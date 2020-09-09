@@ -1,0 +1,31 @@
+{
+  "name": "Patient Symptom Tracking PWA",
+  "short_name": "SymptomTrack",
+  "theme_color": "#713BDB",
+  "background_color": "#F5F6FA",
+  "icons": [
+    {
+      "src": "/static/images/icons/icon-64.png",
+      "type": "image/png",
+      "sizes": "64x64"
+    },
+    {
+      "src": "/static/images/icons/icon-96.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/static/images/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/static/images/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -6,6 +6,8 @@
 
 `python --version`
 
+#### Make sure you are in the `project` folder in your terminal.
+
 #### Install the requirements
 
 `pip install -r requirements.txt`

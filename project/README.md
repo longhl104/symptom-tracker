@@ -17,3 +17,12 @@
 `python run.py`
 
 #### Check the terminal for the address of the app. It usually runs on http://127.0.0.1:5500/.
+
+#### To run all of the unit tests (the test files start with "test\_\*.py")
+
+`nose2`
+
+#### To check code coverage of the unit tests
+
+`coverage run project/tests/test_basic.py`
+`coverage report project/app.py`

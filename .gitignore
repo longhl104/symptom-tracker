@@ -112,6 +112,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+flask/
 
 # Spyder project settings
 .spyderproject

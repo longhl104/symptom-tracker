@@ -24,5 +24,5 @@
 
 #### To check code coverage of the unit tests
 
-`coverage run project/tests/test_basic.py`
-`coverage report project/app.py`
+`coverage run --source=project -m nose2`
+`coverage report -m`

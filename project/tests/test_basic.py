@@ -1,27 +1,18 @@
-import os
 import unittest
-
-import pytest
-
-
-class BasicTests(unittest.TestCase):
-
-    ############################
-    #### setup and teardown ####
-    ############################
-
-    # executed prior to each test
-    def setUp(self):
-        pass
-
-    # executed after each test
-    def tearDown(self):
-        pass
-
-    ###############
-    #### tests ####
-    ###############
+from project.app import app
 
 
-if __name__ == "__main__":
+class BasicTestCase(unittest.TestCase):
+    def test_home(self):
+        tester = app.test_client(self)
+        response = tester.get('/', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+    def test_service_worker_js(self):
+        tester = app.test_client(self)
+        response = tester.get('/service-worker.js', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+
+if __name__ == '__main__':
     unittest.main()

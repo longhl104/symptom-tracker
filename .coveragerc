@@ -1,5 +1,5 @@
 [run]
-omit = 
+omit = /* Omit testing for these files */
     project/tests/*
     project/run.py
     project/__init__.py

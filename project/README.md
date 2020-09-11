@@ -24,5 +24,5 @@
 
 #### To check code coverage of the unit tests
 
-`coverage run --source=project -m nose2`
+`coverage run -m nose2`
 `coverage report -m`

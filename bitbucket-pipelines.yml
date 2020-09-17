@@ -8,6 +8,9 @@ image: python:3.7.3
 pipelines:
   default:
     - step:
+        script:
+          - cd project
+    - step:
         caches:
           - pip
         script: # Modify the commands below to build your repository.

@@ -8,14 +8,10 @@ image: python:3.7.3
 pipelines:
   default:
     - step:
-        name: Install requirements
+        name: Install requirements and run tests
         caches:
           - pip
         script:
           - cd project
           - pip install -r requirements.txt
-    - step:
-        name: Run tests
-        script:
-          - cd project
           - nose2

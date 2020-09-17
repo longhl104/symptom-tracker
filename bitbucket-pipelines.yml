@@ -8,13 +8,14 @@ image: python:3.7.3
 pipelines:
   default:
     - step:
-        script:
-          - cd project
-    - step:
+        name: Install requirements
         caches:
           - pip
-        script: # Modify the commands below to build your repository.
+        script:
+          - cd project
           - pip install -r requirements.txt
     - step:
+        name: Run tests
         script:
+          - cd project
           - nose2

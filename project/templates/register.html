@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Symptom Tracking App</title>
+
+     <!-- Basic declarations and meta descriptions -->
+     <meta charset="utf-8">
+     <link rel="icon" href="{{ url_for('static', filename='images/icons/icon-96.png') }}">
+     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+     <meta name="description" content="Symptom Tracking App">
+ 
+     <!-- Web app manifest -->
+     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+ 
+     <!-- iOS -->
+     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icons/icon-96.png') }}">
+     <meta name="apple-mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-status-bar-style" content="black">
+     <meta name="format-detection" content="telephone=no">
+     
+    <!-- Custom or external CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+    <section class="full-page">
+      <div class="container">
+        <div class="card">
+          <img class="logo" src="{{ url_for('static', filename='images/icons/icon-64.png' ) }}" />
+          <h5 class="card-title">Tingle</h5>
+        </div>
+        <div style="width: 80%; margin-top: -40px; margin-bottom: -40px; justify-content: left;"> 
+          <input class="btn blue" form="back" type="submit" value="< Back to home">
+          <form class="form" id="back" action="./login"> </form>
+        </div>
+        <div class="info-card shadow" id="register">
+            <h5 class="card-title" style="font-weight: normal">Create a new account</h5>
+          <form class="form" action="/action_page.php">
+            <p class="info-text">Personal details</p>
+            <div style="width: 62%; padding-right: 7%; display: inline-block;">
+              <label for="fname">First name *</label>
+              <input type="firstname" class="input" name="firstname" required>
+              <label for="lastname">Last name *</label>
+              <input type="text" class="input" name="lastname" required>
+            </div>
+            <div style="width: 30%; display: inline-block;">
+              <label for="gender" style="display: inline-block; margin: 0px 10px 0px 0px; vertical-align: top">Gender</label>
+              <div style="display: inline-block;">
+                <input type="radio" class="radio-input" name="gender" value="male">   Male<br>
+                <input type="radio" class="radio-input" name="gender" value="female">   Female<br>
+                <input type="radio" class="radio-input" name="gender" value="other">   Other<br>
+              </div>
+              <label for="age">Age</label>
+              <input type="number" class="input" name="age" min="18" max="120">
+            </div>
+            <label for="mobile">Mobile number</label>
+            <input type="tel" class="input" name="mobile" pattern="[0-9]{10}">
+            <label for="treatment" style="display:inline-block;">Treatment type</label>
+            <select class="btn blue" id="treatment-btn" name="treatment">
+              <option value="default">Please select one</option>
+              <option value="carboplatin">Carboplatin</option>
+              <option value="cisplatin">Cisplatin</option>
+              <option value="etoposide">Etoposide</option>
+              <option value="ixempra">Ixempra</option>
+              <option value="jevtana">Jevtana</option>
+              <option value="oxaliplatin">Oxaliplatin</option>
+              <option value="velban">Velban</option>
+            </select>
+            <p class="info-text" >Account details</p>
+            <label for="email">Email *</label>
+            <input type="text" class="input" name="email" required>
+            <label for="password">Password *</label>
+            <input type="password" class="input" name="password" minlength="8" required>
+            <label for="passwordconf">Password confirmation *</label>
+            <input type="password" class="input" name="passwordconf" minlength="8" required><br>
+            <label for="consent" style="margin-bottom: 10px">I consent to the anonymised use of my symptom data.</label>
+            <input type="radio" class="radio-input" name="consent" value="yes">  Yes, I agree<br>
+            <input type="radio" class="radio-input" name="consent" value="no">  No<br>
+            <input class="btn green" style="float: right" type="submit" value="Create an account">
+          </form>
+        </div>
+      </div>
+    </section>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/install.js') }}"></script>
+  </body>  
+</html>

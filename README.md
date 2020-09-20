@@ -22,6 +22,9 @@ Development of a mobile app or online portal to enable patients to record sympto
 | Osama Bin Waseem | Osama Bin Waseem | obin7252@uni.sydney.edu.au |
 | Thomas Wang | QingLin Wang | qwan3440@uni.sydney.edu.au |
 
+* Repo owner or admin
+* Other community or team contact
+
 ## Client Information
 
 | Name | Email |

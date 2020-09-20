@@ -1,0 +1,9 @@
+[run]
+omit = /* Omit testing for these files */
+    tests/*
+    run.py
+    __init__.py
+
+    /* my (Long's) virtual environment is named "flask", you guys need to change to other name if needed */
+    flask/* 
+    flask/Lib/*

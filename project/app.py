@@ -1,6 +1,5 @@
 from flask import *
-from modules import *
-from . import database
+import database
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -8,9 +7,7 @@ page = {}  # Determines the page information
 
 
 app = Flask(__name__)
-app.secret_key = """U29tZWJvZHkgb25jZSB0b2xkIG1lIFRoZSB3b3JsZCBpcyBnb25uYSBy
-b2xsIG1lIEkgYWluJ3QgdGhlIHNoYXJwZXN0IHRvb2wgaW4gdGhlIHNoZWQgU2hlIHdhcyBsb29r
-aW5nIGtpbmRhIGR1bWIgV2l0aCBoZXIgZmluZ2VyIGFuZCBoZXIgdGh1bWIK"""
+app.secret_key = """aklsdfawlefpowaiefnasdfnlaefoiawejf"""
 
 
 @app.route('/')

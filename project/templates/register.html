@@ -70,7 +70,7 @@
 					<h5 class="card-title" style="font-weight: normal">
 						Create a new account
 					</h5>
-					<form class="form" action="/action_page.php">
+					<form class="form" method="POST" action="{{url_for('register')}}">
 						<p class="info-text">Personal details</p>
 						<div style="width: 62%; padding-right: 7%; display: inline-block">
 							<label for="fname">First name *</label>
@@ -126,14 +126,15 @@
 							>Treatment type</label
 						>
 						<select class="btn blue" id="treatment-btn" name="treatment">
-							<option value="default">Please select one</option>
-							<option value="carboplatin">Carboplatin</option>
-							<option value="cisplatin">Cisplatin</option>
-							<option value="etoposide">Etoposide</option>
-							<option value="ixempra">Ixempra</option>
-							<option value="jevtana">Jevtana</option>
-							<option value="oxaliplatin">Oxaliplatin</option>
-							<option value="velban">Velban</option>
+							<option value="" disabled selected hidden>
+								Choose treatment type
+							</option>
+
+							{% for instance in treatments %}
+							<option value="{{instance.treatment_name}}">
+								{{instance.treatment_name}}
+							</option>
+							{% endfor %}
 						</select>
 						<p class="info-text">Account details</p>
 						<label for="email">Email *</label>

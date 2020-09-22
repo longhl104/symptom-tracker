@@ -7,7 +7,7 @@ page = {}  # Determines the page information
 
 
 app = Flask(__name__)
-app.secret_key = """aklsdfawlefpowaiefnasdfnlaefoiawejf"""
+app.secret_key = """/TMVe0"Lw`hc*0I"""
 
 
 @app.route('/')
@@ -15,7 +15,7 @@ def index():
     if('logged_in' not in session or not session['logged_in']):
         return redirect(url_for('login'))
 
-    return render_template('index.html', session=session, page=page, user=user_details)
+    return render_template('index.html', session=session, page=page)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -53,9 +53,33 @@ def patient_index():
     return render_template('patient/index.html', session=session, page=page)
 
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    return render_template('register.html')
+    if request.method == 'POST':
+        print(request.form)
+        add_patient_ret = database.add_patient(
+            request.form['firstname'],
+            request.form['lastname'],
+            request.form['gender'],
+            request.form['age'],
+            request.form['mobile'],
+            request.form['treatment'],
+            request.form['email'],
+            request.form['password'],
+            request.form['consent']
+        )
+        if add_patient_ret is None:
+            return redirect(url_for('register'))
+        else:
+            return redirect(url_for('patient_index'))
+    elif request.method == 'GET':
+        treatments = None
+        treatments = database.get_all_treatments()
+
+        if treatments is None:
+            treatments = {}
+
+        return render_template('register.html', session=session, page=page, treatments=treatments)
 
 
 @app.route('/service-worker.js')

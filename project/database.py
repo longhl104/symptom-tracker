@@ -64,11 +64,11 @@ def print_sql_string(inputstring, params=None):
 #####################################################
 
 
-def dictfetchall(cursor, sqltext, params=None):
+def dictfetchall(cursor, sqltext, params=()):
     """ Returns query results as list of dictionaries."""
 
     result = []
-    if (params is None):
+    if len(params) == 0:
         print(sqltext)
     else:
         print("we HAVE PARAMS!")
@@ -84,7 +84,7 @@ def dictfetchall(cursor, sqltext, params=None):
     return result
 
 
-def dictfetchone(cursor, sqltext, params=None):
+def dictfetchone(cursor, sqltext, params=()):
     """ Returns query results as list of dictionaries."""
     # cursor = conn.cursor()
     result = []
@@ -106,22 +106,11 @@ def check_login(email, password):
         return None
     cur = conn.cursor()
     try:
-        # Try executing the SQL and get from the database
-        #########
-        # TODO  #
-        #########
-
-        #############################################################################
-        # Fill in the SQL below in a manner similar to Wk 08 Lab to log the user in #
-        #############################################################################
-
         sql = """
             SELECT *
             FROM tingleserver."Account"
-            WHERE email=%s AND password=%s
+            WHERE ac_email=%s AND ac_password=%s
         """
-        # print(username)
-        # print(password)
         cur.execute(sql, (email, password))
         # r = cur.fetchone()
 
@@ -133,6 +122,70 @@ def check_login(email, password):
     except:
         # If there were any errors, return a NULL row printing an error to the debug
         print("Error Invalid Login")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
+
+
+def get_all_treatments():
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT tingleserver."Treatment".treatment_name FROM tingleserver."Treatment"
+        """
+
+        r = dictfetchall(cur, sql)
+        print("return val is:")
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Unexpected error getting All Songs:", sys.exc_info()[0])
+        raise
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
+
+
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
+    print(firstname, lastname, gender, age, mobile,
+          treatment, email, password, consent)
+    if consent == 'no':
+        return None
+
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        # Try executing the SQL and get from the database
+        sql = """
+            SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
+        """
+
+        if gender == 'other':
+            gender = None
+
+        cur.execute(sql, (firstname, lastname, gender, age,
+                          mobile, treatment, email, password))
+        conn.commit()
+        r = cur.fetchone()
+        print("return val is:")
+        print(r)
+        cur.close()
+        conn.commit()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Unexpected error adding a movie:", sys.exc_info()[0])
+        conn.rollback()
+        raise
     cur.close()                     # Close the cursor
     conn.close()                    # Close the connection to the db
     return None

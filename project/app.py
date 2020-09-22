@@ -61,3 +61,7 @@ def register():
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')

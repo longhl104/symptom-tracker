@@ -13,3 +13,7 @@ def service_worker():
 @app.route('/login')
 def login():
     return render_template('login.html')
+
+@app.route('/forgot-password')
+def forgot_password():
+    return render_template('forgot-password.html')

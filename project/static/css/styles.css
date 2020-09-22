@@ -42,7 +42,7 @@ input, label {
 
 .info-card {
   background-color: white !important;
-  margin: 20px;
+  margin: 10px 20px 20px 20px;
   padding: 20px;
   width: 80%;
 }
@@ -75,6 +75,12 @@ input, label {
   margin: auto;
 }
 
+.topgrid {
+  display: grid;
+  width: 80%;
+  grid-template: 1fr / 1fr 1fr 1fr 1fr;
+}
+
 .btn {
   padding: 10px;
   border: transparent;
@@ -85,6 +91,18 @@ input, label {
   cursor: pointer;
   margin-top: 10px;
   font-family: 'Montserrat', sans-serif;
+}
+
+.backbtn {
+  padding: 10px 20px;
+  border: transparent;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 500;
+  width: auto;
+  cursor: pointer;
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;]
 }
 
 .logbtn {
@@ -135,6 +153,11 @@ input, label {
   background-color: #1485FF !important;
   color: #ffffff !important;
   border: #1485FF !important;
+}
+
+.info {
+  margin: auto;
+  width: 70%;
 }
 
 @media only screen and (max-width: 768px) {

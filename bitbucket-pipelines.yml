@@ -1,0 +1,14 @@
+image: python:3.7.3
+
+pipelines:
+  default:
+    - step:
+        name: Install requirements, run tests and generate coverage report
+        caches:
+          - pip
+        script:
+          - cd project
+          - pip install -r requirements.txt
+          - nose2
+          - coverage run -m nose2
+          - coverage report -m

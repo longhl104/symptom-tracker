@@ -1,7 +1,7 @@
 import configparser
 import json
 import sys
-from modules import pg8000
+import pg8000
 
 def database_connect():
     # Read the config file
@@ -28,6 +28,7 @@ def database_connect():
 
     # return the connection to use
     return connection
+
 def dictfetchall(cursor,sqltext,params=None):
     """ Returns query results as list of dictionaries."""
 

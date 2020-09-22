@@ -1,5 +1,6 @@
 from flask import *
 import database
+import configparser
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -7,7 +8,11 @@ page = {}  # Determines the page information
 
 
 app = Flask(__name__)
-app.secret_key = """/TMVe0"Lw`hc*0I"""
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+app.secret_key = config['DATABASE']['secret_key']
 
 
 @app.route('/')
@@ -28,7 +33,7 @@ def login():
 
         if login_return_data is None:
             page['bar'] = False
-            flash("Incorrect username/password, please try again")
+            flash("Incorrect email/password, please try again")
             return redirect(url_for('login'))
 
         page['bar'] = True

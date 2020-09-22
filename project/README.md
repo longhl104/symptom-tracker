@@ -51,11 +51,12 @@ To check code coverage of the unit tests
 
 - You need to download the latest version of PgAdmin <https://www.pgadmin.org/download/>
 
-- We should use the same username and password for pgadmin server for synchronization
+- We should use the same username and password for pgadmin server for synchronization (below is just an example, you need to set up your own `config.ini`)
 
   - host: 127.0.0.1
   - username: postgres
   - database name: postgres
   - password = tingle12345
+  - secret_key = abcdefghijklmnopqrst
 
 - Click "Query Tool" in "Tools" tab. Copy the code in the [backup sql file](project\database\backup_schema.sql) and paste it into the query tool editor. Then click run. Now the schema "tingleserver" has been created.

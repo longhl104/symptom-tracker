@@ -45,9 +45,8 @@ def print_sql_string(inputstring, params=None):
     Prints out a string as a SQL string parameterized assuming all strings
     """
 
-    if params is not None:
-        if params != []:
-            inputstring = inputstring.replace("%s", "'%s'")
+    if params is not None and len(params) != 0:
+        inputstring = inputstring.replace("%s", "'%s'")
 
     print(inputstring % params)
 
@@ -145,7 +144,7 @@ def get_all_treatments():
         return r
     except:
         # If there were any errors, return a NULL row printing an error to the debug
-        print("Unexpected error getting All Songs:", sys.exc_info()[0])
+        print("Unexpected error getting All Treatments:", sys.exc_info()[0])
         raise
     cur.close()                     # Close the cursor
     conn.close()                    # Close the connection to the db
@@ -168,9 +167,6 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
             SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
         """
 
-        if gender == 'other':
-            gender = None
-
         cur.execute(sql, (firstname, lastname, gender, age,
                           mobile, treatment, email, password))
         conn.commit()
@@ -183,7 +179,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         return r
     except:
         # If there were any errors, return a NULL row printing an error to the debug
-        print("Unexpected error adding a movie:", sys.exc_info()[0])
+        print("Unexpected error adding a patient:", sys.exc_info()[0])
         conn.rollback()
         raise
     cur.close()                     # Close the cursor

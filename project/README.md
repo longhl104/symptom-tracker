@@ -12,6 +12,10 @@
 
 `pip install -r requirements.txt`
 
+#### Add a config file
+Create a copy of the sample-config.ini file and rename it to config.ini.
+Fill it with the correct parameters.
+
 #### Run this command once
 `chmod +x run.sh`
 

@@ -1,6 +1,6 @@
-drop schema if exists accountserver cascade;
-create schema accountserver;
-set search_path to 'accountserver';
+DROP SCHEMA IF EXISTS accountserver CASCADE;
+CREATE SCHEMA accountserver;
+SET search_path TO 'accountserver';
 
 DROP TABLE IF EXISTS Account CASCADE;
 DROP TABLE IF EXISTS Patient CASCADE;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS Researcher CASCADE;
 CREATE TABLE AccountType (
     account_type_id SERIAL PRIMARY KEY,
     account_type_name VARCHAR(100) NOT NULL
-)
+);
 
 CREATE TABLE Account(
     account_id SERIAL PRIMARY KEY,
@@ -26,15 +26,15 @@ CREATE TABLE Account(
     ac_admin SMALLINT DEFAULT 0
 );
 
+CREATE TABLE Clinician (
+    clinician_id SERIAL UNIQUE REFERENCES Account(account_id),
+    professions TEXT
+);
+
 CREATE TABLE Patient(
     patient_id SERIAL REFERENCES Account(account_id),
     symptoms_tracking TEXT,
-    pt_clinician INTEGER NOT NULL REFERENCES Clinician(id)
-);
-
-CREATE TABLE Clinician (
-    clinician_id SERIAL REFERENCES Account(account_id),
-    professions TEXT
+    pt_clinician INTEGER NOT NULL REFERENCES Clinician(clinician_id)
 );
 
 CREATE TABLE Researcher (
@@ -43,31 +43,31 @@ CREATE TABLE Researcher (
 );
 
 CREATE OR REPLACE FUNCTION accountserver.addpatient(
-    type TEXT NOT NULL,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL,
-    firstname TEXT NOT NULL,
-    lastname TEXT NOT NULL,
+    type TEXT,
+    username TEXT,
+    password TEXT,
+    firstname TEXT,
+    lastname TEXT,
     email TEXT,
     age SMALLINT,
     gender TEXT,
-    phone INTEGER NOT NULL,
-    assignedclinician INTEGER NOT NULL,
-    symptoms)
+    phone INTEGER,
+    assignedclinician INTEGER,
+    symptoms TEXT)
 RETURNS int AS
-$ADD$
+$BODY$
     WITH ins1 AS (
-        INSERT INTO accountserver.Patient (patient_id, pt_clinician, symptoms_tracking)
+        INSERT INTO accountserver.Patient (pt_clinician, symptoms_tracking)
         VALUES (assignedclinician, symptoms)
         RETURNING patient_id
-        ) ins2 AS (
-            INSERT INTO accountserver.Account (ac_username, ac_password, ac_firstname, ac_lastname, ac_email, ac_age, ac_gender, ac_phone)
+        ), ins2 AS (
+            INSERT INTO accountserver.Account (ac_username, ac_password, ac_first_name, ac_last_name, ac_email, ac_age, ac_gender, ac_phone)
             VALUES (username, password, firstname, lastname, email, age, gender, phone)
             RETURNING account_id
-        ) ins3 AS (
+        ), ins3 AS (
             INSERT INTO accountserver.AccountType (account_type_name)
             VALUES (type)
-            SELECT account_id FROM ins2
         )
-$ADD$
+		SELECT patient_id FROM accountserver.Patient;
+$BODY$
 LANGUAGE sql;

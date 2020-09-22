@@ -12,7 +12,12 @@ Make sure you are in the `project` folder in your terminal.
 
 `pip install -r requirements.txt`
 
-## Run this command once
+#### Add a config file
+
+Create a copy of the sample-config.ini file and rename it to config.ini.
+Fill it with the correct parameters.
+
+#### Run this command once
 
 `chmod +x run.sh`
 

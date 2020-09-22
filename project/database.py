@@ -3,12 +3,6 @@ import json
 import sys
 import pg8000
 
-#####################################################
-#   Database Connect
-#   (No need to touch
-#       (unless the exception is potatoing))
-#####################################################
-
 
 def database_connect():
     """

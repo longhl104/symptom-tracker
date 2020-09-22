@@ -1,170 +1,113 @@
-import sqlite3
+import configparser
+import json
+import sys
+from modules import pg8000
 
+def database_connect():
+    # Read the config file
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    if 'database' not in config['DATABASE']:
+        config['DATABASE']['database'] = config['DATABASE']['user']
 
-class SQLDatabase():
+    # Create a connection to the database
+    connection =  None
+    try:
+        # Parses the config file and connects using the connect string
+        connection = pg8000.connect(database=config['DATABASE']['database'],
+                                    user=config['DATABASE']['user'],
+                                    password=config['DATABASE']['password'],
+                                    host=config['DATABASE']['host'])
+    except pg8000.OperationalError as operation_error:
+        print("""Error, you haven't updated your config.ini or you have a bad
+        connection, please try again. (Update your files first, then check
+        internet connection)
+        """)
+        print(operation_error)
+        return None
 
-    def __init__(self, database_arg=":memory:"):
-        self.conn = sqlite3.connect(database_arg,check_same_thread=False)
-        self.cur = self.conn.cursor()
+    # return the connection to use
+    return connection
+def dictfetchall(cursor,sqltext,params=None):
+    """ Returns query results as list of dictionaries."""
 
+    result = []
+    if (params is None):
+        print(sqltext)
+    else:
+        print("we HAVE PARAMS!")
+        print_sql_string(sqltext,params)
 
-    def execute(self, sql_string):
-        out = None
-        for string in sql_string.split(";"):
-            try:
-                out = self.cur.execute(string)
-            except:
-                pass
-                return out
+    cursor.execute(sqltext,params)
+    cols = [a[0].decode("utf-8") for a in cursor.description]
+    print(cols)
+    returnres = cursor.fetchall()
+    for row in returnres:
+        result.append({a:b for a,b in zip(cols, row)})
+    # cursor.close()
+    return result
 
-    def commit(self):
-        self.conn.commit()
+def dictfetchone(cursor,sqltext,params=None):
+    """ Returns query results as list of dictionaries."""
+    # cursor = conn.cursor()
+    result = []
+    cursor.execute(sqltext,params)
+    cols = [a[0].decode("utf-8") for a in cursor.description]
+    returnres = cursor.fetchone()
+    result.append({a:b for a,b in zip(cols, returnres)})
+    return result
 
-    #-----------------------------------------------------------------------------
+ef check_login(email, password):
+    """
+    Check that the users information exists in the database.
+        - True => return the user data
+        - False => return None
+    """
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
 
+        sql = """SELECT *
+        FROM tingleserver.Account
+        WHERE ac_email = %s AND ac_password = %s """
+        print(username)
+        print(password)
 
-    def database_setup(self, admin_password='admin'):
+        r = dictfetchone(cur,sql,(email,password))
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Error Invalid Login")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
 
-        self.execute('''
-            DROP TABLE IF EXISTS Account;
-            DROP TABLE IF EXISTS Patient;
-            DROP TABLE IF EXISTS Clinician;
-            DROP TABLE IF EXISTS Researcher;
-        ''')
-        self.commit()
+def addUser(first,last,email,age,gender,phone,password):
 
-        # Create the users table
-        self.execute('''
-        CREATE TABLE Account(
-            Accountid INTEGER PRIMARY KEY,
-            username TEXT,
-            password TEXT,
-            FirstName TEXT,
-            LastName TEXT,
-            Email TEXT,
-            Age INTEGER,
-            Gender TEXT,
-            Phone INTEGER,
-            AccountType TEXT,
-            admin INTEGER DEFAULT 0
-        );
-
-        CREATE TABLE Patient(
-            id INTEGER FOREIGN KEY REFERENCES Account(Accountid),
-            SympotomsTracking TEXT,
-            Clinician INTEGER NOT NULL REFERENCES Clinician(id)
-        );
-
-        CREATE TABLE Clinician (
-            id INTEGER FOREIGN KEY REFERENCES Account(Accountid),
-            Professions TEXT
-        );
-        CREATE TABLE Researcher (
-            id INTEGER FOREIGN KEY REFERENCES Account(Accountid),
-            researchs TEXT
-        );
-        ''')
-
-        self.commit()
-
-           # Add our admin user
-        self.add_user('admin', admin_password, admin=1)
-        self.add_user('boss', admin_password, admin=1)
-
-
-
-
-
-    #-----------------------------------------------------------------------------
-    # User handling(need more editing)
-    #-----------------------------------------------------------------------------
-
-    def add_user(self, username, password, admin=0):
-
-        sql_cmd = """
-                INSERT INTO Users(username,password,admin)
-                VALUES(?,?,?)
-            """
-        tup = (username, password, admin)
-        self.cur.execute(sql_cmd,tup)
-        self.commit()
-        # If our aquery returns
-        if self.cur.fetchone():
-            print("successz")
-        return True
-
-
-    #-----------------------------------------------------------------------------
-
-    # Check login credentials
-    def check_credentials(self, username, password):
-        sql_query = """
-                SELECT 1
-                FROM Users
-                WHERE username = ? AND password = ?
-            """
-
-        # If our aquery returns
-        self.cur.execute(sql_query,(username,password))
-        self.commit()
-        if self.cur.fetchall():
-            return True
-        else:
-            return False
-
-    def check_exist(self, username):
-
-        sql_query = """
-                SELECT 1
-                FROM Account
-                WHERE username = ?
-            """
-
-        # If our aquery returns
-        self.cur.execute(sql_query,(username,))
-        self.commit()
-        if self.cur.fetchall():
-            return True
-        else:
-            return False
-    def user_show(self, username, password):
-        sql_query = """
-                SELECT *
-                FROM Account
-
-            """.format(username=username, password=password)
-
-        # If our aquery returns
-        self.execute(sql_query)
-        self.commit()
-        if self.cur.fetchall():
-            return True
-        else:
-            return False
-
-    def user_show_all(self):
-        sql_query = """
-                SELECT *
-                FROM Account
-
-            """
-
-        # If our aquery returns
-        self.execute(sql_query)
-        self.commit()
-        return self.cur.fetchall()
-
-
-
-    def check_user_exists(self,name):
-        sql_query = """
-            SELECT *
-            FROM Account
-            WHERE username=?
-        """
-        self.cur.execute(sql_query,(name,))
-        self.commit()
-        if len(self.cur.fetchall()) > 0:
-            return True
-        else:
-            return False
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        # Try executing the SQL and get from the database
+        sql = """INSERT INTO tingleserver.Account(ac_first_name,ac_last_name,ac_email,ac_age,ac_gender,ac_phone,ac_password)
+                 VALUES(first,last,email,age,gender,phone,password)
+                 """
+        cur.execute(sql)
+        r = cur.fetchone()              # Fetch the first row
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Unexpected error:", sys.exc_info()[0])
+        #raise
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None

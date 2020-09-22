@@ -139,3 +139,4 @@ dmypy.json
 cython_debug/
 /.vs/soft3888_t09a_group3/v16/Browse.VC.opendb
 .vs
+.vs/

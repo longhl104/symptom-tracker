@@ -57,7 +57,7 @@ def dictfetchone(cursor,sqltext,params=None):
     result.append({a:b for a,b in zip(cols, returnres)})
     return result
 
-ef check_login(email, password):
+def check_login(email, password):
     """
     Check that the users information exists in the database.
         - True => return the user data

@@ -1,7 +1,7 @@
 import configparser
 import json
 import sys
-from modules import pg8000
+import pg8000
 
 #####################################################
 #   Database Connect
@@ -99,3 +99,46 @@ def dictfetchone(cursor, sqltext, params=None):
     returnres = cursor.fetchone()
     result.append({a: b for a, b in zip(cols, returnres)})
     return result
+
+
+def check_login(email, password):
+    """
+    Check that the users information exists in the database.
+        - True => return the user data
+        - False => return None
+    """
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        # Try executing the SQL and get from the database
+        #########
+        # TODO  #
+        #########
+
+        #############################################################################
+        # Fill in the SQL below in a manner similar to Wk 08 Lab to log the user in #
+        #############################################################################
+
+        sql = """
+            SELECT *
+            FROM tingleserver."Account"
+            WHERE email=%s AND password=%s
+        """
+        # print(username)
+        # print(password)
+        cur.execute(sql, (email, password))
+        # r = cur.fetchone()
+
+        r = dictfetchone(cur, sql, (email, password))
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Error Invalid Login")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None

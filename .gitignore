@@ -137,6 +137,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# VS code settings
 /.vs/soft3888_t09a_group3/v16/Browse.VC.opendb
 .vs
 .vs/
@@ -148,3 +150,6 @@ cython_debug/
 .vs/soft3888_t09a_group3/v16/Browse.VC.db
 .vs/soft3888_t09a_group3/v16/Browse.VC.db-shm
 .vs/VSWorkspaceState.json
+
+# Personal config files
+project/config.ini

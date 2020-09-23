@@ -12,12 +12,6 @@ input, label {
   display: block;
 }
 
-/* #multi-checklist {
-  display: inline-block;
-  margin-left: 10px;
-  margin-bottom: 20px;
-  padding-right: 20px;
-} */
 
 .full-page {
   width: 100vw;
@@ -296,10 +290,6 @@ input, label {
 .dropdown-check-list ul.items li {
   list-style: none;
   padding: 4px;
-}
-
-.dropdown-check-list ul.items li:disabled {
-  background: black;
 }
 
 .dropdown-check-list.visible .items {

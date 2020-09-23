@@ -62,6 +62,13 @@ input, label {
   width: 80%;
 }
 
+.forgot-pass-card {
+  background-color: white !important;
+  margin: 10px 20px 20px 20px;
+  padding: 20px;
+  width: 80%;
+}
+
 .info-card#register {
   width: 80%;
 }
@@ -129,6 +136,12 @@ input, label {
   margin: auto;
 }
 
+.topgrid {
+  display: grid;
+  width: 80%;
+  grid-template: 1fr / 1fr 1fr 1fr 1fr;
+}
+
 .navbar {
   height: 100%;
   width: 400px; 
@@ -172,6 +185,18 @@ input, label {
 
 .btn {
   padding: 10px;
+  border: transparent;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 500;
+  width: auto;
+  cursor: pointer;
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.backbtn {
+  padding: 10px 20px;
   border: transparent;
   border-radius: 5px;
   font-size: 18px;
@@ -247,6 +272,11 @@ input, label {
   background-color: #1485FF !important;
   color: #ffffff !important;
   border: #1485FF !important;
+}
+
+.info {
+  margin: auto;
+  width: 70%;
 }
 
 .purple {

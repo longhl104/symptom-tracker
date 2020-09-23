@@ -94,3 +94,8 @@ def dashboard():
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
+
+
+@app.route('/password-reset')
+def forgot_password():
+    return render_template('forgot-password.html')

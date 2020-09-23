@@ -61,14 +61,13 @@ def patient_index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        print(request.form)
         add_patient_ret = database.add_patient(
             request.form['firstname'],
             request.form['lastname'],
             request.form['gender'],
             request.form['age'],
             request.form['mobile'],
-            request.form['treatment'],
+            request.form.getlist('treatment'),
             request.form['email'],
             request.form['password'],
             request.form['consent']
@@ -90,6 +89,7 @@ def register():
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
+
 
 @app.route('/service-worker.js')
 def service_worker():

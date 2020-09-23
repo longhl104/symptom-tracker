@@ -164,19 +164,37 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
     try:
         # Try executing the SQL and get from the database
         sql = """
-            SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
+            SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s);
         """
-
         cur.execute(sql, (firstname, lastname, gender, age,
-                          mobile, treatment, email, password))
+                          mobile, email, password))
         conn.commit()
-        r = cur.fetchone()
-        print("return val is:")
-        print(r)
+        patient_id = cur.fetchone()[0]
+
+        if treatment is not None and len(treatment) > 0:
+            for t in treatment:
+                sql = """
+                    SELECT treatment_id
+                    FROM tingleserver."Treatment"
+                    WHERE treatment_name=%s;
+                """
+                cur.execute(sql, (t,))
+                conn.commit()
+                treatment_id = cur.fetchone()[0]
+                print(treatment_id)
+
+                sql = """
+                    INSERT INTO tingleserver."Patient_Receives_Treatment"(
+                        patient_id, treatment_id)
+                        VALUES (%s, %s);
+                """
+                cur.execute(sql, (patient_id, treatment_id))
+                conn.commit()
+
         cur.close()
         conn.commit()                     # Close the cursor
         conn.close()                    # Close the connection to the db
-        return r
+        return patient_id
     except:
         # If there were any errors, return a NULL row printing an error to the debug
         print("Unexpected error adding a patient:", sys.exc_info()[0])

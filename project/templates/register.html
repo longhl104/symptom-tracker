@@ -31,7 +31,7 @@
       <div class="container">
         <div style="overflow: scroll;" class="info-card shadow" id="register">
             <h5 class="card-title" style="font-weight: normal">Create a new account</h5>
-          <form class="form" action="./dashboard">
+          <form class="form" method="POST" action="{{url_for('register')}}">
             <p class="info-text">Personal details</p>
             <div id="name-inputs" class="input-box">
               <label for="fname">First name *</label>
@@ -56,20 +56,9 @@
               <label> Have you received, or are you currently receiving, any of the following types of chemotherapy? Please choose one or more types from the following list.</label>
               <div class="blue anchor btn">Select one or more treatment types</div>
               <ul class="items" id = treatments>
-                <li><input type="checkbox" class="checkbox-input"> Oxaliplatin (Eloxatin, Oxalatin, Oxaliccord, Xalox, FOLFOX, XELOX)</li>
-                <li><input type="checkbox" class="checkbox-input"> Cisplatin (Cisplatinum, Platinol)</li>
-                <li><input type="checkbox" class="checkbox-input"> Carboplatin (Carbaccord)</li>
-                <li><input type="checkbox" class="checkbox-input"> Paclitaxel (Taxol, Anzatax, Plaxel, Abraxane)</li>
-                <li><input type="checkbox" class="checkbox-input"> Docetaxel (Taxotere, Dotax, Oncotaxel)</li>
-                <li><input type="checkbox" class="checkbox-input"> Cabazitaxel (Jevtana)</li>
-                <li><input type="checkbox" class="checkbox-input"> Vincristine</li>
-                <li><input type="checkbox" class="checkbox-input"> Vinblastine</li>
-                <li><input type="checkbox" class="checkbox-input"> Vinorelbine (Navelbine)</li>
-                <li><input type="checkbox" class="checkbox-input"> Thalidomide (Thalomid) </li>
-                <li><input type="checkbox" class="checkbox-input"> Bortezomib (Velcade)</li>
-                <li><input type="checkbox" class="checkbox-input"> Lenalidomide (Revlimid)</li>
-                <li><input type="checkbox" class="checkbox-input"> Pomalidomide (Pomalyst)</li>
-                <li><input type="checkbox" class="checkbox-input"> Eribulin (Halaven) </li>
+				{% for instance in treatments %}
+				<li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}">{{instance.treatment_name}}</li>
+				{% endfor %}
                 <li><input id="notype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I have not received any of these types of chemotherapy</li>
                 <li><input id="unknowntype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I don't know the name of the chemotherapy that I have received</li>
               </ul>

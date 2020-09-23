@@ -60,11 +60,11 @@
 					<h5 class="card-title" style="font-weight: normal; margin-top: 20px">
 						Welcome
 					</h5>
-					<form class="form" action="/action_page.php">
+					<form class="form" method="POST" action="{{url_for('login')}}">
 						<label for="email">Email</label>
 						<input type="text" class="input" name="email" />
 						<label for="pass">Password</label>
-						<input type="text" class="input" name="pass" />
+						<input type="text" class="input" name="password" />
 						<div class="grid">
 							<input
 								class="btn blue"

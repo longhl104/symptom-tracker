@@ -87,6 +87,10 @@ def register():
         return render_template('register.html', session=session, page=page, treatments=treatments)
 
 
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')

@@ -13,6 +13,13 @@ label {
   display: block;
 }
 
+/* #multi-checklist {
+  display: inline-block;
+  margin-left: 10px;
+  margin-bottom: 20px;
+  padding-right: 20px;
+} */
+
 .full-page {
   width: 100vw;
   height: 100vh;
@@ -41,11 +48,33 @@ label {
   text-align: center;
 }
 
+.card-subtitle {
+  margin: 5px 5px 5px 5px;
+  font-size: 24px;
+  font-weight: normal;
+  text-align: center;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
 .info-card {
   background-color: white !important;
   margin: 20px;
-  padding: 20px;
+  padding: 40px 20px 50px 20px;
   width: 80%;
+}
+
+.info-card#register {
+  width: 80%;
+}
+
+.info-card#login {
+  width: 60%;
 }
 
 .shadow {
@@ -62,6 +91,25 @@ label {
   margin: 30px auto 30px auto;
 }
 
+.input-box {
+  display: inline-block;
+}
+
+#name-inputs {
+  width: 62%;
+  padding-right: 7%;
+}
+
+#age-gender-inputs {
+  width: 30%
+}
+
+#gender-label {
+  display: inline-block;
+  margin: 0px 5px 0px 0px;
+  vertical-align: top
+}
+
 .input {
   width: 100%;
   height: 30px;
@@ -71,9 +119,68 @@ label {
   font-family: 'Montserrat', sans-serif;
 }
 
+.checkbox-input {
+  vertical-align: middle;
+  display: inline-block;
+  margin-top: -4px;
+}
+
+.info-text {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
 .grid {
   display: grid;
   margin: auto;
+}
+
+.navbar {
+  height: 100%;
+  width: 400px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: white;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.navbar a {
+  margin: 20px 30px 20px 30px;
+  text-decoration: none;
+  font-size: 25px;
+  color: black;
+  display: block;
+  text-align: center;
+}
+
+/* When you mouse over the navigation links, change their color */
+.navbar a:hover {
+  font-weight: 500 !important;
+  background-color: #1485FF !important;
+  color: #ffffff !important;
+  border: #1485FF !important;
+}
+
+/* Style page content */
+.main {
+  margin-left: 160px;
+  /* Same as the width of the sidebar */
+  padding: 0px 10px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .navbar {
+    padding-top: 15px;
+  }
+
+  .navbar a {
+    font-size: 18px;
+  }
 }
 
 .btn {
@@ -86,6 +193,17 @@ label {
   cursor: pointer;
   margin-top: 10px;
   font-family: 'Montserrat', sans-serif;
+}
+
+.btn-align {
+  float: right;
+  margin-left: 10px
+}
+
+.link {
+  text-decoration: none;
+  color: #1485FF;
+  font-weight: bold;
 }
 
 .logbtn {
@@ -118,9 +236,15 @@ label {
   font-family: 'Montserrat', sans-serif;
 }
 
-.logo {
+.large-logo {
   width: 192px !important;
   height: 192px !important;
+  margin: 0 auto;
+}
+
+.small-logo {
+  width: 64px !important;
+  height: 64px !important;
   margin: 0 auto;
 }
 
@@ -138,9 +262,67 @@ label {
   border: #1485FF !important;
 }
 
+.purple {
+  font-weight: 500 !important;
+  background-color: #713BDB !important;
+  color: #ffffff !important;
+  border: #713BDB !important;
+}
+
+.dropdown-check-list .anchor {
+  position: relative;
+  display: block;
+  padding: 10px 50px 10px 10px;
+  border: 1px solid #ccc;
+}
+
+.dropdown-check-list .anchor:after {
+  position: absolute;
+  content: "";
+  border-left: 4px solid white;
+  border-top: 4px solid white;
+  padding: 5px;
+  right: 10px;
+  top: 28%;
+  -moz-transform: rotate(-135deg);
+  -ms-transform: rotate(-135deg);
+  -o-transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+  transform: rotate(-135deg);
+}
+
+.dropdown-check-list ul.items {
+  display: none;
+  padding: 4px;
+  margin: 0;
+  border: 1px solid #CCC;
+  background-color: #F5F6FA;
+  border-top: none;
+}
+
+.dropdown-check-list ul.items li {
+  list-style: none;
+  padding: 4px;
+}
+
+.dropdown-check-list ul.items li:disabled {
+  background: black;
+}
+
+.dropdown-check-list.visible .items {
+  display: block;
+}
+
 @media only screen and (max-width: 768px) {
-  .container {
-    width: 100%;
+
+  .info-card#login {
+    width: 120%;
+  }
+
+  /* For mobile phones: */
+  .input {
+    display: block;
+    width: 100% !important;
   }
 
   .logbtn {
@@ -169,5 +351,31 @@ label {
     width: 90%;
     cursor: pointer;
     font-family: 'Montserrat', sans-serif;
+  }
+
+  .btn-align {
+    display: block;
+    width: 100%;
+    float: none;
+    margin-left: 0px;
+  }
+
+}
+
+@media only screen and (max-width: 1750px) {
+
+  /* For general smaller screen combatibility: */
+  .info-card#register {
+    width: 150%;
+    max-height: 80%
+  }
+
+  #name-inputs {
+    width: 100% !important;
+  }
+
+  #age-gender-inputs {
+    width: 100% !important;
+    margin: 5px 10px 0px 0px;
   }
 }

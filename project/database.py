@@ -12,7 +12,7 @@ def database_connect():
     """
     # Read the config file
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('sample-config.ini')
     if 'database' not in config['DATABASE']:
         config['DATABASE']['database'] = config['DATABASE']['user']
 

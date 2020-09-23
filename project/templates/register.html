@@ -42,9 +42,9 @@
             <div id="age-gender-inputs" class="input-box">
               <label for="gender" id="gender-label">Gender</label>
               <div style="display: inline-block;">
-                <input type="radio" class="checkbox-input" name="gender" value="male">   Male<br>
-                <input type="radio" class="checkbox-input" name="gender" value="female">   Female<br>
-                <input type="radio" class="checkbox-input" name="gender" value="other">   Other<br>
+                <input type="radio" class="checkbox-input" name="gender" value="male"> Male<br>
+                <input type="radio" class="checkbox-input" name="gender" value="female"> Female<br>
+                <input type="radio" class="checkbox-input" name="gender" value="other"> Other<br>
               </div>
               <label for="age">Age</label>
               <input type="number" class="input" name="age" min="18" max="120">
@@ -56,9 +56,9 @@
               <label> Have you received, or are you currently receiving, any of the following types of chemotherapy? Please choose one or more types from the following list.</label>
               <div class="blue anchor btn">Select one or more treatment types</div>
               <ul class="items" id = treatments>
-				{% for instance in treatments %}
-				<li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}">{{instance.treatment_name}}</li>
-				{% endfor %}
+              {% for instance in treatments %}
+              <li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}">{{instance.treatment_name}}</li>
+              {% endfor %}
                 <li><input id="notype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I have not received any of these types of chemotherapy</li>
                 <li><input id="unknowntype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I don't know the name of the chemotherapy that I have received</li>
               </ul>

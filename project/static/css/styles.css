@@ -13,12 +13,6 @@ label {
   display: block;
 }
 
-/* #multi-checklist {
-  display: inline-block;
-  margin-left: 10px;
-  margin-bottom: 20px;
-  padding-right: 20px;
-} */
 
 .full-page {
   width: 100vw;
@@ -66,6 +60,13 @@ label {
   background-color: white !important;
   margin: 20px;
   padding: 40px 20px 50px 20px;
+  width: 80%;
+}
+
+.forgot-pass-card {
+  background-color: white !important;
+  margin: 10px 20px 20px 20px;
+  padding: 20px;
   width: 80%;
 }
 
@@ -136,6 +137,12 @@ label {
   margin: auto;
 }
 
+.topgrid {
+  display: grid;
+  width: 80%;
+  grid-template: 1fr / 1fr 1fr 1fr 1fr;
+}
+
 .navbar {
   height: 100%;
   width: 400px;
@@ -174,17 +181,24 @@ label {
 
 /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
 @media screen and (max-height: 450px) {
-  .navbar {
-    padding-top: 15px;
-  }
-
-  .navbar a {
-    font-size: 18px;
-  }
+  .navbar {padding-top: 15px;}
+  .navbar a {font-size: 18px;}
 }
 
 .btn {
   padding: 10px;
+  border: transparent;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: 500;
+  width: auto;
+  cursor: pointer;
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.backbtn {
+  padding: 10px 20px;
   border: transparent;
   border-radius: 5px;
   font-size: 18px;
@@ -262,6 +276,11 @@ label {
   border: #1485FF !important;
 }
 
+.info {
+  margin: auto;
+  width: 70%;
+}
+
 .purple {
   font-weight: 500 !important;
   background-color: #713BDB !important;
@@ -303,10 +322,6 @@ label {
 .dropdown-check-list ul.items li {
   list-style: none;
   padding: 4px;
-}
-
-.dropdown-check-list ul.items li:disabled {
-  background: black;
 }
 
 .dropdown-check-list.visible .items {

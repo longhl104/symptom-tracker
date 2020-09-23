@@ -1,0 +1,20 @@
+.btn {
+  padding: 10px;
+  border: transparent;
+  border-radius: 5px;
+  font-size: 18px;
+  color: #FFFFFF;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.green {
+  background-color: #4EB760;
+  border: #4EB760;
+}
+  
+.blue {
+  background-color: #1485FF;
+  border: #1485FF;
+}
+  

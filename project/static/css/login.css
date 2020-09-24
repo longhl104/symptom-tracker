@@ -1,0 +1,79 @@
+input, label {
+  display: block;
+}
+
+.container {
+  width: 60%;
+}
+
+/*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+  .container {
+    width: 50%;
+  }
+}
+
+/*
+  Device = Tablets, iPads (Portrait)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .card {
+    width: 80%;
+  }
+
+  .container {
+    width: 60%;
+  }
+}
+
+/*
+  Device = Tablets, iPads (Landscape)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .card {
+    width: 80%;
+  }
+
+  .container {
+    width: 60%;
+  }
+}
+
+/*
+  Device = Low Resolution Tablets, Smartphones (Landscape)
+  Screen = 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .card {
+    width: 100%;
+  }
+
+  .container {
+    width: 100%;
+  }  
+}
+
+/*
+  Device = Most Smartphones (Portrait)
+  Screen = 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .card {
+    width: 100%;
+  }
+
+  .container {
+    width: 100%;
+    align-items: normal;
+  } 
+}

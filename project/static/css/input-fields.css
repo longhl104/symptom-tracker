@@ -1,0 +1,22 @@
+input:not([type=checkbox]):not([type=submit]) {
+  width: 100%;
+  height: 35px;
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #BCBCC4;
+  border-radius: 5px;
+}
+
+select {
+  width: 100%;
+  height: 35px;
+  font-size: 16px;
+  padding: 0 5px;
+  border: 1px solid #BCBCC4;
+  border-radius: 5px;
+}
+
+label {
+  color: #333333;
+  margin: 15px 0px 3px 0px;
+}

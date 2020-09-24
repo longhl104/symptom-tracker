@@ -62,7 +62,7 @@ def register():
     elif request.method == 'GET':
         treatments = None
         # TODO: try except; should handle somehow if it fails
-        # treatments = database.get_all_treatments()
+        treatments = database.get_all_treatments()
         # TODO: probably best to hardcode some treatment types if it fails
         if treatments is None:
             treatments = {}

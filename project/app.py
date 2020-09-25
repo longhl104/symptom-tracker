@@ -35,7 +35,7 @@ def login():
         global user_details
         user_details = login_return_data[0]
 
-        return redirect(url_for('patient_index'))
+        return redirect(url_for('patient_dashboard'))
 
     elif request.method == 'GET':
         return(render_template('index.html', session=session, page=page))
@@ -44,13 +44,13 @@ def login():
 def register():
     if request.method == 'POST':
         add_patient_ret = database.add_patient(
-            request.form['firstname'],
-            request.form['lastname'],
+            request.form['first-name'],
+            request.form['last-name'],
             request.form['gender'],
             request.form['age'],
-            request.form['mobile'],
+            request.form['mobile-number'],
             request.form.getlist('treatment'),
-            request.form['email'],
+            request.form['email-address'],
             request.form['password'],
             request.form['consent']
         )
@@ -58,7 +58,7 @@ def register():
             # TODO: return error message
             return redirect(url_for('register'))
         else:
-            return redirect(url_for('patient_index'))
+            return redirect(url_for('patient_dashboard'))
     elif request.method == 'GET':
         treatments = None
         # TODO: try except; should handle somehow if it fails

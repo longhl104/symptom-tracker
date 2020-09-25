@@ -13,6 +13,11 @@ class BasicTestCase(unittest.TestCase):
         response = tester.get('/forgot-password', content_type='html/text')
         self.assertEqual(response.status_code, 200)
 
+    def test_register_extra(self):
+        tester = app.test_client(self)
+        response = tester.get('/register-extra', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
     # TODO: fix testcases that use pg8000 module
     
     # def test_register(self):

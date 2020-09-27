@@ -10,14 +10,16 @@
   <div class="container">
     <h5 class="title">Record Symptom</h5>
     <div class="card">
-      <form class="form col" action="{{url_for('record_symptom')}}">
+      <form class="form col" action="{{url_for('record_symptom')}}" method="POST">
         <label for="symptom">Symptom</label>
         <select name="symptom">
+          <option label=" "></option>
           <option value="Tingling in my hands">Tingling in my hands</option>
           <option value="Tingling in my feet">Tingling in my feet</option>
         </select>
         <label for="severity">Severity</label>
         <select name="severity">
+          <option label=" "></option>
           <option value="Not at all">Not at all</option>
           <option value="A little bit">A little bit</option>
           <option value="Somewhat">Somewhat</option>
@@ -34,6 +36,8 @@
             <input type="time" name="time">
           </div>
         </div>
+        <label for="notes">Notes</label>
+        <textarea name="notes" rows="4"></textarea>
         <input class="btn green" type="submit" style="margin-top: 20px;" value="Submit">
       </form>
     </div>

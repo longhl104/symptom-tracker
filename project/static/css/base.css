@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&display=swap');
 
-* {
+*{
   margin: 0;
   padding: 0;
   font-family: 'Oxygen', sans-serif !important;
@@ -28,6 +28,28 @@ body {
   flex-direction: column;
 }
 
+.row {
+  display: flex;
+  flex-direction: row;
+}
+
+.grid {
+  display: grid;
+}
+
+.two-equal-columns {
+  grid-column-gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.space-between {
+  justify-content: space-between;
+}
+
+.w-50 {
+  width: 50%;
+}
+
 .logo {
   width: 64px !important;
   height: 64px !important;
@@ -37,20 +59,20 @@ body {
 .card {
   background: #fff;
   padding: 40px;
-  width: 50%;
+  width: 60%;
   border-radius: 20px;
   box-shadow: 0 7px 30px -10px rgba(150,170,180,0.35);
 }
 
 .title {
   color: #1A1A1A;
-  font-size: 48px;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .subtitle {
-  color: #333333;
-  font-size: 18px;
+  color: #4b4b4b;
+  font-size: 1rem;
   font-weight: 400;
 }
 
@@ -76,4 +98,66 @@ span {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+}
+
+.error-message {
+  text-align: center;
+  color: #FF4141;
+}
+
+.info-message {
+  text-align: center;
+}
+
+/*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+
+}
+
+/*
+  Device = Tablets, iPads (Portrait)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .title {
+    font-size: 1.7rem;
+  }
+}
+
+/*
+  Device = Tablets, iPads (Landscape)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .title {
+    font-size: 1.7rem;
+  }
+}
+
+/*
+  Device = Low Resolution Tablets, Smartphones (Landscape)
+  Screen = 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .title {
+    font-size: 2.1rem;
+  }
+}
+
+/*
+  Device = Most Smartphones (Portrait)
+  Screen = 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .title {
+    font-size: 1.7rem;
+  }
 }

@@ -1,0 +1,16 @@
+.three-fifths-two-fifths-columns {
+  grid-column-gap: 10px;
+  grid-template-columns: 3fr 2fr;
+}
+
+/*
+  Device = Most Smartphones (Portrait)
+  Screen = 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+
+  .three-fifths-two-fifths-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,16 @@
+.container {
+  width: 65%;
+  padding: 1rem;
+  justify-content: normal;
+  align-items: normal;
+}
+
+.card {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.title {
+  color: #333333;
+  font-size: 50px;
+}

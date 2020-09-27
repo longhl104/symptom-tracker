@@ -86,6 +86,20 @@ def patient_dashboard():
 
 @app.route('/patient/record-symptom')
 def record_symptom():
+    if request.method == 'POST':
+        recordSymptom = database.recordSymptom(
+            user_details['username'],
+            request.form['symptom'],
+            request.form['severity'],
+            request.form['date'],
+            request.form['time'],
+           
+        )
+        if recordSymptom is None:
+            # TODO: return error message
+            return redirect(url_for('record-symptom'))
+        else:
+            return redirect(url_for('patient_dashboard'))
     return render_template('patient/record-symptom.html')
 
 # PWA-related routes

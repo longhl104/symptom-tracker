@@ -124,6 +124,36 @@ def check_login(email, password):
     cur.close()                     # Close the cursor
     conn.close()                    # Close the connection to the db
     return None
+def get_UserID(email, password):
+    """
+        - get UserID from db
+        - True => return the user data
+        - False => return None
+    """
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT tingleserver."account_id"
+            FROM tingleserver."Account"
+            WHERE ac_email=%s AND ac_password=%s
+        """
+        cur.execute(sql, (email, password))
+        # r = cur.fetchone()
+
+        r = dictfetchone(cur, sql, (email, password))
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Invalid details")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
 
 
 def get_all_treatments():
@@ -190,6 +220,38 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
                 """
                 cur.execute(sql, (patient_id, treatment_id))
                 conn.commit()
+
+        cur.close()
+        conn.commit()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return patient_id
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Unexpected error adding a patient:", sys.exc_info()[0])
+        conn.rollback()
+        raise
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
+
+def recordSymptom(email,symptom,severity,date,time):
+    print(email,symptom,severity,date,time)
+    if date == 'no':     #if invalid date exist *to-do*
+        return None
+
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        # Try executing the SQL and get from the database
+        sql = """
+            SELECT tingleserver.record_symptom(%s,%s,%s,%s,%s,);
+        """
+        cur.execute(sql, (email,symptom,severity,date,time))
+        conn.commit()
+        patient_id = cur.fetchone()[0]
+
 
         cur.close()
         conn.commit()                     # Close the cursor

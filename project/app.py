@@ -1,7 +1,6 @@
 from flask import *
 import database
 import configparser
-from datetime import datetime
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -87,16 +86,13 @@ def patient_dashboard():
 
 @app.route('/patient/record-symptom')
 def record_symptom():
-    #now = datetime.now()
-    #date = now.strftime("%d/%m/%Y")
-    #time = now.strftime("%H:%M")
     if request.method == 'POST':
         recordSymptom = database.recordSymptom(
             user_details['username'],
             request.form['symptom'],
             request.form['severity'],
             date,
-            time
+            time #need edit
            
         )
         if recordSymptom is None:

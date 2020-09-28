@@ -1,6 +1,7 @@
 from flask import *
 import database
 import configparser
+import urllib
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -48,8 +49,8 @@ def register():
                 request.form['first-name'],
                 request.form['last-name'],
                 request.form['gender'],
-                request.form.get('age', 'N/A'),
-                request.form.get('mobile-number', 'N/A'),
+                request.form.get('age', 'no'),
+                request.form.get('mobile-number', 'no'),
                 request.form.getlist('treatment'),
                 request.form['email-address'],
                 request.form['password'],
@@ -92,13 +93,14 @@ def patient_dashboard():
 def record_symptom():
     if request.method == 'POST':
         try:
-            recordSymptom = database.recordSymptom(
-                user_details['username'],
+            recordSymptom = database.record_symptom(
+                # user_details['username'],
+                "hale6334@uni.sydney.edu.au",
                 request.form['symptom'],
                 request.form['severity'],
-                date.get('date', 'no'),
-                time.form.get('time', 'no') #need edit
-
+                # request.form['datetime-local']
+                request.form.get('date', 'no'),
+                request.form.get('time', 'no') #need edit
             )
             if recordSymptom is None:
                 # TODO: return error message
@@ -108,7 +110,10 @@ def record_symptom():
         except:
             print("Exception occurred. Please try again")
             return redirect(url_for('record-symptom'))
-    return render_template('patient/record-symptom.html')
+    elif request.method == 'GET':
+        return render_template('patient/record-symptom.html')
+    # print(request.form['symptom'],request.form['severity'],request.form.get('date', 'no'),time)
+
 
 # PWA-related routes
 

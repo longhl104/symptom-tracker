@@ -1,7 +1,7 @@
 from flask import *
 import database
 import configparser
-drafrom datetime import datetime
+from datetime import datetime
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)

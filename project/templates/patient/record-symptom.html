@@ -12,12 +12,12 @@
     <div class="card">
       <form class="form col" action="{{url_for('record_symptom')}}">
         <label for="symptom">Symptom</label>
-        <select nPMe="symptom">
+        <select name="symptom">
           <option value="Tingling in my hands">Tingling in my hands</option>
           <option value="Tingling in my feet">Tingling in my feet</option>
         </select>
         <label for="severity">Severity</label>
-        <select nPMe="severity">
+        <select name="severity">
           <option value="Not at all">Not at all</option>
           <option value="A little bit">A little bit</option>
           <option value="Somewhat">Somewhat</option>
@@ -31,7 +31,7 @@
           </div>
           <div class="col">
             <label for="time">Time</label>
-            <select nPMe="time">
+            <select name="time">
               <option value="12:00AM">0</option>
               <option value="12:15AM">15</option>
               <option value="12:30AM">30</option>

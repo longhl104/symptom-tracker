@@ -92,8 +92,8 @@ def record_symptom():
             request.form['symptom'],
             request.form['severity'],
             date,
-            time #need edit
-           
+            time.form['time'] #need edit
+
         )
         if recordSymptom is None:
             # TODO: return error message

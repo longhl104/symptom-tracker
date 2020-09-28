@@ -43,22 +43,26 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        add_patient_ret = database.add_patient(
-            request.form['first-name'],
-            request.form['last-name'],
-            request.form['gender'],
-            request.form['age'],
-            request.form['mobile-number'],
-            request.form.getlist('treatment'),
-            request.form['email-address'],
-            request.form['password'],
-            request.form['consent']
-        )
-        if add_patient_ret is None:
-            # TODO: return error message
+        try:
+            add_patient_ret = database.add_patient(
+                request.form['first-name'],
+                request.form['last-name'],
+                request.form['gender'],
+                request.form.get('age', 'N/A'),
+                request.form.get('mobile-number', 'N/A'),
+                request.form.getlist('treatment'),
+                request.form['email-address'],
+                request.form['password'],
+                request.form.get('consent', 'no')
+            )
+            if add_patient_ret is None:
+                # TODO: return error message
+                return redirect(url_for('register'))
+            else:
+                return redirect(url_for('patient_dashboard'))
+        except:
+            print("Exception occurred. Please try again")
             return redirect(url_for('register'))
-        else:
-            return redirect(url_for('patient_dashboard'))
     elif request.method == 'GET':
         treatments = None
         # TODO: try except; should handle somehow if it fails
@@ -87,19 +91,23 @@ def patient_dashboard():
 @app.route('/patient/record-symptom')
 def record_symptom():
     if request.method == 'POST':
-        recordSymptom = database.recordSymptom(
-            user_details['username'],
-            request.form['symptom'],
-            request.form['severity'],
-            date,
-            time.form['time'] #need edit
+        try:
+            recordSymptom = database.recordSymptom(
+                user_details['username'],
+                request.form['symptom'],
+                request.form['severity'],
+                date.get('date', 'no'),
+                time.form.get('time', 'no') #need edit
 
-        )
-        if recordSymptom is None:
-            # TODO: return error message
+            )
+            if recordSymptom is None:
+                # TODO: return error message
+                return redirect(url_for('record-symptom'))
+            else:
+                return redirect(url_for('patient_dashboard'))
+        except:
+            print("Exception occurred. Please try again")
             return redirect(url_for('record-symptom'))
-        else:
-            return redirect(url_for('patient_dashboard'))
     return render_template('patient/record-symptom.html')
 
 # PWA-related routes

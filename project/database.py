@@ -184,8 +184,26 @@ def get_all_treatments():
 def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
     print(firstname, lastname, gender, age, mobile,
           treatment, email, password, consent)
-    if consent == 'no':
-        return None
+    # Consent to exposing personal data to research should be optional
+    # if consent == 'no':
+    #     return None
+
+    # Catching boundary cases
+    if len(firstname) > 255:
+        print("First name entered is greater than maximum length of 255.")
+        raise
+    if len(lastname) > 255:
+        print("Last name entered is greater than maximum length of 255.")
+        raise
+    elif len(password) > 20:
+        print("Password entered is greater than maximum length of 20.")
+        raise
+    elif len(email) > 255:
+        print("Email entered is greater than maximum length of 255.")
+        raise
+    elif len(mobile) > 20:
+        print("Phone number entered is greater than maximum length of 20.")
+        raise
 
     conn = database_connect()
     if(conn is None):
@@ -237,7 +255,11 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
 def recordSymptom(email,symptom,severity,date,time):
     print(email,symptom,severity,date,time)
     if date == 'no':     #if invalid date exist *to-do*
-        return None
+        print('Invalid date entered.')
+        raise
+    elif time == 'no':
+        print("Invalid time entered.")
+        raise
 
     conn = database_connect()
     if(conn is None):

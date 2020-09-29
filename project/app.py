@@ -73,6 +73,9 @@ def register():
 
         return render_template('register.html', session=session, page=page, treatments=treatments)
 
+@app.route('/register-extra')
+def register_extra():
+    return render_template('register-extra.html')
 
 @app.route('/forgot-password')
 def forgot_password():

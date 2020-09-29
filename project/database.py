@@ -270,19 +270,22 @@ def record_symptom(email,symptom,severity,date,time):
         return None
     cur = conn.cursor()
     try:
+        print(email)
         # Try executing the SQL and get from the database
         sql = """
-            SELECT tingleserver.record_symptom(%s,%s,%s,%s,%s,);
+            INSERT INTO tingleserver."Symptom"(
+                patient_username,symptom_name,severity,recorded_date,recorded_time)
+                VALUES(%s,%s,%s,%s,%s);
         """
-        cur.execute(sql, (email,symptom,severity,date,time))
+        cur.execute(sql,(email,symptom,severity,date,time))
         conn.commit()
-        patient_id = cur.fetchone()[0]
+        #email2 = cur.fetchone()[0] not working
 
 
         cur.close()
         conn.commit()                     # Close the cursor
         conn.close()                    # Close the connection to the db
-        return patient_id
+        return email
     except:
         # If there were any errors, return a NULL row printing an error to the debug
         print("Unexpected error adding a patient:", sys.exc_info()[0])

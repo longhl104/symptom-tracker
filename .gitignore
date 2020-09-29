@@ -1,4 +1,3 @@
-/.vs
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -156,4 +155,3 @@ cython_debug/
 project/config.ini
 config.ini
 sample-config.ini
-/project/.vs/

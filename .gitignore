@@ -155,4 +155,5 @@ cython_debug/
 # Personal config files
 project/config.ini
 config.ini
+sample-config.ini
 /project/.vs/

@@ -19,8 +19,16 @@
         <input type="password" class="input" name="password" required>
         <div class="col">
           <a href="{{url_for('forgot_password')}}" style="margin-top: 15px; margin-bottom: 5px;">Forgot your password?</a>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert" role="alert">
+                      <span class="{{ category }}-message">{{ message }}</span>
+                    </div>
+                  {% endfor %}
+              {% endif %}
+          {% endwith %}
           <input class="btn green" type="submit" value="Sign In">
-          <span class="error-message"></span>
         </div>
       </form>
       <div style="text-align: center;">

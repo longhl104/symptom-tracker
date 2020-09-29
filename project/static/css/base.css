@@ -105,6 +105,11 @@ span {
   color: #FF4141;
 }
 
+.warning-message {
+  text-align: center;
+  color: #ffcc00;
+}
+
 .info-message {
   text-align: center;
 }

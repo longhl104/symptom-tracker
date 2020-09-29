@@ -254,12 +254,15 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
 
 def record_symptom(email,symptom,severity,date,time):
     print(email,symptom,severity,date,time)
-    time = urllib.unquote(time)
+
     if date is None or date == '':     #if invalid date exist *to-do*
         print('Invalid date entered.')
         raise
     elif time is None or time == '':
         print("Invalid time entered.")
+        raise
+    elif email is None or email == '':
+        print("User not found.")
         raise
 
     conn = database_connect()

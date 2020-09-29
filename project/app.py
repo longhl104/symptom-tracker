@@ -89,27 +89,28 @@ def patient_dashboard():
     page['title'] = 'Dashboard'
     return render_template('patient/dashboard.html', session=session, page=page)
 
-@app.route('/patient/record-symptom')
+@app.route('/patient/record-symptom', methods=['GET', 'POST'])
 def record_symptom():
     if request.method == 'POST':
         try:
+            time = request.form.get('time', 'no')
+            time = time.replace("%3A",":")
             recordSymptom = database.record_symptom(
-                # user_details['username'],
-                "hale6334@uni.sydney.edu.au",
+                user_details['username'],
+                # "hale6334@uni.sydney.edu.au",
                 request.form['symptom'],
                 request.form['severity'],
-                # request.form['datetime-local']
                 request.form.get('date', 'no'),
-                request.form.get('time', 'no') #need edit
+                time #need edit
             )
             if recordSymptom is None:
                 # TODO: return error message
-                return redirect(url_for('record-symptom'))
+                return redirect(url_for('record_symptom'))
             else:
                 return redirect(url_for('patient_dashboard'))
         except:
             print("Exception occurred. Please try again")
-            return redirect(url_for('record-symptom'))
+            return redirect(url_for('record_symptom'))
     elif request.method == 'GET':
         return render_template('patient/record-symptom.html')
     # print(request.form['symptom'],request.form['severity'],request.form.get('date', 'no'),time)

@@ -1,6 +1,7 @@
 from flask import *
 import database
 import configparser
+import email_handler
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -73,12 +74,43 @@ def register():
 def register_extra():
     return render_template('register-extra.html')
 
-@app.route('/forgot-password')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    return render_template('forgot-password.html')
+    if request.method == 'POST':
+        email = database.check_email(request.form['email'])
+        if email is None:
+            flash('There is no account associated with that email, please try again', "error")
+            return render_template('forgot-password.html')
+        else:
+            message = email_handler.setup_email(email)
+            email_handler.send_email(message)
+            flash('Email sent. If you cannot see the email in your inbox, check your spam folder',  "success")
+            return render_template('forgot-password.html')
+    elif request.method == 'GET':
+        return render_template('forgot-password.html')
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    if request.method == 'POST':
+        #TODO: work out how to get email address
+        email = None
+        # email = database.check_email(request.form['email'])
+        if email is None:
+            flash('An error occurred. Please try again.', "error")
+            return render_template('reset-password.html')
+        # TODO: check if password is of sufficient complexity
+        password = request.form['pw']
+        password_confirm = request.form['pw_confirm']
+        if password != password_confirm:
+            flash('The passwords do not match.', "error")
+        else:
+            database.update_password(password)
+            flash('Password reset',  "success")
+    elif request.method == 'GET':
+        return render_template('/reset-password.html')
 
 # Patient-related routes
-
 @app.route('/patient/')
 def patient_dashboard():
     # TODO: extract out into a decorator so less repeated code

@@ -94,6 +94,41 @@ def dictfetchone(cursor, sqltext, params=()):
     return result
 
 
+def check_email(email):
+    """
+    Check that the user's email exists in the database.
+        - True => return user email
+        - False => return None
+    """
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT *
+            FROM tingleserver."Account"
+            WHERE ac_email=%s
+        """
+        cur.execute(sql, (email))
+        # r = cur.fetchone()
+
+        r = dictfetchone(cur, sql, (email))
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Error Invalid Login")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
+
+#TODO: update a user's password in the database, given their email 
+def update_password(new_password):
+    pass
+
 def check_login(email, password):
     """
     Check that the users information exists in the database.

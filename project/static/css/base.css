@@ -109,6 +109,11 @@ span {
   text-align: center;
 }
 
+.success-message {
+  text-align: center;
+  color: #47e64c
+}
+
 /*
   Device = Desktops
   Screen = 1281px to higher resolution desktops

@@ -1,7 +1,7 @@
 from flask import *
 import database
 import configparser
-import urllib
+import urllib.parse
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -91,18 +91,23 @@ def patient_dashboard():
 
 @app.route('/patient/record-symptom', methods=['GET', 'POST'])
 def record_symptom():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
     if request.method == 'POST':
         try:
             time = request.form.get('time', 'no')
             time = time.replace("%3A",":")
             recordSymptom = database.record_symptom(
                 user_details['username'],
-                # "hale6334@uni.sydney.edu.au",
                 request.form['symptom'],
                 request.form['severity'],
-                request.form.get('date', 'no'),
-                time #need edit
+                date.get('date', 'no'),
+                urllib.parse.unquote(time.form.get('time', 'no'))
+
+
             )
+
+           
             if recordSymptom is None:
                 # TODO: return error message
                 return redirect(url_for('record_symptom'))
@@ -111,10 +116,7 @@ def record_symptom():
         except:
             print("Exception occurred. Please try again")
             return redirect(url_for('record_symptom'))
-    elif request.method == 'GET':
-        return render_template('patient/record-symptom.html')
-    # print(request.form['symptom'],request.form['severity'],request.form.get('date', 'no'),time)
-
+    return render_template('patient/record-symptom.html')
 
 # PWA-related routes
 

@@ -30,10 +30,10 @@ class BasicTestCase(unittest.TestCase):
     #     response = tester.get('/patient/', content_type='html/text')
     #     self.assertEqual(response.status_code, 200)
 
-    # def test_patient_dashboard_when_logged_in(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/patient/', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+    def test_patient_dashboard_when_logged_in(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
 
     # def test_patient_record_symptom_without_being_logged_in(self):
     #     tester = app.test_client(self)

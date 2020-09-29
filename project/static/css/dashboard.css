@@ -1,0 +1,127 @@
+.container {
+    width: 65%;
+    padding-top: 4rem;
+    justify-content: normal;
+    align-items: normal;
+}
+.grid-container {
+    display: grid;
+    grid-template:
+      'header header'
+      'button-left button-right'
+      'main main';
+    row-gap: 20px;
+    column-gap: 20px;
+    padding: 10px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-header { grid-area: header;}
+.grid-button-left { grid-area: button-left; background-color: #4EB760; border-radius: 5px;}
+.grid-button-right { grid-area: button-right; background-color: #1485FF; border-radius: 5px;}
+.grid-main { grid-area: main; }
+
+.aligned {
+    width: 100%;
+    text-align: center;
+    margin: 0px;
+}
+
+.survey-item {
+    background-color: white;
+    padding: 5px;
+    margin-top: 20px;
+    display: flex;
+}
+
+.survey-text {
+    padding-left: 10px;
+    margin: auto auto auto 10px;
+}
+
+.survey-status {
+    margin-left: auto;
+    margin-top: 0px;
+    min-width: 120px;
+    text-align: center;
+}
+
+
+/*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+    .aligned {
+        font-size: 1.5rem;
+        padding: 40px;
+    }
+
+}
+
+/*
+  Device = Tablets, iPads (Portrait)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    .aligned {
+        font-size: 1.5rem;
+        padding: 40px;
+    }
+}
+
+/*
+  Device = Tablets, iPads (Landscape)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .aligned {
+        font-size: 1.5rem;
+        padding: 40px;
+    }
+}
+
+/*
+  Device = Low Resolution Tablets, Smartphones (Landscape)
+  Screen = 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+    .aligned {
+        font-size: 0.8rem;
+        padding: 20px;
+    }
+    .survey-status {
+        min-width: 80px; 
+    }
+    .survey-text {
+        font-size: 16px; 
+    }
+}
+
+/*
+  Device = Most Smartphones (Portrait)
+  Screen = 320px to 479px
+*/
+
+@media (max-width: 480px) {
+    .aligned {
+        font-size: 0.8rem;
+        padding: 20px;
+    }
+    .title {
+        font-size: 1.4rem !important;
+      }
+    .subtitle {
+        font-size: 1rem !important;
+      }
+    .survey-status {
+        min-width: 60px; 
+    }
+    .survey-text {
+        font-size: 12px; 
+    }
+}

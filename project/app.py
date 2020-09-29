@@ -2,6 +2,7 @@ from flask import *
 import database
 import configparser
 import urllib.parse
+from datetime import datetime
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -94,28 +95,34 @@ def record_symptom():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if request.method == 'POST':
-        try:
-            time = request.form.get('time', 'no')
-            time = time.replace("%3A",":")
-            recordSymptom = database.record_symptom(
-                user_details['username'],
-                request.form['symptom'],
-                request.form['severity'],
-                date.get('date', 'no'),
-                urllib.parse.unquote(time.form.get('time', 'no'))
+        #try:
+        print(user_details)
+        time = request.form.get('time', 'no')
+        time = time.replace("%3A",":")
+        datestring = request.form.get('date', 'no')
+        date = datetime.strptime(datestring,'%Y-%m-%d').date()
+        time = datetime.strptime(time,'%H:%M').time().strftime('%H:%M')
+        
+
+        recordSymptom = database.record_symptom(
+            user_details['ac_email'],
+            request.form['symptom'],
+            request.form['severity'],
+            date,
+            time
 
 
-            )
+        )
 
-           
-            if recordSymptom is None:
-                # TODO: return error message
-                return redirect(url_for('record_symptom'))
-            else:
-                return redirect(url_for('patient_dashboard'))
-        except:
-            print("Exception occurred. Please try again")
+        
+        if recordSymptom is None:
+            # TODO: return error message
             return redirect(url_for('record_symptom'))
+        else:
+            return redirect(url_for('patient_dashboard'))
+        #except:
+            #print("Exception occurred. Please try again")
+            #return redirect(url_for('record_symptom'))
     return render_template('patient/record-symptom.html')
 
 # PWA-related routes

@@ -92,6 +92,14 @@ def patient_dashboard():
 def record_symptom():
     return render_template('patient/record-symptom.html')
 
+@app.route('/patient/reports')
+def patient_reports():
+    return render_template('patient/reports.html')
+
+@app.route('/patient/account')
+def patient_account():
+    return render_template('patient/account.html')
+
 # PWA-related routes
 
 @app.route('/service-worker.js')

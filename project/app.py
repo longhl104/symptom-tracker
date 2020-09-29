@@ -127,8 +127,3 @@ def record_symptom():
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')
-
-
-@app.route('/base')
-def base():
-    return render_template('base.html')

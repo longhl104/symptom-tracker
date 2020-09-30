@@ -141,6 +141,14 @@ def record_symptom():
             return redirect(url_for('patient_dashboard'))
     return render_template('patient/record-symptom.html')
 
+@app.route('/patient/symptom-history')
+def symptom_history():
+    if user_details.get('ac_email') is None:
+        return redirect(url_for('login'))
+    symptoms = None
+    symptoms = database.get_all_symptoms(user_details['ac_email'])
+    symptoms = [symptom['row'].split(",") for symptom in symptoms]
+    return render_template('patient/symptom-history.html', symptoms = symptoms)    
 @app.route('/patient/reports')
 def patient_reports():
     return render_template('patient/reports.html')
@@ -151,6 +159,7 @@ def patient_account():
 
 # PWA-related routes
 
+# PWA-related routes
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')

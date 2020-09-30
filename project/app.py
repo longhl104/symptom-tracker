@@ -93,7 +93,9 @@ def record_symptom():
 
 @app.route('/patient/symptom-history')
 def symptom_history():
-    return render_template('patient/symptom-history.html')    
+    symptoms = None
+    symptoms = database.get_all_symptoms()
+    return render_template('patient/symptom-history.html', symptoms)    
 
 # PWA-related routes
 @app.route('/service-worker.js')

@@ -69,6 +69,7 @@ def register():
                 return redirect(url_for('patient_dashboard'))
         except:
             print('Exception occurred. Please try again')
+            flash('Something went wrong. Please try again', 'error')
             return redirect(url_for('register'))
     elif request.method == 'GET':
         if not session.get('logged_in', None):

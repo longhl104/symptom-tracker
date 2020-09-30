@@ -1,11 +1,11 @@
 window.onload = function () {
-  var checkList = document.getElementById('multi-checklist');
+  var checkList = document.getElementById("multi-checklist");
 
-  checkList.getElementsByClassName('anchor')[0].onclick = function(evt) {
-  if (checkList.classList.contains('visible')) {
-    checkList.classList.remove('visible');
+  checkList.getElementsByClassName("anchor")[0].onclick = function(evt) {
+  if (checkList.classList.contains("visible")) {
+    checkList.classList.remove("visible");
   } else {
-    checkList.classList.add('visible');
+    checkList.classList.add("visible");
   }
   selectChanged();
 };
@@ -13,7 +13,7 @@ window.onload = function () {
 function selectChanged() {
   var notype = document.getElementById("notype").checked;
   var unknowntype = document.getElementById("unknowntype").checked;
-  items = document.getElementById('treatments').getElementsByTagName("LI");
+  items = document.getElementById("treatments").getElementsByTagName("LI");
   if (notype) {
     for (var i = 0; i < items.length; i++) {
       if (items[i].firstChild.id != "notype") {
@@ -34,4 +34,17 @@ function selectChanged() {
     }
   }
 }
+}
+
+function validateForm() {
+  document.getElementById("error-message").innerText = "";
+  const form = document.forms["register-form"];
+  let valid = true;
+
+  if (form["password"].value !== form["confirm-password"].value) {
+    document.getElementById("error-message").innerText = "Passwords do not match";
+    valid = false;
+  }
+
+  return valid;
 }

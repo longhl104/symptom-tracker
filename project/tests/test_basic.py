@@ -50,6 +50,16 @@ class BasicTestCase(unittest.TestCase):
     #     response = tester.get('/patient/record-symptom', content_type='html/text')
     #     self.assertEqual(response.status_code, 200)
 
+    def test_patient_reports(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/reports', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+    def test_patient_account(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/account', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
     def test_service_worker_js(self):
         tester = app.test_client(self)
         response = tester.get('/service-worker.js', content_type='html/text')

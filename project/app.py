@@ -31,9 +31,11 @@ def login():
             return redirect(url_for('login'))
 
         session['logged_in'] = True
+        
 
         global user_details
         user_details = login_return_data[0]
+        session['name'] = user_details['ac_firstname']
 
         return redirect(url_for('patient_dashboard'))
 
@@ -69,14 +71,18 @@ def register():
             print('Exception occurred. Please try again')
             return redirect(url_for('register'))
     elif request.method == 'GET':
-        treatments = None
-        # TODO: try except; should handle somehow if it fails
-        treatments = database.get_all_treatments()
-        # TODO: probably best to hardcode some treatment types if it fails
-        if treatments is None:
-            treatments = {}
+        if not session.get('logged_in', None):
+            treatments = None
+            # TODO: try except; should handle somehow if it fails
+            treatments = database.get_all_treatments()
+            # TODO: probably best to hardcode some treatment types if it fails
+            if treatments is None:
+                treatments = {}
 
-        return render_template('register.html', session=session, page=page, treatments=treatments)
+            return render_template('register.html', session=session, treatments=treatments)
+        else:
+            # TODO: How do we handle redirecting to the correct dashboard?
+            return redirect(url_for('patient_dashboard'))
 
 @app.route('/register-extra')
 def register_extra():
@@ -91,12 +97,11 @@ def forgot_password():
 
 @app.route('/patient/')
 def patient_dashboard():
-    # TODO: extract out into a decorator so less repeated code
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
-    page['title'] = 'Dashboard'
-    return render_template('patient/dashboard.html', session=session, page=page)
+    print(session)
+    return render_template('patient/dashboard.html', session=session)
 
 @app.route('/patient/record-symptom', methods=['GET', 'POST'])
 def record_symptom():
@@ -104,15 +109,15 @@ def record_symptom():
         return redirect(url_for('login'))
     if request.method == 'POST':
         form_data = dict(request.form.lists())
-
+        print(form_data)
         symptom = form_data.get('symptom')[0]
-        if len(form_data.get('symptom')) == 2:
+        if symptom == 'Other':
             symptom = form_data.get('symptom')[1]
-        
+        print(symptom)
         activity = form_data.get('activity')[0]
-        if len(form_data.get('activity')) == 2:
+        if activity == 'Other':
             activity = form_data.get('activity')[1]
-
+        print(activity)
         severity = form_data.get('severity')[0]
         date = form_data.get('date')[0]
         time = form_data.get('time')[0]
@@ -134,6 +139,14 @@ def record_symptom():
         else:
             return redirect(url_for('patient_dashboard'))
     return render_template('patient/record-symptom.html')
+
+@app.route('/patient/reports')
+def patient_reports():
+    return render_template('patient/reports.html')
+
+@app.route('/patient/account')
+def patient_account():
+    return render_template('patient/account.html')
 
 # PWA-related routes
 

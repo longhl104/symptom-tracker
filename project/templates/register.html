@@ -8,6 +8,7 @@
   <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
 {% endblock %}
 {% block title %}Create an account{% endblock %}
+{% block sidebar %}
 {% block content %}
   <div class="container">
     <div class="card col">
@@ -60,7 +61,7 @@
         <input type="password" class="input" name="confirm-password" minlength="8" required>
         <div class="row">
           <input type="checkbox" name="consent" style="margin: 20px 5px 0 0;">
-          <label for="consent"> I consent to the anonymised use of my symptom data for research purposes.</label>
+          <label for="consent"> I consent to the anonymised use of my symptom data for research purposes. (<a href="#">More info</a>)</label>
         </div>
         <div class="col">
           <input class="btn green" type="submit" value="Sign up">
@@ -72,4 +73,5 @@
       </div>
     </div>
   </div>
+{% endblock %}
 {% endblock %}

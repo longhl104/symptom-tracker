@@ -239,3 +239,27 @@ def record_symptom(email, symptom, severity, date, time, activity, notes):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+
+def get_all_symptoms(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (recorded_date, recorded_time, symptom_name, severity) FROM tingleserver."Symptom" WHERE patient_username = %s
+
+            """
+
+            r = dictfetchall(cur, sql, (email,))
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting All Treatments:", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+{% endblock %}
+{% block title %}Record Symptom{% endblock %}
+{% block content %}
+  <div class="container">
+    <h5 class="title">Symptom History</h5>
+    <div class="card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Symptom</th>
+                    <th>Severity</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for symptom in symptoms %}
+                    <tr>
+                        <td>symptom.date</td>
+                        <td>symptom.time</td>
+                        <td>symptom.name</td>
+                        <td>symptom.severity</td>
+                        <td class="edit"><button class="btn editbtn blue">Edit</button></td>
+                        <td class="delete"><button class="btn editbtn red">Delete</button></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+  </div>
+{% endblock %}
+
+<!-- <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
+      <h5 class="title" style="text-align: center">Welcome</h5>
+      <h6 class="subtitle" style="text-align: center;">Sign in to continue</h6>
+      <form class="form" action="{{url_for('login')}}">
+        <label for="email">Email</label>
+        <input type="text" class="input" name="email" required>
+        <label for="pass">Password</label>
+        <input type="password" class="input" name="pass" required>
+        <div class="col">
+          <a href="{{url_for('forgot_password')}}" style="margin-top: 15px; margin-bottom: 5px;">Forgot your password?</a>
+          <input class="btn green" type="submit" value="Sign In">
+          <span class="error-message"></span>
+        </div>
+      </form>
+      <div style="text-align: center;">
+        <span>Don't have an account? <a href="{{url_for('register')}}">Sign up now</a></span>
+      </div> -->

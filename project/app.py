@@ -78,7 +78,6 @@ def forgot_password():
     return render_template('forgot-password.html')
 
 # Patient-related routes
-
 @app.route('/patient/')
 def patient_dashboard():
     # TODO: extract out into a decorator so less repeated code
@@ -92,8 +91,11 @@ def patient_dashboard():
 def record_symptom():
     return render_template('patient/record-symptom.html')
 
-# PWA-related routes
+@app.route('/patient/symptom-history')
+def symptom_history():
+    return render_template('patient/symptom-history.html')    
 
+# PWA-related routes
 @app.route('/service-worker.js')
 def service_worker():
     return app.send_static_file('service-worker.js')

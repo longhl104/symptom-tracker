@@ -191,19 +191,19 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
     # TODO: return error message to user
     if len(firstname) > 255:
         print("First name entered is greater than maximum length of 255.")
-        raise
+        return None
     if len(lastname) > 255:
         print("Last name entered is greater than maximum length of 255.")
-        raise
+        return None
     elif len(password) > 20:
         print("Password entered is greater than maximum length of 20.")
-        raise
+        return None
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
-        raise
+        return None
     elif len(mobile) > 20:
         print("Phone number entered is greater than maximum length of 20.")
-        raise
+        return None
 
     conn = database_connect()
     if conn:

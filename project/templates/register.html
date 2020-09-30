@@ -4,7 +4,6 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-
   {% endblock %}
 {% block title %}Create an account{% endblock %}
 {% block sidebar %}
@@ -33,6 +32,7 @@
           <div class="col">
             <label for="gender">Gender</label>
             <select name="gender">
+              <option value="NA"></option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>

@@ -47,15 +47,23 @@ def login():
             # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['logged_in'] = False
+    return(render_template('index.html', session=session, page=page))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         try:
+            if request.form['password'] != request.form['confirm-password']:
+                flash('Passwords do not match. Please try again', 'error')
+                return redirect(url_for('register'))
             add_patient_ret = database.add_patient(
                 request.form['first-name'],
                 request.form['last-name'],
-                request.form['gender'],
+                request.form.get('gender', ''),
                 request.form.get('age', ''),
                 request.form.get('mobile-number', ''),
                 request.form.getlist('treatment', ['A']),

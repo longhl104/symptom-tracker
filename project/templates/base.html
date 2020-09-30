@@ -31,6 +31,8 @@
     <section class="full-page">
       {% block content %}{% endblock %}
     </section>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/install.js') }}"></script>
+    {% block bodyscripts %}
+      <script type="text/javascript" src="{{ url_for('static', filename='js/install.js') }}"></script>
+    {% endblock %}
   </body>  
 </html>

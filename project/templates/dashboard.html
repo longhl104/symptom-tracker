@@ -4,6 +4,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 {% block title %}Dashboard{% endblock %}
+
+{% block sidebar %}
+{{ super() }}
 {% block content %}
 <div class="s-layout">
   <!-- Sidebar -->
@@ -38,4 +41,5 @@
     <h1>Full View, Please!</h1>
   </main>
 </div>
+{% endblock %}
 {% endblock %}

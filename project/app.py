@@ -82,8 +82,8 @@ def forgot_password():
 @app.route('/patient/')
 def patient_dashboard():
     # TODO: extract out into a decorator so less repeated code
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
+    # if not session.get('logged_in', None):
+    #     return redirect(url_for('login'))
 
     page['title'] = 'Dashboard'
     return render_template('patient/dashboard.html', session=session, page=page)

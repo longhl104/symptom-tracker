@@ -204,7 +204,6 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
                     conn.commit()
 
             cur.close()
-            conn.commit()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return patient_id
         except:
@@ -216,19 +215,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         conn.close()                    # Close the connection to the db
     return None
 
-def record_symptom(email, symptom, severity, date, time):
-    print(email, symptom, severity, date, time)
-
-    if date is None or date == '':     #if invalid date exist *to-do*
-        print('Invalid date entered.')
-        raise
-    elif time is None or time == '':
-        print("Invalid time entered.")
-        raise
-    elif email is None or email == '':
-        print("User not found.")
-        raise
-
+def record_symptom(email, symptom, severity, date, time, activity, notes):
     conn = database_connect()
     if conn:
         cur = conn.cursor()
@@ -237,16 +224,12 @@ def record_symptom(email, symptom, severity, date, time):
             # Try executing the SQL and get from the database
             sql = """
                 INSERT INTO tingleserver."Symptom"(
-                    patient_username, symptom_name, severity, recorded_date, recorded_time)
-                    VALUES(%s, %s, %s, %s, %s);
+                    patient_username, symptom_name, severity, recorded_date, recorded_time, activity, notes)
+                    VALUES(%s, %s, %s, %s, %s, %s, %s);
             """
-            cur.execute(sql, (email, symptom, severity, date, time))
+            cur.execute(sql, (email, symptom, severity, date, time, activity, notes))
             conn.commit()
-            #email2 = cur.fetchone()[0] not working
-
             cur.close()
-            conn.commit()                   # Close the cursor
-            conn.close()                    # Close the connection to the db
             return email
         except:
             # If there were any errors, return a NULL row printing an error to the debug

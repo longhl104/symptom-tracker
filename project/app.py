@@ -27,7 +27,7 @@ def login():
         )
 
         if login_return_data is None:
-            flash('Incorrect email/password, please try again', "error")
+            flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))
 
         session['logged_in'] = True
@@ -38,7 +38,11 @@ def login():
         return redirect(url_for('patient_dashboard'))
 
     elif request.method == 'GET':
-        return(render_template('index.html', session=session, page=page))
+        if not session.get('logged_in', None):
+            return(render_template('index.html', session=session, page=page))
+        else:
+            # TODO: How do we handle redirecting to the correct dashboard?
+            return redirect(url_for('patient_dashboard'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -62,7 +66,7 @@ def register():
             else:
                 return redirect(url_for('patient_dashboard'))
         except:
-            print("Exception occurred. Please try again")
+            print('Exception occurred. Please try again')
             return redirect(url_for('register'))
     elif request.method == 'GET':
         treatments = None
@@ -99,34 +103,36 @@ def record_symptom():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if request.method == 'POST':
-        #try:
-        print(user_details)
-        time = request.form.get('time', 'no')
-        time = time.replace("%3A",":")
-        datestring = request.form.get('date', 'no')
-        date = datetime.strptime(datestring,'%Y-%m-%d').date()
-        time = datetime.strptime(time,'%H:%M').time().strftime('%H:%M')
+        form_data = dict(request.form.lists())
+
+        symptom = form_data.get('symptom')[0]
+        if len(form_data.get('symptom')) == 2:
+            symptom = form_data.get('symptom')[1]
         
+        activity = form_data.get('activity')[0]
+        if len(form_data.get('activity')) == 2:
+            activity = form_data.get('activity')[1]
+
+        severity = form_data.get('severity')[0]
+        date = form_data.get('date')[0]
+        time = form_data.get('time')[0]
+        notes = form_data.get('notes')[0]
 
         recordSymptom = database.record_symptom(
             user_details['ac_email'],
-            request.form['symptom'],
-            request.form['severity'],
+            symptom,
+            severity,
             date,
-            time
-
-
+            time,
+            activity,
+            notes
         )
 
-        
         if recordSymptom is None:
-            # TODO: return error message
+            flash('Unable to record symptom, please try again.', 'error')
             return redirect(url_for('record_symptom'))
         else:
             return redirect(url_for('patient_dashboard'))
-        #except:
-            #print("Exception occurred. Please try again")
-            #return redirect(url_for('record_symptom'))
     return render_template('patient/record-symptom.html')
 
 # PWA-related routes

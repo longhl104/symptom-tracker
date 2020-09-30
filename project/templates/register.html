@@ -5,16 +5,16 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 
-  <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
-{% endblock %}
+  {% endblock %}
 {% block title %}Create an account{% endblock %}
+{% block sidebar %}
 {% block content %}
   <div class="container">
     <div class="card col">
       <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
       <h5 class="title" style="text-align: center">Create an account</h5>
       <h6 class="subtitle" style="text-align: center;">Please fill out the form below</h6>
-      <form class="form" action="{{url_for('register')}}">
+      <form name="register-form" class="form" method="POST" onsubmit="return validateForm()" action="{{url_for('register')}}">
         <div class="grid two-equal-columns">
           <div class="col">
             <label for="first-name">First name<sup>*</sup></label>
@@ -60,11 +60,18 @@
         <input type="password" class="input" name="confirm-password" minlength="8" required>
         <div class="row">
           <input type="checkbox" name="consent" style="margin: 20px 5px 0 0;">
-          <label for="consent"> I consent to the anonymised use of my symptom data for research purposes.</label>
+          <label for="consent"> I consent to the anonymised use of my symptom data for research purposes. (<a href="#">More info</a>)</label>
         </div>
         <div class="col">
           <input class="btn green" type="submit" value="Sign up">
-          <span class="error-message"></span>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <span class="{{ category }}-message">{{ message }}</span>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          <span id="error-message" class="error-message"></span>
         </div>
       </form>
       <div style="text-align: center;">
@@ -72,4 +79,5 @@
       </div>
     </div>
   </div>
+{% endblock %}
 {% endblock %}

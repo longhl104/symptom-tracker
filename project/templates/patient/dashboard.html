@@ -1,9 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>Tingle - Symptom Tracker</title>
-	</head>
-	<body>
-		This is interface for patient
-	</body>
-</html>
+{% extends "sidebar.html" %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+{% block title %}Dashboard{% endblock %}
+
+{% block sidebar %}
+{{ super() }}
+  {% block content %}
+  <main class="s-layout__content">
+    <div class="container" style="justify-content: start;">
+      <div class="grid-container">
+        <div class="grid-header">
+          <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
+        </div>
+        <div class="grid-button-left">
+          <a href="{{url_for('record_symptom')}}" class="btn green aligned">Record a symptom</a>
+        </div>
+        <div class="grid-button-right">
+          <a href="{{url_for('symptom_history')}}" class="btn blue aligned">View Symptoms</a>
+        </div>
+        <div class="grid-main">
+          <br>
+          <h5 class="subtitle">Your surveys</h5>
+          <div class="survey-item">
+            <div class="survey-text">Weekly survey</div>
+            <a href="" class="btn blue survey-status">Start</a>
+          </div>
+          <div class="survey-item">
+            <div class="survey-text">General survey</div>
+            <a href="" class="btn blue survey-status">Start</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  {% endblock %}
+{% endblock %}

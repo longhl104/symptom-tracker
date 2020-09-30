@@ -4,11 +4,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 config = configparser.ConfigParser()
-config.read('sample-config.ini')
+config.read('config.ini')
 
 def setup_email(to):
 
-    sender = config['DATABASE']['email']
+    sender = "brainandmindcentre.usyd@gmail.com" # config['DATABASE']['email']
     recipient = to
 
     # Create alternative text version of email if html not displayed
@@ -23,7 +23,7 @@ def setup_email(to):
 
     Copy and paste the link below into your browser to create a new password:
 
-    https://www.google.com
+    http://127.0.0.1:5000/reset-password/Gr6BCpNIN
 
     This link will expire in 24 hours.
 
@@ -41,7 +41,7 @@ def setup_email(to):
 def send_email(message):
 
     port = 465  # For SSL
-    password = config['DATABASE']['email_password']
+    password = "w4wtcitb9newaf" #config['DATABASE']['email_password']
     
     # Create a secure SSL context
     context = ssl.create_default_context()

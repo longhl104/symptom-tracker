@@ -6,21 +6,28 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 {% endblock %}
 {% block title %}Sign in{% endblock %}
+{% block sidebar %}
 {% block content %}
   <div class="container">
     <div class="card col">
       <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
       <h5 class="title" style="text-align: center">Welcome</h5>
       <h6 class="subtitle" style="text-align: center;">Sign in to continue</h6>
-      <form class="form" action="{{url_for('login')}}">
+      <form class="form" method="POST" action="{{url_for('login')}}">
         <label for="email">Email</label>
         <input type="text" class="input" name="email" required>
         <label for="pass">Password</label>
-        <input type="password" class="input" name="pass" required>
+        <input type="password" class="input" name="password" required>
         <div class="col">
           <a href="{{url_for('forgot_password')}}" style="margin-top: 15px; margin-bottom: 5px;">Forgot your password?</a>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <span class="{{ category }}-message">{{ message }}</span>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
           <input class="btn green" type="submit" value="Sign In">
-          <span class="error-message"></span>
         </div>
       </form>
       <div style="text-align: center;">
@@ -28,4 +35,5 @@
       </div>
     </div>
   </div>
+{% endblock %}
 {% endblock %}

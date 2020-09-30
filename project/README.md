@@ -12,12 +12,12 @@ Make sure you are in the `project` folder in your terminal.
 
 `pip install -r requirements.txt`
 
-#### Add a config file
+## Add a config file
 
 Create a copy of the sample-config.ini file and rename it to config.ini.
 Fill it with the correct parameters.
 
-#### Run this command once
+## Run this command once
 
 `chmod +x run.sh`
 
@@ -60,3 +60,47 @@ To check code coverage of the unit tests
   - secret_key = abcdefghijklmnopqrst
 
 - Click "Query Tool" in "Tools" tab. Copy the code in the [backup sql file](project\database\backup_schema.sql) and paste it into the query tool editor. Then click run. Now the schema "tingleserver" has been created.
+
+## Alert messages
+
+### For front-end
+
+Copy this chunk of code into where you want to the alert message to show up.
+
+```html
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert" role="alert">
+          <span class="{{ category }}-message">{{ message }}</span>
+        </div>
+      {% endfor %}
+  {% endif %}
+{% endwith %}
+```
+
+You can change CSS code and add more message styles in [base.css](project\static\css\base.css).
+
+I added `warning-message` for example:
+
+```CSS
+.error-message {
+  text-align: center;
+  color: #FF4141;
+}
+
+.warning-message {
+  text-align: center;
+  color: #ffcc00;
+}
+```
+
+### For back-end
+
+Use function `flash` with this format `flash('_error_message_', "_category_")`
+
+```Python
+flash('Incorrect email/password, please try again', "error")
+```
+
+`category` can be seen in CSS above, for example, `error`, `warning`, etc.

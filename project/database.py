@@ -12,7 +12,7 @@ def database_connect():
     """
     # Read the config file
     config = configparser.ConfigParser()
-    config.read('sample-config.ini')
+    config.read('config.ini')
     if 'database' not in config['DATABASE']:
         config['DATABASE']['database'] = config['DATABASE']['user']
 
@@ -124,6 +124,36 @@ def check_login(email, password):
     cur.close()                     # Close the cursor
     conn.close()                    # Close the connection to the db
     return None
+def get_UserID(email, password):
+    """
+        - get UserID from db
+        - True => return the user data
+        - False => return None
+    """
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT tingleserver."account_id"
+            FROM tingleserver."Account"
+            WHERE ac_email=%s AND ac_password=%s
+        """
+        cur.execute(sql, (email, password))
+        # r = cur.fetchone()
+
+        r = dictfetchone(cur, sql, (email, password))
+        print(r)
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return r
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Invalid details")
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
 
 
 def get_all_treatments():
@@ -154,8 +184,26 @@ def get_all_treatments():
 def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
     print(firstname, lastname, gender, age, mobile,
           treatment, email, password, consent)
-    if consent == 'no':
-        return None
+    # Consent to exposing personal data to research should be optional
+    # if consent == 'no':
+    #     return None
+
+    # Catching boundary cases
+    if len(firstname) > 255:
+        print("First name entered is greater than maximum length of 255.")
+        raise
+    if len(lastname) > 255:
+        print("Last name entered is greater than maximum length of 255.")
+        raise
+    elif len(password) > 20:
+        print("Password entered is greater than maximum length of 20.")
+        raise
+    elif len(email) > 255:
+        print("Email entered is greater than maximum length of 255.")
+        raise
+    elif len(mobile) > 20:
+        print("Phone number entered is greater than maximum length of 20.")
+        raise
 
     conn = database_connect()
     if(conn is None):
@@ -195,6 +243,49 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         conn.commit()                     # Close the cursor
         conn.close()                    # Close the connection to the db
         return patient_id
+    except:
+        # If there were any errors, return a NULL row printing an error to the debug
+        print("Unexpected error adding a patient:", sys.exc_info()[0])
+        conn.rollback()
+        raise
+    cur.close()                     # Close the cursor
+    conn.close()                    # Close the connection to the db
+    return None
+
+def record_symptom(email,symptom,severity,date,time):
+    print(email,symptom,severity,date,time)
+
+    if date is None or date == '':     #if invalid date exist *to-do*
+        print('Invalid date entered.')
+        raise
+    elif time is None or time == '':
+        print("Invalid time entered.")
+        raise
+    elif email is None or email == '':
+        print("User not found.")
+        raise
+
+    conn = database_connect()
+    if(conn is None):
+        return None
+    cur = conn.cursor()
+    try:
+        print(email)
+        # Try executing the SQL and get from the database
+        sql = """
+            INSERT INTO tingleserver."Symptom"(
+                patient_username,symptom_name,severity,recorded_date,recorded_time)
+                VALUES(%s,%s,%s,%s,%s);
+        """
+        cur.execute(sql,(email,symptom,severity,date,time))
+        conn.commit()
+        #email2 = cur.fetchone()[0] not working
+
+
+        cur.close()
+        conn.commit()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+        return email
     except:
         # If there were any errors, return a NULL row printing an error to the debug
         print("Unexpected error adding a patient:", sys.exc_info()[0])

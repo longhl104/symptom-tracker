@@ -17,6 +17,7 @@ app.secret_key = config['DATABASE']['secret_key']
 
 # General routes
 
+
 @app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
@@ -26,12 +27,9 @@ def login():
         )
 
         if login_return_data is None:
-            page['bar'] = False
-            flash('Incorrect email/password, please try again')
+            flash('Incorrect email/password, please try again', "error")
             return redirect(url_for('login'))
 
-        page['bar'] = True
-        flash('You have been logged in successfully')
         session['logged_in'] = True
 
         global user_details
@@ -41,6 +39,7 @@ def login():
 
     elif request.method == 'GET':
         return(render_template('index.html', session=session, page=page))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -75,11 +74,16 @@ def register():
 
         return render_template('register.html', session=session, page=page, treatments=treatments)
 
+@app.route('/register-extra')
+def register_extra():
+    return render_template('register-extra.html')
+
 @app.route('/forgot-password')
 def forgot_password():
     return render_template('forgot-password.html')
 
 # Patient-related routes
+
 
 @app.route('/patient/')
 def patient_dashboard():

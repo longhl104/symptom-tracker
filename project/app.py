@@ -49,9 +49,9 @@ def register():
                 request.form['first-name'],
                 request.form['last-name'],
                 request.form['gender'],
-                request.form.get('age', 'no'),
-                request.form.get('mobile-number', 'no'),
-                request.form.getlist('treatment'),
+                request.form.get('age', ''),
+                request.form.get('mobile-number', ''),
+                request.form.getlist('treatment', ['A']),
                 request.form['email-address'],
                 request.form['password'],
                 request.form.get('consent', 'no')

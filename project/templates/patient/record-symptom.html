@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 {% endblock %}
 {% block title %}Record Symptom{% endblock %}
+{% block sidebar %}
 {% block content %}
   <div class="container">
     <h5 class="title">Record Symptom</h5>
@@ -38,6 +39,7 @@
       </form>
     </div>
   </div>
+{% endblock %}
 {% endblock %}
 
 <!-- <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />

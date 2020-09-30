@@ -88,8 +88,8 @@ def forgot_password():
 @app.route('/patient/')
 def patient_dashboard():
     # TODO: extract out into a decorator so less repeated code
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
+    # if not session.get('logged_in', None):
+    #     return redirect(url_for('login'))
 
     page['title'] = 'Dashboard'
     return render_template('patient/dashboard.html', session=session, page=page)
@@ -128,6 +128,14 @@ def record_symptom():
             #print("Exception occurred. Please try again")
             #return redirect(url_for('record_symptom'))
     return render_template('patient/record-symptom.html')
+
+@app.route('/patient/reports')
+def patient_reports():
+    return render_template('patient/reports.html')
+
+@app.route('/patient/account')
+def patient_account():
+    return render_template('patient/account.html')
 
 # PWA-related routes
 

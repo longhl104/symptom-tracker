@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/solid.min.css') }}">
+{% endblock %}
+{% block title %} {{ super() }} {% endblock %}
+
+<div class="s-layout">
+{% block sidebar %}
+  <div class="s-layout__sidebar">
+    <a class="s-sidebar__trigger" href="#0">
+      <i class="fa fa-bars fa-lg"></i>
+    </a>
+
+    <nav class="s-sidebar__nav">
+      <ul>
+        <li>
+          <img class="logo" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
+          <em class="logo-title" style="margin-bottom: 20px;">Symptom Tracker</em>
+        </li>
+        <li>
+          <a class="s-sidebar__nav-link" href="{{url_for('patient_dashboard')}}">
+            <i class="fa fa-home fa-lg"></i><em class="sidebar-text">Home</em>
+          </a>
+        </li>
+        <li>
+          <a class="s-sidebar__nav-link" href="{{url_for('patient_reports')}}">
+            <i class="fa fa-chart-area fa-lg"></i><em class="sidebar-text">Reports</em>
+          </a>
+        </li>
+        <li>
+          <a class="s-sidebar__nav-link" href="{{url_for('patient_account')}}">
+            <i class="fa fa-user fa-lg"></i><em class="sidebar-text">Account</em>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+{% endblock %}
+{% block content %} {% endblock %}
+</div>

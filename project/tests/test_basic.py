@@ -18,6 +18,11 @@ class BasicTestCase(unittest.TestCase):
         response = tester.get('/register-extra', content_type='html/text')
         self.assertEqual(response.status_code, 200)
 
+    def test_symptom_history(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/symptom-history', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
     # TODO: fix testcases that use pg8000 module
     
     # def test_register(self):
@@ -44,6 +49,16 @@ class BasicTestCase(unittest.TestCase):
     #     tester = app.test_client(self)
     #     response = tester.get('/patient/record-symptom', content_type='html/text')
     #     self.assertEqual(response.status_code, 200)
+
+    def test_patient_reports(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/reports', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+    def test_patient_account(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/account', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
 
     def test_service_worker_js(self):
         tester = app.test_client(self)

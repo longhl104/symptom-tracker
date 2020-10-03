@@ -15,12 +15,14 @@ class AppTest(unittest.TestCase):
     #! test methods' name must start with "test_"
     def test_void(self):
         pass
-
+    
+    #add mock patch to the function you want to mock
     @mock.patch('database.check_login')
     def test_login_no_data(self, db):
         # db.return_value = [{'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
         #                     'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456'}]
         with app.test_client() as client:
+            # set the return value
             db.return_value = None
             response = client.post('/', data=dict(
                 email='long',
@@ -38,6 +40,96 @@ class AppTest(unittest.TestCase):
                 email='long',
                 password='12345678'
             ), follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    def test_login_get_method(self):
+        with app.test_client() as client:
+            app.session = {}
+            response = client.get('/', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/')
+        pass
+
+    @mock.patch('database.add_patient')
+    def test_register_post_method_failed(self, db):
+        with app.test_client() as client:
+            db.return_value = None
+            response = client.post('/register', data={
+                'first-name': 'foo',
+                'last-name': 'bar',
+                'gender':'Male',
+                'age': '12',
+                'mobile-number': '04123456789',
+                'treatment':'A',
+                'email-address':'foo@bar.com',
+                'password':'12345678',
+                'consent':'yes'
+            }
+            , follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    @mock.patch('database.add_patient')
+    def test_register_post_method_successful(self, db):
+        with app.test_client() as client:
+            db.return_value = 1
+            response = client.post('/register', data={
+                'first-name': 'foo',
+                'last-name': 'bar',
+                'gender': 'Male',
+                'age': '12',
+                'mobile-number': '04123456789',
+                'treatment': 'A',
+                'email-address': 'foo@bar.com',
+                'password': '12345678',
+                'consent': 'yes'
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_dashboard'))
+        pass
+
+    @mock.patch('database.add_patient')
+    def test_register_post_method_exception(self, db):
+        with app.test_client() as client:
+            db.return_value = 1
+            response = client.post('/register', data={
+                'first-name': 'foo',
+                'last-name': 'bar',
+                'gender': 'Male',
+                'age': '12',
+                'mobile-number': '04123456789',
+                'treatment': 'A',
+                'email-address': 'foo@bar.com',
+                'password': '12345678',
+                'consent': 'yes'
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_dashboard'))
+        pass
+
+    def test_register_get_method_not_logged_in(self):
+        with app.test_client() as client:
+            app.session = {}
+            response = client.get('/register', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    def test_register_get_method_logged_in(self):
+        with app.test_client() as client:
+            app.session = {'logged_in':True}
+            response = client.get('/register', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    def test_patient_dashboard(self):
+        with app.test_client() as client:
+            app.session = {'logged_in':True}
+            response = client.get('/patient', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, '/patient/')
         pass

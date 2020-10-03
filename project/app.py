@@ -3,6 +3,8 @@ import database
 import configparser
 import urllib.parse
 from datetime import datetime
+import traceback
+import sys
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -25,7 +27,6 @@ def login():
             request.form['email'],
             request.form['password']
         )
-        print(login_return_data)
 
         if login_return_data is None:
             flash('Incorrect email/password, please try again', 'error')
@@ -58,7 +59,7 @@ def register():
                 request.form['gender'],
                 request.form.get('age', ''),
                 request.form.get('mobile-number', ''),
-                request.form.getlist('treatment', ['A']),
+                request.form.getlist('treatment'),
                 request.form['email-address'],
                 request.form['password'],
                 request.form.get('consent', 'no')
@@ -69,6 +70,7 @@ def register():
             else:
                 return redirect(url_for('patient_dashboard'))
         except:
+            traceback.print_exc(file=sys.stdout)
             print('Exception occurred. Please try again')
             flash('Something went wrong. Please try again', 'error')
             return redirect(url_for('register'))

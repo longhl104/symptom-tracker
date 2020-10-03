@@ -18,7 +18,7 @@
           <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
         </div>
         <div class="grid-button-left">
-          <a href="{{url_for('record_symptom')}}" class="btn green aligned">Record a symptom</a>
+          <a href="{{url_for('record_symptom')}}" class="btn green aligned">Record Symptom</a>
         </div>
         <div class="grid-button-right">
           <a href="{{url_for('symptom_history')}}" class="btn blue aligned">View Symptoms</a>
@@ -35,6 +35,11 @@
             <a href="" class="btn blue survey-status">Start</a>
           </div>
         </div>
+        <div class = "break">
+        </div>
+        <form class="logout form" action="{{url_for('logout')}}">
+          <input style="width: 50%; min-width: 90px; float: right" class="btn green" type="submit" value="Logout">
+        </form>
       </div>
     </div>
   </main>

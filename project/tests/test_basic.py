@@ -30,25 +30,43 @@ class BasicTestCase(unittest.TestCase):
         response = tester.post('/register', data={'first-name':'firstname', 'last-name':'lastname', 'gender':'Male', 'age':'20', 'mobile-number':'0411123345', 'treatment':['Oxaliplatin (Eloxatin, Oxalatin, Oxaliccord, Xalox, FOLFOX, XELOX)'], 'email-address':'email@gmail.com', 'password':'password', 'consent':'on'})
         self.assertEqual(response.status_code, 302)
 
-    # def test_patient_dashboard_without_being_logged_in(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/patient/', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+    def test_patient_dashboard_without_being_logged_in(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/', content_type='html/text')
+        self.assertEqual(response.status_code, 302)
 
-    # def test_patient_dashboard_when_logged_in(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/patient/', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+    def test_patient_dashboard_when_logged_in(self):
+        tester = app.test_client(self)
+        response = tester.get('/', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+        response = tester.post('/', data={'email':'thomaswowchina@gmail.com','pass':'qwer1234'})
+        self.assertEqual(response.status_code, 302)
+        response = tester.get('/patient/', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
 
-    # def test_patient_record_symptom_without_being_logged_in(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/patient/record-symptom', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+    def test_patient_record_symptom_without_being_logged_in(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/record-symptom', content_type='html/text')
+        self.assertEqual(response.status_code, 302)
 
-    # def test_patient_record_symptom_when_logged_in(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/patient/record-symptom', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+    def test_patient_record_symptom_when_logged_in(self):
+        tester = app.test_client(self)
+        response = tester.get('/', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+        response = tester.post('/', data={'email':'thomaswowchina@gmail.com','pass':'qwer1234'})
+        self.assertEqual(response.status_code, 302)
+        response = tester.get('/patient/record-symptom', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+    def test_patient_reports(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/reports', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+
+    def test_patient_account(self):
+        tester = app.test_client(self)
+        response = tester.get('/patient/account', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
 
     def test_service_worker_js(self):
         tester = app.test_client(self)

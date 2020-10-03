@@ -3,6 +3,9 @@ from app import app
 
 class BasicTestCase(unittest.TestCase):
     #! test methods' name must start with "test_"
+    def tearDown(self):
+        pass
+
     def test_login(self):
         tester = app.test_client(self)
         response = tester.get('/', content_type='html/text')
@@ -19,11 +22,13 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     # TODO: fix testcases that use pg8000 module
-    
-    # def test_register(self):
-    #     tester = app.test_client(self)
-    #     response = tester.get('/register', content_type='html/text')
-    #     self.assertEqual(response.status_code, 200)
+
+    def test_register(self):
+        tester = app.test_client(self)
+        response = tester.get('/register', content_type='html/text')
+        self.assertEqual(response.status_code, 200)
+        response = tester.post('/register', data={'first-name':'firstname', 'last-name':'lastname', 'gender':'Male', 'age':'20', 'mobile-number':'0411123345', 'treatment':['Oxaliplatin (Eloxatin, Oxalatin, Oxaliccord, Xalox, FOLFOX, XELOX)'], 'email-address':'email@gmail.com', 'password':'password', 'consent':'on'})
+        self.assertEqual(response.status_code, 302)
 
     # def test_patient_dashboard_without_being_logged_in(self):
     #     tester = app.test_client(self)

@@ -25,6 +25,7 @@ def login():
             request.form['email'],
             request.form['password']
         )
+        print(login_return_data)
 
         if login_return_data is None:
             flash('Incorrect email/password, please try again', 'error')

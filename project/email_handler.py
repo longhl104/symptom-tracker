@@ -11,12 +11,6 @@ def setup_email(to):
     sender = "brainandmindcentre.usyd@gmail.com" # config['DATABASE']['email']
     recipient = to
 
-    # Create alternative text version of email if html not displayed
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "Reset your password"
-    message["From"] = sender
-    message["To"] = recipient
-
     text = """\
 
     You are receiving this email because you requested a password reset for the Brain and Mind Centre's Symptom Tracker. 
@@ -33,8 +27,10 @@ def setup_email(to):
 
     The Brain and Mind Centre at the University of Sydney"""
 
-    message_text = MIMEText(text, "plain")
-    message.attach(message_text)
+    message = MIMEText(text, "plain")
+    message["Subject"] = "Reset your password"
+    message["From"] = sender
+    message["To"] = recipient
 
     return message
 

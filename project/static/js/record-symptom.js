@@ -44,7 +44,7 @@ function validateForm() {
     valid = false;
   }
 
-  if (form["location"][0].value === "Other" && !document.getElementById("slocation").value.length) {
+  if (form["location"][0].value === "Other" && !document.getElementById("location").value.length) {
     document.getElementById("location-error-message").innerText = "Please specify a location";
     valid = false;
   }

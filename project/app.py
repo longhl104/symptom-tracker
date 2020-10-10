@@ -109,6 +109,7 @@ def record_symptom():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if request.method == 'POST':
+        severity_scale = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
         form_data = dict(request.form.lists())
         print(form_data)
         symptom = form_data.get('symptom')[0]
@@ -119,7 +120,7 @@ def record_symptom():
         if activity == 'Other':
             activity = form_data.get('activity')[1]
         print(activity)
-        severity = form_data.get('severity')[0]
+        severity = severity_scale[int(form_data.get('severity')[0])]
         date = form_data.get('date')[0]
         time = form_data.get('time')[0]
         notes = form_data.get('notes')[0]

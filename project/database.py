@@ -74,6 +74,7 @@ def dictfetchall(cursor, sqltext, params=()):
         print_sql_string(sqltext, params)
 
     cursor.execute(sqltext, params)
+    print(cursor)
     cols = [a[0].decode("utf-8") for a in cursor.description]
     print(cols)
     returnres = cursor.fetchall()
@@ -215,19 +216,27 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         conn.close()                    # Close the connection to the db
     return None
 
-def record_symptom(email, symptom, severity, date, time, activity, notes):
+def record_symptom(id, email, symptom, severity, date, time, activity, notes):
     conn = database_connect()
     if conn:
         cur = conn.cursor()
         try:
             print(email)
             # Try executing the SQL and get from the database
-            sql = """
-                INSERT INTO tingleserver."Symptom"(
-                    patient_username, symptom_name, severity, recorded_date, recorded_time, activity, notes)
-                    VALUES(%s, %s, %s, %s, %s, %s, %s);
-            """
-            cur.execute(sql, (email, symptom, severity, date, time, activity, notes))
+            if len(id) == 0:
+                sql = """
+                    INSERT INTO tingleserver."Symptom"(
+                        patient_username, symptom_name, severity, recorded_date, recorded_time, activity, notes)
+                        VALUES(%s, %s, %s, %s, %s, %s, %s);
+                """
+                cur.execute(sql, (email, symptom, severity, date, time, activity, notes))
+            else:
+                sql = """
+                    UPDATE tingleserver."Symptom" SET
+                        symptom_name = %s, severity = %s, recorded_date = %s, recorded_time = %s, activity = %s, notes = %s
+                        WHERE symptom_id = %s AND patient_username = %s
+                """
+                cur.execute(sql, (symptom, severity, date, time, activity, notes, id, email))
             conn.commit()
             cur.close()
             return email
@@ -246,8 +255,7 @@ def get_all_symptoms(email):
         cur = conn.cursor()
         try:
             sql = """
-                SELECT (recorded_date, recorded_time, symptom_name, severity) FROM tingleserver."Symptom" WHERE patient_username = %s
-
+                SELECT (symptom_id, recorded_date, recorded_time, symptom_name, severity, notes, activity) FROM tingleserver."Symptom" WHERE patient_username = %s
             """
 
             r = dictfetchall(cur, sql, (email,))
@@ -259,6 +267,33 @@ def get_all_symptoms(email):
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting All Treatments:", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def delete_symptom_record(email, id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+            """
+            print_sql_string(sql, (email,id,))
+            cur.execute(sql, (email,id,))
+            sql = """
+                SELECT COUNT(*) FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+            """
+            r = dictfetchall(cur, sql, (email,id,))
+            print("return val is:")
+            print(r)
+            conn.commit()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting:", sys.exc_info()[0])
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

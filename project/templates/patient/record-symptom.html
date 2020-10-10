@@ -13,6 +13,7 @@
       <h5 class="title">Record a Symptom</h5>
       <div class="card">
         <form name="record-symptom" class="form col" action="{{url_for('record_symptom')}}" onsubmit="return validateForm()" method="POST">
+          <input type="hidden" name="id"/>
           <label for="symptom">Symptom<sup>*</sup></label>
           <select name="symptom" onchange="checkvalue(this)" required>
             <option label=" "></option>

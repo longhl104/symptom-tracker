@@ -19,22 +19,27 @@
                       <th>Time</th>
                       <th>Symptom</th>
                       <th>Severity</th>
-                      <th></th>
+                      <th>Edit/Delete</th>
                   </tr>
               </thead>
               <tbody>
                   {% for symptom in symptoms %}
                       <tr>
-                          <td>{{symptom[0][1:]}}</td>
-                          <td>{{symptom[1]}}</td>
-                          <td>{{symptom[2][1:-1]}}</td>
-                          <td>{{symptom[3][1:-2]}}</td>
-                          <td class="delete"><button class="btn editbtn red">Delete</button></td>
+                        <td>{{symptom.recorded_date}}</td>
+                        <td>{{symptom.recorded_time}}</td>
+                        <td>{{symptom.symptom_name}}</td>
+                        <td>{{symptom.severity}}</td>
+                        <td><button class="btn editbtn blue" onclick="editRecord('{{symptom.symptom_id}}', '{{symptom.symptom_name}}', '{{symptom.location}}', '{{symptom.activity}}', '{{symptom.severity}}', '{{symptom.occurence}}', '{{symptom.recorded_date}}', '{{symptom.recorded_time}}', '{{symptom.notes}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
+                        <button class="btn deletebtn red" onclick="deleteRecord('')"><i class="fa fa-trash fa-lg" style="color: #ffffff"></i></button></td>
                       </tr>
                   {% endfor %}
               </tbody>
           </table>
       </div>
     </div>
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/symptom-history.js') }}"></script>
   {% endblock %}
 {% endblock %}

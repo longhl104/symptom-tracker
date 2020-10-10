@@ -104,13 +104,16 @@ def patient_dashboard():
     print(session)
     return render_template('patient/dashboard.html', session=session)
 
-@app.route('/patient/record-symptom', methods=['GET', 'POST'])
-def record_symptom():
+@app.route('/patient/record-symptom/', methods=['GET', 'POST'])
+@app.route('/patient/record-symptom/<id>', methods=['DELETE'])
+def record_symptom(id=None):
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
+
     if request.method == 'POST':
         form_data = dict(request.form.lists())
         print(form_data)
+        id = form_data.get('id')[0]
         symptom = form_data.get('symptom')[0]
         if symptom == 'Other':
             symptom = form_data.get('symptom')[1]
@@ -125,6 +128,7 @@ def record_symptom():
         notes = form_data.get('notes')[0]
 
         recordSymptom = database.record_symptom(
+            id,
             user_details['ac_email'],
             symptom,
             severity,
@@ -139,6 +143,13 @@ def record_symptom():
             return redirect(url_for('record_symptom'))
         else:
             return redirect(url_for('patient_dashboard'))
+
+    if request.method == 'DELETE':
+        result = database.delete_symptom_record(user_details['ac_email'], id)
+        deleted = True if len(result) == 1 and result[0]['count'] == 0 else False
+        return {
+            "deleted": deleted
+        }
     return render_template('patient/record-symptom.html')
 
 @app.route('/patient/symptom-history')
@@ -147,8 +158,18 @@ def symptom_history():
         return redirect(url_for('login'))
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
-    symptoms = [symptom['row'].split(",") for symptom in symptoms]
-    return render_template('patient/symptom-history.html', symptoms = symptoms)    
+    list_of_symptoms = []
+    symptom_col_order = ["symptom_id", "recorded_date", "recorded_time", "symptom_name", "severity", "notes", "activity"]
+    for symptom in symptoms:
+        symptom = symptom["row"][1:-1]
+        symptom_dict = {}
+        for i, col in enumerate(symptom.split(",")):
+            if i == 2 and col[-3:] == ":00":
+                col = col[:-3]
+            symptom_dict[symptom_col_order[i]] = col.strip('"')
+        list_of_symptoms.append(symptom_dict)
+    return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
+
 @app.route('/patient/reports')
 def patient_reports():
     return render_template('patient/reports.html')

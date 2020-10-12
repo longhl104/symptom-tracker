@@ -121,15 +121,93 @@ class AppTest(unittest.TestCase):
     def test_register_get_method_not_logged_in_none_treatments(self, db):
         with tingle.test_client() as client:
             db.return_value = None
-            client.get('/register', follow_redirects=True)
+            response = client.get('/register', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, '/register')
         pass
 
-    def test_patient_dashboard(self):
+    def test_patient_dashboard_logged_in(self):
         with tingle.test_client() as client:
             response = client.get('/patient', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, '/patient/')
+        pass
+
+    @mock.patch('app.session', {'logged_in': False})
+    def test_patient_dashboard_not_logged_in(self):
+        with tingle.test_client() as client:
+            response = client.get('/patient/', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/')
+        pass
+
+    @mock.patch('app.session', {'logged_in': False})
+    def test_record_symptom_not_logged_in(self):
+        with tingle.test_client() as client:
+            response = client.get(
+                '/patient/record-symptom', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/')
+        pass
+
+    @mock.patch('database.record_symptom')
+    def test_record_symptom_logged_in_other_symptom_other_activity_none_record(self, db):
+        with tingle.test_client() as client:
+            db.return_value = None
+            response = client.post('/patient/record-symptom',
+                                   data={
+                                       'symptom': ['Other', 'Itchy'],
+                                       'activity': ['Other', 'Coding'],
+                                       'severity': ['Bad'],
+                                       'date': ['13/10/2020'],
+                                       'time': ['12:55 AM'],
+                                       'notes': ['Note']
+                                   },
+                                   follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/record-symptom')
+        pass
+
+    @mock.patch('database.record_symptom')
+    def test_record_symptom_logged_in_other_symptom_other_activity_not_none_record(self, db):
+        with tingle.test_client() as client:
+            db.return_value = True
+            response = client.post('/patient/record-symptom',
+                                   data={
+                                       'symptom': ['Other', 'Itchy'],
+                                       'activity': ['Other', 'Coding'],
+                                       'severity': ['Bad'],
+                                       'date': ['13/10/2020'],
+                                       'time': ['12:55 AM'],
+                                       'notes': ['Note']
+                                   },
+                                   follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    @mock.patch('app.user_details', {'ac_email': None})
+    def test_symptom_history_none_email(self):
+        with tingle.test_client() as client:
+            response = client.get(
+                '/patient/symptom-history', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/')
+        pass
+
+    @mock.patch('app.user_details', {'ac_email': 'foo@bar.com'})
+    @mock.patch('database.get_all_symptoms')
+    def test_symptom_history_not_none_email(self, db):
+        with tingle.test_client() as client:
+            db.return_value = [
+                {
+                    'row': 'abc,def,cab,fea,aij'
+                }
+            ]
+            response = client.get(
+                '/patient/symptom-history', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, '/patient/symptom-history')
         pass
 
 

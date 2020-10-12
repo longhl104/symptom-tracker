@@ -150,7 +150,10 @@ def symptom_history():
         return redirect(url_for('login'))
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
+    print("hello {}".format(symptoms))
+
     symptoms = [symptom['row'].split(",") for symptom in symptoms]
+    print("hello {}".format(symptoms))
     return render_template('patient/symptom-history.html', symptoms = symptoms)    
 @app.route('/patient/reports')
 def patient_reports():

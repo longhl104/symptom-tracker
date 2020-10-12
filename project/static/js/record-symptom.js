@@ -1,26 +1,20 @@
-function setDateAndTime() {
+function setDate() {
   var date = new Date();
 
   var day = date.getDate(),
       month = date.getMonth() + 1,
       year = date.getFullYear(),
-      hour = date.getHours(),
-      min  = date.getMinutes();
   
   month = (month < 10 ? "0" : "") + month;
   day = (day < 10 ? "0" : "") + day;
-  hour = (hour < 10 ? "0" : "") + hour;
-  min = (min < 10 ? "0" : "") + min;
   
-  var today = year + "-" + month + "-" + day,
-      displayTime = hour + ":" + min; 
+  var today = year + "-" + month + "-" + day;
   
-  document.getElementById('date').value = today;      
-  document.getElementById("time").value = displayTime;
+  document.getElementById('date').value = today;
 }
 
 window.onload = function() {
-  setDateAndTime();
+  setDate();
 };
 
 function checkvalue(elem) {
@@ -35,7 +29,6 @@ function checkvalue(elem) {
 function validateForm() {
   document.getElementById("symptom-error-message").innerText = "";
   document.getElementById("location-error-message").innerText = "";
-  document.getElementById("activity-error-message").innerText = "";
 
   const form = document.forms["record-symptom"];
   let valid = true;
@@ -46,11 +39,6 @@ function validateForm() {
 
   if (form["location"][0].value === "Other" && !document.getElementById("location").value.length) {
     document.getElementById("location-error-message").innerText = "Please specify a location";
-    valid = false;
-  }
-
-  if (form["activity"][0].value === "Other" && !document.getElementById("activity").value.length) {
-    document.getElementById("activity-error-message").innerText = "Please specify an activity";
     valid = false;
   }
 

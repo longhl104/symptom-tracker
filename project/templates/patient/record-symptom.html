@@ -16,12 +16,31 @@
           <label for="symptom">Symptom<sup>*</sup></label>
           <select name="symptom" onchange="checkvalue(this)" required>
             <option label=" "></option>
-            <option value="Tingling in my hands">Tingling in my hands</option>
-            <option value="Tingling in my feet">Tingling in my feet</option>
+            <option value="Buzzing">Buzzing</option>
+            <option value="Cramping">Cramping</option>
+            <option value="Discomfort">Discomfort</option>
+            <option value="Numbness">Numbness</option>
+            <option value="Pain">Pain</option>
+            <option value="Ringing">Ringing</option>
+            <option value="Tingling">Tingling</option>
+            <option value="Weakness">Weakness</option>
             <option value="Other">Other</option>
           </select>
           <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
           <span class="error-message" id="symptom-error-message"></span>
+          <label for="location">Location<sup>*</sup></label>
+          <select name="location" onchange="checkvalue(this)" required>
+            <option label=" "></option>
+            <option value="Arms">Arms</option>
+            <option value="Ears">Ears</option>
+            <option value="Eyes">Eyes</option>
+            <option value="Feet">Feet</option>
+            <option value="Hands">Hands</option>
+            <option value="Legs">Legs</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="location" placeholder="Enter a location here" name="location" style="display: none;"/>
+          <span class="error-message" id="location-error-message"></span>
           <label for="activity">Activity<sup>*</sup></label>
           <select name="activity" onchange="checkvalue(this)" required>
             <option label=" "></option>
@@ -42,6 +61,15 @@
             <option value="Somewhat">Somewhat</option>
             <option value="Quite a bit">Quite a bit</option>
             <option value="Very much">Very much</option>
+          </select>
+          <label for="occurence">Occurence<sup>*</sup></label>
+          <select name="occurence" required>
+            <option label=" "></option>
+            <option value="Morning">Morning</option>
+            <option value="Daytime">Daytime</option>
+            <option value="Night-time">Night-time</option>
+            <option value="All the time">All the time</option>
+            <option value="Sporadic">Sporadic</option>
           </select>
           <div class="grid two-equal-columns">
             <div class="col">

@@ -34,12 +34,18 @@ function checkvalue(elem) {
 
 function validateForm() {
   document.getElementById("symptom-error-message").innerText = "";
+  document.getElementById("location-error-message").innerText = "";
   document.getElementById("activity-error-message").innerText = "";
 
   const form = document.forms["record-symptom"];
   let valid = true;
   if (form["symptom"][0].value === "Other" && !document.getElementById("symptom").value.length) {
     document.getElementById("symptom-error-message").innerText = "Please specify a symptom";
+    valid = false;
+  }
+
+  if (form["location"][0].value === "Other" && !document.getElementById("location").value.length) {
+    document.getElementById("location-error-message").innerText = "Please specify a location";
     valid = false;
   }
 

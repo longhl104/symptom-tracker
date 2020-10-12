@@ -215,7 +215,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         conn.close()                    # Close the connection to the db
     return None
 
-def record_symptom(email, symptom, severity, date, time, activity, notes):
+def record_symptom(email, symptom, location, severity, date, notes):
     conn = database_connect()
     if conn:
         cur = conn.cursor()

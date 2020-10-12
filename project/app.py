@@ -31,13 +31,21 @@ def login():
             return redirect(url_for('login'))
 
         session['logged_in'] = True
-        
+
 
         global user_details
         user_details = login_return_data[0]
         session['name'] = user_details['ac_firstname']
 
-        return redirect(url_for('patient_dashboard'))
+        if user_details['ac_type'] == 'clinician':
+            return redirect(url_for('clinician_dashboard'))
+        elif user_details['ac_type'] == 'researcher':
+            return redirect(url_for('researcher_dashboard'))
+        elif user_details['ac_type'] == 'patient':
+            return redirect(url_for('patient_dashboard'))
+        else:
+            print('Error: Attempted logging in with Unknown')
+            raise
 
     elif request.method == 'GET':
         if not session.get('logged_in', None):
@@ -50,6 +58,39 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Adding placeholder clinician and researcher accounts
+        try:
+            # Clinician
+            database.add_patient(
+            'Nick',
+            'Riviera',
+            'Male',
+            '45',
+            '0411222333',
+            None,
+            'nick.riviera.clinician@gmail.com',
+            'tingle12345',
+            'yes',
+            'clinician'
+            )
+
+            # Researcher
+            database.add_patient(
+            'Christopher',
+            'Nolan',
+            'Male',
+            '50',
+            '0411222333',
+            None,
+            'christopher.nolan.researcher@gmail.com',
+            'tingle12345',
+            'yes',
+            'researcher'
+            )
+        except:
+            pass
+
+        # Patient as normal
         try:
             add_patient_ret = database.add_patient(
                 request.form['first-name'],
@@ -60,7 +101,8 @@ def register():
                 request.form.getlist('treatment', ['A']),
                 request.form['email-address'],
                 request.form['password'],
-                request.form.get('consent', 'no')
+                request.form.get('consent', 'no'),
+                'patient'
             )
             if add_patient_ret is None:
                 # TODO: return error message
@@ -93,13 +135,58 @@ def register_extra():
 def forgot_password():
     return render_template('forgot-password.html')
 
+@app.route('/researcher/')
+def researcher_dashboard():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] == 'clinician':
+        print('Error: Attempted accessing researcher dashboard as Clinician')
+        return redirect(url_for('clinician_dashboard'))
+    elif user_details['ac_type'] == 'patient':
+        print('Error: Attempted accessing researcher dashboard as Patient')
+        return redirect(url_for('patient_dashboard'))
+    elif user_details['ac_type'] != 'researcher':
+        print('Error: Attempted accessing researcher dashboard as Unknown')
+        raise
+
+    print(session)
+    return render_template('researcher/dashboard.html', session=session)
+
+@app.route('/clinician/')
+def clinician_dashboard():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] == 'researcher':
+        print('Error: Attempted accessing clinician dashboard as Researcher')
+        return redirect(url_for('researcher_dashboard'))
+    elif user_details['ac_type'] == 'patient':
+        print('Error: Attempted accessing clinician dashboard as Patient')
+        return redirect(url_for('patient_dashboard'))
+    elif user_details['ac_type'] != 'clinician':
+        print('Error: Attempted accessing clinician dashboard as Unknown')
+        raise
+
+    print(session)
+    return render_template('clinician/dashboard.html', session=session)
+
 # Patient-related routes
-
-
 @app.route('/patient/')
 def patient_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
+
+    user_details = login_return_data[0]
+    if user_details['ac_type'] == 'clinician':
+        print('Error: Attempted accessing patient dashboard as Clinician')
+        return redirect(url_for('clinician_dashboard'))
+    elif user_details['ac_type'] == 'researcher':
+        print('Error: Attempted accessing patient dashboard as Researcher')
+        return redirect(url_for('researcher_dashboard'))
+    elif user_details['ac_type'] != 'patient':
+        print('Error: Attempted accessing patient dashboard as Unknown')
+        raise
 
     print(session)
     return render_template('patient/dashboard.html', session=session)
@@ -108,6 +195,17 @@ def patient_dashboard():
 def record_symptom():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
+
+    if user_details['ac_type'] == 'clinician':
+        print('Error: Attempted accessing recording symptom as Clinician')
+        return redirect(url_for('clinician_dashboard'))
+    elif user_details['ac_type'] == 'researcher':
+        print('Error: Attempted accessing recording symptom as Researcher')
+        return redirect(url_for('researcher_dashboard'))
+    elif user_details['ac_type'] != 'patient':
+        print('Error: Attempted accessing recording symptom as Unknown')
+        raise
+
     if request.method == 'POST':
         form_data = dict(request.form.lists())
         print(form_data)
@@ -148,7 +246,7 @@ def symptom_history():
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
     symptoms = [symptom['row'].split(",") for symptom in symptoms]
-    return render_template('patient/symptom-history.html', symptoms = symptoms)    
+    return render_template('patient/symptom-history.html', symptoms = symptoms)
 @app.route('/patient/reports')
 def patient_reports():
     return render_template('patient/reports.html')

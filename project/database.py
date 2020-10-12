@@ -147,8 +147,7 @@ def get_all_treatments():
         conn.close()                    # Close the connection to the db
     return None
 
-
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent, type):
     print(firstname, lastname, gender, age, mobile,
           treatment, email, password, consent)
 
@@ -175,33 +174,42 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         cur = conn.cursor()
         try:
             # Try executing the SQL and get from the database
-            sql = """
-                SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s);
-            """
+            if type == 'researcher':
+                sql = """
+                    SELECT tingleserver.add_researcher(%s,%s,%s,%s,%s,%s,%s,%s);
+                """
+            elif type == 'clinician':
+                sql = """
+                    SELECT tingleserver.add_clinician(%s,%s,%s,%s,%s,%s,%s,%s);
+                """
+            elif type == 'patient':
+                sql = """
+                    SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
+                """
             cur.execute(sql, (firstname, lastname, gender, age,
-                            mobile, email, password))
+                            mobile, email, password, type))
             conn.commit()
             patient_id = cur.fetchone()[0]
+            if type == 'patient':
+                if treatment is not None and len(treatment) > 0:
+                    for t in treatment:
+                        sql = """
+                            SELECT treatment_id
+                            FROM tingleserver."Treatment"
+                            WHERE treatment_name=%s;
+                        """
+                        cur.execute(sql, (t,))
+                        conn.commit()
+                        treatment_id = cur.fetchone()[0]
+                        print(treatment_id)
 
-            if treatment is not None and len(treatment) > 0:
-                for t in treatment:
-                    sql = """
-                        SELECT treatment_id
-                        FROM tingleserver."Treatment"
-                        WHERE treatment_name=%s;
-                    """
-                    cur.execute(sql, (t,))
-                    conn.commit()
-                    treatment_id = cur.fetchone()[0]
-                    print(treatment_id)
-
-                    sql = """
-                        INSERT INTO tingleserver."Patient_Receives_Treatment"(
-                            patient_id, treatment_id)
-                            VALUES (%s, %s);
-                    """
-                    cur.execute(sql, (patient_id, treatment_id))
-                    conn.commit()
+                        sql = """
+                            INSERT INTO tingleserver."Patient_Receives_Treatment"(
+                                patient_id, treatment_id)
+                                VALUES (%s, %s);
+                        """
+                        cur.execute(sql, (patient_id, treatment_id))
+                        conn.commit()
 
             cur.close()
             conn.close()                    # Close the connection to the db

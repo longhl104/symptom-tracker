@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-def setup_email(to):
+def setup_email(to, key):
 
     sender = "brainandmindcentre.usyd@gmail.com" # config['DATABASE']['email']
     recipient = to
@@ -17,7 +17,7 @@ def setup_email(to):
 
     Copy and paste the link below into your browser to create a new password:
 
-    http://127.0.0.1:5000/reset-password/Gr6BCpNIN
+    http://127.0.0.1:5000/reset-password/{key}
 
     This link will expire in 24 hours.
 
@@ -25,7 +25,7 @@ def setup_email(to):
 
     Thank you,
 
-    The Brain and Mind Centre at the University of Sydney"""
+    The Brain and Mind Centre at the University of Sydney""".format(key=key)
 
     message = MIMEText(text, "plain")
     message["Subject"] = "Reset your password"

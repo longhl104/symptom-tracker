@@ -93,42 +93,6 @@ def dictfetchone(cursor, sqltext, params=()):
     result.append({a: b for a, b in zip(cols, returnres)})
     return result
 
-
-def check_email(email):
-    """
-    Check that the user's email exists in the database.
-        - True => return user email
-        - False => return None
-    """
-    conn = database_connect()
-    if(conn is None):
-        return None
-    cur = conn.cursor()
-    try:
-        sql = """
-            SELECT *
-            FROM tingleserver."Account"
-            WHERE ac_email=%s
-        """
-        cur.execute(sql, (email))
-        # r = cur.fetchone()
-
-        r = dictfetchone(cur, sql, (email))
-        print(r)
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
-        return r
-    except:
-        # If there were any errors, return a NULL row printing an error to the debug
-        print("Error Invalid Login")
-    cur.close()                     # Close the cursor
-    conn.close()                    # Close the connection to the db
-    return None
-
-#TODO: update a user's password in the database, given their email 
-def update_password(new_password):
-    pass
-
 def check_login(email, password):
     """
     Check that the users information exists in the database.
@@ -293,7 +257,83 @@ def get_all_symptoms(email):
             return r
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error getting All Treatments:", sys.exc_info()[0])
+            print("Unexpected error getting All Treatments: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_password_key(key, email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Password_Key"(
+                    url_key, ac_email)
+                    VALUES(%s, %s);
+            """
+            cur.execute(sql, (key, email))
+            conn.commit()
+            cur.close()
+            return email
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error creating a unique key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def update_password(ac_password, url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Account"
+                    SET ac_password = %s
+                    WHERE ac_email = (
+                        SELECT ac_email
+                        FROM tingleserver."Password_Key"
+                        WHERE url_key=%s
+                    );
+            """
+            # DELETE FROM tingleserver."Password_Key"
+            # WHERE url_key = %s;
+            cur.execute(sql, (ac_password, url_key))
+            result = dictfetchone(cur, """SELECT *
+                                            FROM tingleserver."Password_Key"
+                                            WHERE url_key=%s""", (url_key,))
+            cur.close()
+            conn.close()
+            return result
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error updating password: ", sys.exc_info()[0])
+            conn.rollback()
+            cur.close()                     # Close the cursor
+            conn.close()  
+    return None
+
+def delete_token(url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Password_Key"
+                WHERE url_key = %s;
+            """
+            cur.execute(sql, (url_key,))
+            conn.commit()
+            cur.close()
+            return None
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting token: ", sys.exc_info()[0])
+            conn.rollback()
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

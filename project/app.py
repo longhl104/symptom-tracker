@@ -3,6 +3,9 @@ import database
 import configparser
 import email_handler
 import urllib.parse
+import random
+import string
+import pg8000
 from datetime import datetime
 
 user_details = {}  # User details kept for us
@@ -102,43 +105,42 @@ def register_extra():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        #TODO fix check if email account exists
-        # email = database.check_email(request.form['email'])
-        # if email is None:
-        #     flash('There is no account associated with that email, please try again', "error")
-        #     return render_template('forgot-password.html')
-        # else:
-        message = email_handler.setup_email(request.form['email'])
+        unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+        try:
+            database.add_password_key(unique_key, request.form['email'])
+        except pg8000.core.IntegrityError: # if key already exists
+            unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+            database.add_password_key(unique_key, request.form['email'])
+        except pg8000.core.ProgrammingError: # email not in database
+            flash('There is no account associated with that email. Please try again.', "error")
+            return render_template('forgot-password.html')
+        message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)
-        flash('Email sent. If you cannot see the email in your inbox, check your spam folder',  "success")
+        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")
         return render_template('forgot-password.html')
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
-@app.route('/reset-password/', methods=['GET', 'POST'])
-@app.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token=None):
+@app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
+def reset_password(url_key):
     if request.method == 'POST':
-        #TODO: work out how to get email address
-        # email = None
-        # # email = database.check_email(request.form['email'])
-        # if email is None:
-        #     flash('An error occurred. Please try again.', "error")
-        #     return render_template('reset-password.html')
-        # TODO: check if password is of sufficient complexity
         password = request.form['pw']
         password_confirm = request.form['pw_confirm']
+        if password != password_confirm:
+            flash('The passwords do not match.', "error")
+        elif (len(password) < 8):
+            flash('Password length must be 8 characters or longer.', "error")
+        else:
+            result = database.update_password(password, url_key)
+            if not result:
+                flash('The reset password key is invalid. Please request a new token.', "error")
+            else:
+                database.delete_token(url_key)
+                flash('Password successfully reset. You may now login.',  "success")
+        return redirect(url_for('reset_password', url_key=url_key))
 
-        # flash('Password successfully reset.',  "success")
-        # TODO: fix password reset logic / database
-        # if password != password_confirm:
-        #     flash('The passwords do not match.', "error")
-        # else:
-        #     database.update_password(password)
-        #     flash('Password reset',  "success")
-        return "Password successfully reset.", 200
     else:
-        return render_template('/reset-password.html', token=token)
+        return render_template('/reset-password.html', url_key=url_key)
 
 @app.route('/patient/')
 def patient_dashboard():

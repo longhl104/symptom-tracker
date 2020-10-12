@@ -117,10 +117,11 @@ class AppTest(unittest.TestCase):
         pass
 
     @mock.patch('app.session', {'logged_in': False})
-    def test_register_get_method_not_logged_in(self):
+    @mock.patch('database.get_all_treatments')
+    def test_register_get_method_not_logged_in_none_treatments(self, db):
         with tingle.test_client() as client:
-            response = client.get('/register', follow_redirects=True)
-            # self.assertEqual(response.status_code, 200)
+            db.return_value = None
+            client.get('/register', follow_redirects=True)
             self.assertEqual(request.path, '/register')
         pass
 

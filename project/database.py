@@ -172,30 +172,29 @@ def get_all_treatments():
     return None
 
 
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
-    print(firstname, lastname, gender, age, mobile,
-          treatment, email, password, consent)
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, consent):
 
     # Catching boundary cases
     # TODO: return error message to user
     # ! We can have this done by using javascript
-    # if len(firstname) > 255:
-    #     print("First name entered is greater than maximum length of 255.")
-    #     raise
-    # if len(lastname) > 255:
-    #     print("Last name entered is greater than maximum length of 255.")
-    #     raise
-    # elif len(password) > 20:
-    #     print("Password entered is greater than maximum length of 20.")
-    #     raise
-    # elif len(email) > 255:
-    #     print("Email entered is greater than maximum length of 255.")
-    #     raise
-    # elif len(mobile) > 20:
-    #     print("Phone number entered is greater than maximum length of 20.")
-    #     raise
+    if len(firstname) > 255:
+        print("First name entered is greater than maximum length of 255.")
+        raise
+    if len(lastname) > 255:
+        print("Last name entered is greater than maximum length of 255.")
+        raise
+    elif len(original_password) < 8 or len(original_password) > 20:
+        print("Password should be between 8 and 20 characters.")
+        raise
+    elif len(email) > 255:
+        print("Email entered is greater than maximum length of 255.")
+        raise
+    elif len(mobile) > 20:
+        print("Phone number entered is greater than maximum length of 20.")
+        raise
 
     conn = database_connect()
+
     if conn:
         cur = conn.cursor()
         try:
@@ -204,7 +203,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
                 SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s);
             """
             cur.execute(sql, (firstname, lastname, gender, age,
-                            mobile, email, password))
+                            mobile, email, password_hash))
             conn.commit()
             patient_id = cur.fetchone()[0]
 

@@ -60,6 +60,7 @@ def register():
                 request.form.get('mobile-number', ''),
                 request.form.getlist('treatment', ['A']),
                 request.form['email-address'],
+                request.form['password'],
                 generate_password_hash(request.form['password']),
                 request.form.get('consent', 'no')
             )
@@ -68,7 +69,8 @@ def register():
                 return redirect(url_for('register'))
             else:
                 return redirect(url_for('patient_dashboard'))
-        except:
+        except Exception as e:
+            print(e)
             print('Exception occurred. Please try again')
             flash('Something went wrong. Please try again', 'error')
             return redirect(url_for('register'))

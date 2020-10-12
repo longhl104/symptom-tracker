@@ -11,7 +11,7 @@ page = {}  # Determines the page information
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
-config.read('sample-config.ini')
+config.read('config.ini')
 
 app.secret_key = config['DATABASE']['secret_key']
 
@@ -177,7 +177,7 @@ def patient_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
-    user_details = login_return_data[0]
+
     if user_details['ac_type'] == 'clinician':
         print('Error: Attempted accessing patient dashboard as Clinician')
         return redirect(url_for('clinician_dashboard'))

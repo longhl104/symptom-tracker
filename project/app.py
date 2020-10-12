@@ -58,39 +58,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Adding placeholder clinician and researcher accounts
-        try:
-            # Clinician
-            database.add_patient(
-            'Nick',
-            'Riviera',
-            'Male',
-            '45',
-            '0411222333',
-            None,
-            'nick.riviera.clinician@gmail.com',
-            'tingle12345',
-            'yes',
-            'clinician'
-            )
-
-            # Researcher
-            database.add_patient(
-            'Christopher',
-            'Nolan',
-            'Male',
-            '50',
-            '0411222333',
-            None,
-            'christopher.nolan.researcher@gmail.com',
-            'tingle12345',
-            'yes',
-            'researcher'
-            )
-        except:
-            pass
-
-        # Patient as normal
+        
         try:
             add_patient_ret = database.add_patient(
                 request.form['first-name'],

@@ -287,6 +287,29 @@ def get_all_symptoms(email):
         conn.close()                    # Close the connection to the db
     return None
 
+def check_key_exists(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT * 
+                FROM tingleserver."Password_Key"
+                WHERE ac_email = %s
+            """
+            cur.execute(sql, (email, ))
+            result = cur.fetchone()
+            conn.commit()
+            cur.close()
+            return result
+        except:
+            print("Unexpected error retrieving key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def add_password_key(key, email):
     conn = database_connect()
     if conn:

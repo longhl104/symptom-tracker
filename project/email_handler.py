@@ -8,8 +8,8 @@ config.read('config.ini')
 
 def setup_email(to, key):
 
-    base_url = config['DATABASE']['base_url']
-    sender = str(config['DATABASE']['email'])
+    base_url = config['EMAIL']['base_url']
+    sender = str(config['EMAIL']['email'])
     recipient = to
 
     text = """\
@@ -38,7 +38,7 @@ def setup_email(to, key):
 def send_email(message):
 
     port = 465  # For SSL
-    password = str(config['DATABASE']['email_password'])
+    password = str(config['EMAIL']['email_password'])
     
     # Create a secure SSL context
     context = ssl.create_default_context()

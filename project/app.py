@@ -109,15 +109,20 @@ def register_extra():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
-        try:
-            database.add_password_key(unique_key, request.form['email'])
-        except pg8000.core.IntegrityError: # if key already exists
+        result = database.check_key_exists(request.form['email'])
+        if (not result):
             unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
-            database.add_password_key(unique_key, request.form['email'])
-        except pg8000.core.ProgrammingError: # email not in database
-            flash('There is no account associated with that email. Please try again.', "error")
-            return render_template('forgot-password.html')
+            try:
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.IntegrityError: # if key already exists
+                unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.ProgrammingError: # email not in database
+                flash('There is no account associated with that email. Please try again.', "error")
+                return render_template('forgot-password.html')
+        else: 
+            print(result)
+            unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)
         flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")

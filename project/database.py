@@ -238,7 +238,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
         conn.close()                    # Close the connection to the db
     return None
 
-def record_symptom(email, symptom, severity, date, time, activity, notes):
+def record_symptom(email, symptom, location, severity, date, notes):
     conn = database_connect()
     if conn:
         cur = conn.cursor()
@@ -247,10 +247,10 @@ def record_symptom(email, symptom, severity, date, time, activity, notes):
             # Try executing the SQL and get from the database
             sql = """
                 INSERT INTO tingleserver."Symptom"(
-                    patient_username, symptom_name, severity, recorded_date, recorded_time, activity, notes)
-                    VALUES(%s, %s, %s, %s, %s, %s, %s);
+                    patient_username, symptom_name, location, severity, recorded_date, notes)
+                    VALUES(%s, %s, %s, %s, %s, %s);
             """
-            cur.execute(sql, (email, symptom, severity, date, time, activity, notes))
+            cur.execute(sql, (email, symptom, location, severity, date, notes))
             conn.commit()
             cur.close()
             return email
@@ -269,7 +269,7 @@ def get_all_symptoms(email):
         cur = conn.cursor()
         try:
             sql = """
-                SELECT (recorded_date, recorded_time, symptom_name, severity) FROM tingleserver."Symptom" WHERE patient_username = %s
+                SELECT (recorded_date, symptom_name, location, severity) FROM tingleserver."Symptom" WHERE patient_username = %s
 
             """
 

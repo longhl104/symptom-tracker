@@ -107,6 +107,10 @@ def register():
 def register_extra():
     return render_template('register-extra.html')
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['logged_in'] = False
+    return(render_template('index.html', session=session, page=page))
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():

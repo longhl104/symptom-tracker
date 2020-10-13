@@ -121,22 +121,20 @@ def record_symptom():
         if symptom == 'Other':
             symptom = form_data.get('symptom')[1]
         print(symptom)
-        activity = form_data.get('activity')[0]
-        if activity == 'Other':
-            activity = form_data.get('activity')[1]
-        print(activity)
+        location = form_data.get('location')[0]
+        if location == 'Other':
+            location = form_data.get('location')[1]
+        print(location)
         severity = form_data.get('severity')[0]
         date = form_data.get('date')[0]
-        time = form_data.get('time')[0]
         notes = form_data.get('notes')[0]
 
         recordSymptom = database.record_symptom(
             user_details['ac_email'],
             symptom,
+            location,
             severity,
             date,
-            time,
-            activity,
             notes
         )
 

@@ -294,7 +294,7 @@ def check_key_exists(email):
         try:
             sql = """
                 SELECT * 
-                FROM tingleserver."Password_Key"
+                FROM tingleserver."Forgot_password"
                 WHERE ac_email = %s
             """
             cur.execute(sql, (email, ))
@@ -316,8 +316,8 @@ def add_password_key(key, email):
         cur = conn.cursor()
         try:
             sql = """
-                INSERT INTO tingleserver."Password_Key"(
-                    url_key, ac_email)
+                INSERT INTO tingleserver."Forgot_password"(
+                    key, ac_email)
                     VALUES(%s, %s);
             """
             cur.execute(sql, (key, email))
@@ -343,16 +343,14 @@ def update_password(ac_password, url_key):
                     SET ac_password = %s
                     WHERE ac_email = (
                         SELECT ac_email
-                        FROM tingleserver."Password_Key"
-                        WHERE url_key=%s
+                        FROM tingleserver."Forgot_password"
+                        WHERE key=%s
                     );
             """
-            # DELETE FROM tingleserver."Password_Key"
-            # WHERE url_key = %s;
             cur.execute(sql, (ac_password, url_key))
             result = dictfetchone(cur, """SELECT *
-                                            FROM tingleserver."Password_Key"
-                                            WHERE url_key=%s""", (url_key,))
+                                            FROM tingleserver."Forgot_password"
+                                            WHERE key=%s""", (url_key,))
             conn.commit()
             cur.close()
             return result
@@ -370,8 +368,8 @@ def delete_token(url_key):
         cur = conn.cursor()
         try:
             sql = """
-                DELETE FROM tingleserver."Password_Key"
-                WHERE url_key = %s;
+                DELETE FROM tingleserver."Forgot_password"
+                WHERE key = %s;
             """
             cur.execute(sql, (url_key,))
             conn.commit()

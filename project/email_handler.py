@@ -7,12 +7,11 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 def setup_email(to, key):
-
     base_url = config['EMAIL']['base_url']
     sender = str(config['EMAIL']['email'])
     recipient = to
 
-    text = """\
+    text = """
 
     You are receiving this email because you requested a password reset for the Brain and Mind Centre's Symptom Tracker. 
 
@@ -51,5 +50,5 @@ def send_email(message):
     # Send email
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login( message["From"], password)
-        server.sendmail( message["From"], message["To"], message.as_string()),
+        server.login(message["From"], password)
+        server.sendmail(message["From"], message["To"], message.as_string())

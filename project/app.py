@@ -54,6 +54,8 @@ def login():
 @app.route('/logout', methods=['GET'])
 def logout():
     session['logged_in'] = False
+    user_details = {}
+    page = {}
     return(render_template('index.html', session=session, page=page))
 
 
@@ -137,10 +139,11 @@ def reset_password(url_key):
         password_confirm = request.form['pw_confirm']
         if password != password_confirm:
             flash('The passwords do not match.', "error")
-        elif (len(password) < 8):
-            flash('Password length must be 8 characters or longer.', "error")
+        elif (len(password) < 8) or (len(password) > 20):
+            flash('Password length must be between 8 and 20 characters.', "error")
         else:
-            result = database.update_password(password, url_key)
+
+            result = database.update_password(generate_password_hash(password), url_key)
             if not result:
                 flash('The reset password key is invalid. Please request a new token.', "error")
             else:
@@ -153,10 +156,8 @@ def reset_password(url_key):
 
 @app.route('/patient/')
 def patient_dashboard():
-    # if not session.get('logged_in', None):
-    #     return redirect(url_for('login'))
-    
-    print(session)
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
     return render_template('patient/dashboard.html', session=session)
 
 

@@ -1,7 +1,11 @@
 from flask import *
 import database
 import configparser
+import email_handler
 import urllib.parse
+import random
+import string
+import pg8000
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -47,15 +51,25 @@ def login():
             # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['logged_in'] = False
+    user_details = {}
+    page = {}
+    return(render_template('index.html', session=session, page=page))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         try:
+            if request.form['password'] != request.form['confirm-password']:
+                flash('Passwords do not match. Please try again', 'error')
+                return redirect(url_for('register'))
             add_patient_ret = database.add_patient(
                 request.form['first-name'],
                 request.form['last-name'],
-                request.form['gender'],
+                request.form.get('gender', ''),
                 request.form.get('age', ''),
                 request.form.get('mobile-number', ''),
                 request.form.getlist('treatment', ['A']),
@@ -93,20 +107,61 @@ def register():
 def register_extra():
     return render_template('register-extra.html')
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['logged_in'] = False
+    return(render_template('index.html', session=session, page=page))
 
-@app.route('/forgot-password')
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    return render_template('forgot-password.html')
+    if request.method == 'POST':
+        result = database.check_key_exists(request.form['email'])
+        if (not result):
+            unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+            try:
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.IntegrityError: # if key already exists
+                unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.ProgrammingError: # email not in database
+                flash('There is no account associated with that email. Please try again.', "error")
+                return render_template('forgot-password.html')
+        else: 
+            print(result)
+            unique_key = result[0]
+        message = email_handler.setup_email(request.form['email'], unique_key)
+        email_handler.send_email(message)
+        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")
+        return render_template('forgot-password.html')
+    elif request.method == 'GET':
+        return render_template('forgot-password.html')
 
-# Patient-related routes
+@app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
+def reset_password(url_key):
+    if request.method == 'POST':
+        password = request.form['pw']
+        password_confirm = request.form['pw_confirm']
+        if password != password_confirm:
+            flash('The passwords do not match.', "error")
+        elif (len(password) < 8) or (len(password) > 20):
+            flash('Password length must be between 8 and 20 characters.', "error")
+        else:
 
+            result = database.update_password(generate_password_hash(password), url_key)
+            if not result:
+                flash('The reset password key is invalid. Please request a new token.', "error")
+            else:
+                database.delete_token(url_key)
+                flash('Password successfully reset. You may now login.',  "success")
+        return redirect(url_for('reset_password', url_key=url_key))
+
+    else:
+        return render_template('/reset-password.html', url_key=url_key)
 
 @app.route('/patient/')
 def patient_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
-
-    print(session)
     return render_template('patient/dashboard.html', session=session)
 
 

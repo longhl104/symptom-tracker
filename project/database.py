@@ -74,11 +74,7 @@ def dictfetchall(cursor, sqltext, params=()):
 
     cursor.execute(sqltext, params)
     cols = [a[0].decode("utf-8") for a in cursor.description]
-    print("cursor: {}".format(cursor))
-    print("cursor description: {}".format(cursor.description))
-    print("cols: {}".format(cols))
     returnres = cursor.fetchall()
-    print("returnres: {}".format(returnres))
 
     for row in returnres:
         result.append({a: b for a, b in zip(cols, row)})

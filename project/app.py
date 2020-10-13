@@ -109,11 +109,6 @@ def register():
 def register_extra():
     return render_template('register-extra.html')
 
-@app.route('/logout', methods=['GET'])
-def logout():
-    session['logged_in'] = False
-    return(render_template('index.html', session=session, page=page))
-
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -209,7 +204,6 @@ def symptom_history():
         return redirect(url_for('login'))
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
-    print("hello {}".format(symptoms))
 
     symptoms = [symptom['row'].split(",") for symptom in symptoms]
     return render_template('patient/symptom-history.html', symptoms = symptoms)    

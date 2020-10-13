@@ -92,7 +92,6 @@ def dictfetchone(cursor, sqltext, params=()):
     result.append({a: b for a, b in zip(cols, returnres)})
     return result
 
-
 def check_login(email, password):
     """
     Check that the users information exists in the database.
@@ -179,19 +178,19 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
     # ! We can have this done by using javascript
     if len(firstname) > 255:
         print("First name entered is greater than maximum length of 255.")
-        raise
+        return None
     if len(lastname) > 255:
         print("Last name entered is greater than maximum length of 255.")
-        raise
+        return None
     elif len(original_password) < 8 or len(original_password) > 20:
         print("Password should be between 8 and 20 characters.")
-        raise
+        return None
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
-        raise
+        return None
     elif len(mobile) > 20:
         print("Phone number entered is greater than maximum length of 20.")
-        raise
+        return None
 
     conn = database_connect()
 
@@ -282,7 +281,104 @@ def get_all_symptoms(email):
             return r
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error getting All Treatments:", sys.exc_info()[0])
+            print("Unexpected error getting All Treatments: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def check_key_exists(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT * 
+                FROM tingleserver."Forgot_password"
+                WHERE ac_email = %s
+            """
+            cur.execute(sql, (email, ))
+            result = cur.fetchone()
+            conn.commit()
+            cur.close()
+            return result
+        except:
+            print("Unexpected error retrieving key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_password_key(key, email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Forgot_password"(
+                    key, ac_email)
+                    VALUES(%s, %s);
+            """
+            cur.execute(sql, (key, email))
+            conn.commit()
+            cur.close()
+            return email
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error creating a unique key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def update_password(ac_password, url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Account"
+                    SET ac_password = %s
+                    WHERE ac_email = (
+                        SELECT ac_email
+                        FROM tingleserver."Forgot_password"
+                        WHERE key=%s
+                    );
+            """
+            cur.execute(sql, (ac_password, url_key))
+            result = dictfetchone(cur, """SELECT *
+                                            FROM tingleserver."Forgot_password"
+                                            WHERE key=%s""", (url_key,))
+            conn.commit()
+            cur.close()
+            return result
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error updating password: ", sys.exc_info()[0])
+            conn.rollback()
+        cur.close()                     # Close the cursor
+        conn.close()  
+    return None
+
+def delete_token(url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Forgot_password"
+                WHERE key = %s;
+            """
+            cur.execute(sql, (url_key,))
+            conn.commit()
+            cur.close()
+            return None
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting token: ", sys.exc_info()[0])
+            conn.rollback()
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

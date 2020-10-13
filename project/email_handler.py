@@ -8,7 +8,8 @@ config.read('config.ini')
 
 def setup_email(to, key):
 
-    sender = "brainandmindcentre.usyd@gmail.com" # config['DATABASE']['email']
+    base_url = config['DATABASE']['base_url']
+    sender = str(config['DATABASE']['email'])
     recipient = to
 
     text = """\
@@ -17,7 +18,7 @@ def setup_email(to, key):
 
     Copy and paste the link below into your browser to create a new password:
 
-    http://127.0.0.1:5000/reset-password/{key}
+    {base_url}/reset-password/{key}
 
     This link will expire in 24 hours.
 
@@ -25,7 +26,7 @@ def setup_email(to, key):
 
     Thank you,
 
-    The Brain and Mind Centre at the University of Sydney""".format(key=key)
+    The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key)
 
     message = MIMEText(text, "plain")
     message["Subject"] = "Reset your password"
@@ -37,7 +38,7 @@ def setup_email(to, key):
 def send_email(message):
 
     port = 465  # For SSL
-    password = "w4wtcitb9newaf" #config['DATABASE']['email_password']
+    password = str(config['DATABASE']['email_password'])
     
     # Create a secure SSL context
     context = ssl.create_default_context()

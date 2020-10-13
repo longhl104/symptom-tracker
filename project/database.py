@@ -306,15 +306,15 @@ def update_password(ac_password, url_key):
             result = dictfetchone(cur, """SELECT *
                                             FROM tingleserver."Password_Key"
                                             WHERE url_key=%s""", (url_key,))
+            conn.commit()
             cur.close()
-            conn.close()
             return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error updating password: ", sys.exc_info()[0])
             conn.rollback()
-            cur.close()                     # Close the cursor
-            conn.close()  
+        cur.close()                     # Close the cursor
+        conn.close()  
     return None
 
 def delete_token(url_key):

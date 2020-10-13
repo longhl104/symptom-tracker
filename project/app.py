@@ -7,6 +7,8 @@ import random
 import string
 import pg8000
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -25,20 +27,19 @@ app.secret_key = config['DATABASE']['secret_key']
 @app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        login_return_data = database.check_login(
-            request.form['email'],
-            request.form['password']
-        )
-
+        login_return_data = database.get_account(request.form['email'])
         if login_return_data is None:
+            flash('Email does not exist, please register a new account', 'error')
+            return redirect(url_for('login'))
+
+        global user_details
+        user_details = login_return_data[0]
+
+        if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))
 
         session['logged_in'] = True
-        
-
-        global user_details
-        user_details = login_return_data[0]
         session['name'] = user_details['ac_firstname']
 
         return redirect(url_for('patient_dashboard'))
@@ -72,6 +73,7 @@ def register():
                 request.form.getlist('treatment', ['A']),
                 request.form['email-address'],
                 request.form['password'],
+                generate_password_hash(request.form['password']),
                 request.form.get('consent', 'no')
             )
             if add_patient_ret is None:
@@ -79,7 +81,8 @@ def register():
                 return redirect(url_for('register'))
             else:
                 return redirect(url_for('patient_dashboard'))
-        except:
+        except Exception as e:
+            print(e)
             print('Exception occurred. Please try again')
             flash('Something went wrong. Please try again', 'error')
             return redirect(url_for('register'))
@@ -96,6 +99,7 @@ def register():
         else:
             # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
+
 
 @app.route('/register-extra')
 def register_extra():
@@ -150,6 +154,7 @@ def patient_dashboard():
     print(session)
     return render_template('patient/dashboard.html', session=session)
 
+
 @app.route('/patient/record-symptom', methods=['GET', 'POST'])
 def record_symptom():
     if not session.get('logged_in', None):
@@ -187,6 +192,7 @@ def record_symptom():
             return redirect(url_for('patient_dashboard'))
     return render_template('patient/record-symptom.html')
 
+
 @app.route('/patient/symptom-history')
 def symptom_history():
     if user_details.get('ac_email') is None:
@@ -194,10 +200,13 @@ def symptom_history():
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
     symptoms = [symptom['row'].split(",") for symptom in symptoms]
-    return render_template('patient/symptom-history.html', symptoms = symptoms)    
+    return render_template('patient/symptom-history.html', symptoms=symptoms)
+
+
 @app.route('/patient/reports')
 def patient_reports():
     return render_template('patient/reports.html')
+
 
 @app.route('/patient/account')
 def patient_account():

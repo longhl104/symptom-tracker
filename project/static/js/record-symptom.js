@@ -3,7 +3,7 @@ function setDate() {
 
   var day = date.getDate(),
       month = date.getMonth() + 1,
-      year = date.getFullYear(),
+      year = date.getFullYear();
   
   month = (month < 10 ? "0" : "") + month;
   day = (day < 10 ? "0" : "") + day;

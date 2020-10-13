@@ -3,7 +3,6 @@ import json
 import sys
 import pg8000
 
-
 def database_connect():
     """
     Connects to the database using the connection string.
@@ -124,6 +123,31 @@ def check_login(email, password):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_account(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Account"
+                WHERE ac_email=%s
+            """
+            cur.execute(sql, (email,))
+            # r = cur.fetchone()
+
+            r = dictfetchone(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get hashed password")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+
 def get_all_treatments():
     conn = database_connect()
     if conn:
@@ -148,20 +172,19 @@ def get_all_treatments():
     return None
 
 
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent):
-    print(firstname, lastname, gender, age, mobile,
-          treatment, email, password, consent)
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, consent):
 
     # Catching boundary cases
     # TODO: return error message to user
+    # ! We can have this done by using javascript
     if len(firstname) > 255:
         print("First name entered is greater than maximum length of 255.")
         raise
     if len(lastname) > 255:
         print("Last name entered is greater than maximum length of 255.")
         raise
-    elif len(password) > 20:
-        print("Password entered is greater than maximum length of 20.")
+    elif len(original_password) < 8 or len(original_password) > 20:
+        print("Password should be between 8 and 20 characters.")
         raise
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
@@ -171,6 +194,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         raise
 
     conn = database_connect()
+
     if conn:
         cur = conn.cursor()
         try:
@@ -179,7 +203,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
                 SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s);
             """
             cur.execute(sql, (firstname, lastname, gender, age,
-                            mobile, email, password))
+                            mobile, email, password_hash))
             conn.commit()
             patient_id = cur.fetchone()[0]
 

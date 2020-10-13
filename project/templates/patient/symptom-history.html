@@ -16,8 +16,8 @@
               <thead>
                   <tr>
                       <th>Date</th>
-                      <th>Time</th>
                       <th>Symptom</th>
+                      <th>Location</th>
                       <th>Severity</th>
                       <th></th>
                   </tr>
@@ -27,7 +27,7 @@
                       <tr>
                           <td>{{symptom[0][1:]}}</td>
                           <td>{{symptom[1]}}</td>
-                          <td>{{symptom[2][1:-1]}}</td>
+                          <td>{{symptom[2]}}</td>
                           <td>{{symptom[3][1:-2]}}</td>
                           <td class="delete"><button class="btn editbtn red">Delete</button></td>
                       </tr>

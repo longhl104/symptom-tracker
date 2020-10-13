@@ -19,8 +19,6 @@ class AppTest(unittest.TestCase):
     # add mock patch to the function you want to mock
     @mock.patch('database.check_login')
     def test_login_no_data(self, db):
-        # db.return_value = [{'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
-        #                     'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456'}]
         with tingle.test_client() as client:
             # set the return value
             db.return_value = None

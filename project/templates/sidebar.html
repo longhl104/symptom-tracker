@@ -36,6 +36,11 @@
           </a>
         </li>
       </ul>
+      <div style="width: 90%; position: absolute; bottom: 0">
+        <form class="form" action="{{url_for('logout')}}">
+          <input id="logout" class="btn green" type="submit" value="Logout">
+        </form>
+      </div>
     </nav>
   </div>
 {% endblock %}

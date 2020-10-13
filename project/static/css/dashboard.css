@@ -9,7 +9,8 @@
     grid-template:
       'header header'
       'button-left button-right'
-      'main main';
+      'main main'
+      'break logout';
     row-gap: 20px;
     column-gap: 20px;
     padding: 10px;
@@ -20,6 +21,8 @@
 .grid-button-left { grid-area: button-left; background-color: #4EB760; border-radius: 5px;}
 .grid-button-right { grid-area: button-right; background-color: #1485FF; border-radius: 5px;}
 .grid-main { grid-area: main; }
+.grid-logout { grid-area: logout; }
+.grid-logout { grid-area: break; }
 
 .aligned {
     width: 100%;

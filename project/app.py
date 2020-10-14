@@ -91,6 +91,10 @@ def register():
                 # TODO: return error message
                 return redirect(url_for('register'))
             else:
+                session['logged_in'] = True
+                login_return_data = database.get_account(request.form['email-address'])
+                global user_details
+                user_details = login_return_data[0]
                 return redirect(url_for('patient_dashboard'))
         except Exception as e:
             print(e)
@@ -266,7 +270,7 @@ def record_symptom(id=None):
             flash('Unable to record symptom, please try again.', 'error')
             return redirect(url_for('record_symptom'))
         else:
-            return redirect(url_for('patient_dashboard'))
+            return redirect(url_for('symptom_history'))
 
     if request.method == 'DELETE':
         result = database.delete_symptom_record(user_details['ac_email'], id)

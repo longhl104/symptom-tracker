@@ -74,12 +74,21 @@ def register():
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
+            age = request.form.get('age', "")
+            if (age == ""):
+                age = None
+            # gender = request.form.get('gender', "NA")
+            # if (gender == "NA"):
+            #     gender = None
+            mobile = request.form.get('mobile-number', "")
+            if (mobile == ""):
+                mobile = None
             add_patient_ret = database.add_patient(
                 request.form.get('first-name'),
                 request.form.get('last-name'),
-                request.form.get('gender', ''),
-                request.form.get('age', ''),
-                request.form.get('mobile-number', ''),
+                request.form.get('gender', ""), # gender,
+                age,
+                mobile, 
                 request.form.getlist('treatment', []),
                 request.form.get('email-address'),
                 request.form.get('password'),

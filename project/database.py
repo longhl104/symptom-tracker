@@ -171,7 +171,7 @@ def get_all_treatments():
     return None
 
 
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, consent):
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, role, consent):
 
     # Catching boundary cases
     # TODO: return error message to user
@@ -199,32 +199,31 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
         try:
             # Try executing the SQL and get from the database
             sql = """
-                SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s);
+                SELECT tingleserver.add_account(%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cur.execute(sql, (firstname, lastname, gender, age,
-                            mobile, email, password_hash))
+            cur.execute(sql, (firstname, lastname, gender, age, mobile, email, password_hash, role, consent))
             conn.commit()
             patient_id = cur.fetchone()[0]
+            if role == 'patient':
+                if treatment is not None and len(treatment) > 0:
+                    for t in treatment:
+                        sql = """
+                            SELECT treatment_id
+                            FROM tingleserver."Treatment"
+                            WHERE treatment_name=%s;
+                        """
+                        cur.execute(sql, (t,))
+                        conn.commit()
+                        treatment_id = cur.fetchone()[0]
+                        print(treatment_id)
 
-            if treatment is not None and len(treatment) > 0:
-                for t in treatment:
-                    sql = """
-                        SELECT treatment_id
-                        FROM tingleserver."Treatment"
-                        WHERE treatment_name=%s;
-                    """
-                    cur.execute(sql, (t,))
-                    conn.commit()
-                    treatment_id = cur.fetchone()[0]
-                    print(treatment_id)
-
-                    sql = """
-                        INSERT INTO tingleserver."Patient_Receives_Treatment"(
-                            patient_id, treatment_id)
-                            VALUES (%s, %s);
-                    """
-                    cur.execute(sql, (patient_id, treatment_id))
-                    conn.commit()
+                        sql = """
+                            INSERT INTO tingleserver."Patient_Receives_Treatment"(
+                                patient_id, treatment_id)
+                                VALUES (%s, %s);
+                        """
+                        cur.execute(sql, (patient_id, treatment_id))
+                        conn.commit()
 
             cur.close()
             conn.close()                    # Close the connection to the db

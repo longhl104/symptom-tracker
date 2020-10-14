@@ -3,7 +3,7 @@ table {
 }
 
 th, td {
-    padding: 15px;
+    padding: 15px 0px;
     border-bottom: 1px solid #ddd;
 }
 
@@ -29,6 +29,9 @@ td {
 }
 
 .editbtn {
-    width: 100px;
-    margin-top: 0px;
-  } 
+    margin-top: 0px !important;
+}
+
+.deletebtn {
+    margin-top: 0px !important;
+}

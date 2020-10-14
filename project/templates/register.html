@@ -4,9 +4,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-
-  <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
-{% endblock %}
+  {% endblock %}
 {% block title %}Create an account{% endblock %}
 {% block sidebar %}
 {% block content %}
@@ -34,6 +32,7 @@
           <div class="col">
             <label for="gender">Gender</label>
             <select name="gender">
+              <option value="NA"></option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
@@ -81,4 +80,7 @@
     </div>
   </div>
 {% endblock %}
+{% endblock %}
+{% block bodyscripts %}
+  <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
 {% endblock %}

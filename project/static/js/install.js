@@ -1,5 +1,3 @@
-'use strict';
-
 let deferredInstallPrompt = null;
 const installButton = document.getElementById('button-install');
 console.log('install', installButton)

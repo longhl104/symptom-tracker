@@ -3,7 +3,6 @@ import json
 import sys
 import pg8000
 
-
 def database_connect():
     """
     Connects to the database using the connection string.
@@ -93,7 +92,6 @@ def dictfetchone(cursor, sqltext, params=()):
     result.append({a: b for a, b in zip(cols, returnres)})
     return result
 
-
 def check_login(email, password):
     """
     Check that the users information exists in the database.
@@ -124,6 +122,31 @@ def check_login(email, password):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_account(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Account"
+                WHERE ac_email=%s
+            """
+            cur.execute(sql, (email,))
+            # r = cur.fetchone()
+
+            r = dictfetchone(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get hashed password")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+
 def get_all_treatments():
     conn = database_connect()
     if conn:
@@ -147,29 +170,30 @@ def get_all_treatments():
         conn.close()                    # Close the connection to the db
     return None
 
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, password, consent, type):
-    print(firstname, lastname, gender, age, mobile,
-          treatment, email, password, consent)
+
+def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, role, consent):
 
     # Catching boundary cases
     # TODO: return error message to user
+    # ! We can have this done by using javascript
     if len(firstname) > 255:
         print("First name entered is greater than maximum length of 255.")
-        raise
+        return None
     if len(lastname) > 255:
         print("Last name entered is greater than maximum length of 255.")
-        raise
-    elif len(password) > 20:
-        print("Password entered is greater than maximum length of 20.")
-        raise
+        return None
+    elif len(original_password) < 8 or len(original_password) > 20:
+        print("Password should be between 8 and 20 characters.")
+        return None
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
-        raise
+        return None
     elif len(mobile) > 20:
         print("Phone number entered is greater than maximum length of 20.")
-        raise
+        return None
 
     conn = database_connect()
+
     if conn:
         cur = conn.cursor()
         try:
@@ -186,8 +210,7 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
                 sql = """
                     SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
                 """
-            cur.execute(sql, (firstname, lastname, gender, age,
-                            mobile, email, password, type))
+            cur.execute(sql, (firstname, lastname, gender, age, mobile, email, password_hash, role))
             conn.commit()
             patient_id = cur.fetchone()[0]
             if type == 'patient':
@@ -223,19 +246,27 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, pass
         conn.close()                    # Close the connection to the db
     return None
 
-def record_symptom(email, symptom, severity, date, time, activity, notes):
+def record_symptom(id, email, symptom, location, severity, occurence, date, notes):
     conn = database_connect()
     if conn:
         cur = conn.cursor()
         try:
             print(email)
             # Try executing the SQL and get from the database
-            sql = """
-                INSERT INTO tingleserver."Symptom"(
-                    patient_username, symptom_name, severity, recorded_date, recorded_time, activity, notes)
-                    VALUES(%s, %s, %s, %s, %s, %s, %s);
-            """
-            cur.execute(sql, (email, symptom, severity, date, time, activity, notes))
+            if len(id) == 0:
+                sql = """
+                    INSERT INTO tingleserver."Symptom"(
+                        patient_username, symptom_name, location, severity, occurence, recorded_date, notes)
+                        VALUES(%s, %s, %s, %s, %s, %s, %s);
+                """
+                cur.execute(sql, (email, symptom, location, severity, occurence, date, notes))
+            else:
+                sql = """
+                    UPDATE tingleserver."Symptom" SET
+                        symptom_name = %s, location = %s, severity = %s, occurence = %s, recorded_date = %s, notes = %s
+                        WHERE symptom_id = %s AND patient_username = %s
+                """
+                cur.execute(sql, (symptom, location, severity, occurence, date, notes, id, email))
             conn.commit()
             cur.close()
             return email
@@ -254,8 +285,8 @@ def get_all_symptoms(email):
         cur = conn.cursor()
         try:
             sql = """
-                SELECT (recorded_date, recorded_time, symptom_name, severity) FROM tingleserver."Symptom" WHERE patient_username = %s
-
+                SELECT (symptom_id, recorded_date, symptom_name, location, severity, occurence, notes)
+                FROM tingleserver."Symptom" WHERE patient_username = %s
             """
 
             r = dictfetchall(cur, sql, (email,))
@@ -266,7 +297,131 @@ def get_all_symptoms(email):
             return r
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error getting All Treatments:", sys.exc_info()[0])
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def check_key_exists(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT * 
+                FROM tingleserver."Forgot_password"
+                WHERE ac_email = %s
+            """
+            cur.execute(sql, (email, ))
+            result = cur.fetchone()
+            conn.commit()
+            cur.close()
+            return result
+        except:
+            print("Unexpected error retrieving key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_password_key(key, email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Forgot_password"(
+                    key, ac_email)
+                    VALUES(%s, %s);
+            """
+            cur.execute(sql, (key, email))
+            conn.commit()
+            cur.close()
+            return email
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error creating a unique key: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def update_password(ac_password, url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Account"
+                    SET ac_password = %s
+                    WHERE ac_email = (
+                        SELECT ac_email
+                        FROM tingleserver."Forgot_password"
+                        WHERE key=%s
+                    );
+            """
+            cur.execute(sql, (ac_password, url_key))
+            result = dictfetchone(cur, """SELECT *
+                                            FROM tingleserver."Forgot_password"
+                                            WHERE key=%s""", (url_key,))
+            conn.commit()
+            cur.close()
+            return result
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error updating password: ", sys.exc_info()[0])
+            conn.rollback()
+        cur.close()                     # Close the cursor
+        conn.close()  
+    return None
+
+def delete_token(url_key):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Forgot_password"
+                WHERE key = %s;
+            """
+            cur.execute(sql, (url_key,))
+            conn.commit()
+            cur.close()
+            return None
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting token: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def delete_symptom_record(email, id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+            """
+            print_sql_string(sql, (email,id,))
+            cur.execute(sql, (email,id,))
+            sql = """
+                SELECT COUNT(*) FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+            """
+            r = dictfetchall(cur, sql, (email,id,))
+            print("return val is:")
+            print(r)
+            conn.commit()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting:", sys.exc_info()[0])
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

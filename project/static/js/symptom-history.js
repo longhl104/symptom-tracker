@@ -1,6 +1,5 @@
 function deleteRecord(id) {
   const confirmation = confirm("Are you sure you would like to delete this record?");
-  console.log('id', id)
   if (confirmation) {
     fetch("/patient/record-symptom/" + id, {
       method: "DELETE",
@@ -17,6 +16,5 @@ function deleteRecord(id) {
 }
 
 function editRecord(id, name, location, severity, occurence, date, notes) {
-  // console.log(id, name, location, severity, occurence, date, notes)
   window.location.href = '/patient/record-symptom?' + encodeURI(`id=${id}&name=${name}&location=${location}&severity=${severity}&occurence=${occurence}&date=${date}&notes=${notes}`);
 }

@@ -36,7 +36,7 @@ function checkQueryParams() {
 
   const form = document.forms["record-symptom"];
   if (id) form["id"].value = id;
-  // What about others?
+
   const validSymptoms = ["Cramping", "Discomfort", "Numbness", "Pain", "Tingling", "Weakness"];
   if (name) {
     if (validSymptoms.indexOf(name) < 0) {

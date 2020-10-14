@@ -73,7 +73,6 @@ def dictfetchall(cursor, sqltext, params=()):
         print_sql_string(sqltext, params)
 
     cursor.execute(sqltext, params)
-    print(cursor)
     cols = [a[0].decode("utf-8") for a in cursor.description]
     print(cols)
     returnres = cursor.fetchall()

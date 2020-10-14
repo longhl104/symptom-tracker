@@ -189,9 +189,6 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
         return None
-    elif len(mobile) > 20:
-        print("Phone number entered is greater than maximum length of 20.")
-        return None
 
     conn = database_connect()
 

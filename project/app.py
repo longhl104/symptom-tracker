@@ -56,7 +56,6 @@ def login():
         if not session.get('logged_in', None):
             return render_template('index.html', session=session, page=page)
         else:
-            # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
 
 @app.route('/logout', methods=['GET'])
@@ -86,7 +85,7 @@ def register():
                 request.form.get('password'),
                 generate_password_hash(request.form.get('password')),
                 'patient',
-                request.form.get('consent')
+                'yes' if request.form.get('consent') == 'on' else 'no'
             )
             if add_patient_ret is None:
                 # TODO: return error message
@@ -295,7 +294,6 @@ def symptom_history():
 @app.route('/patient/reports')
 def patient_reports():
     return render_template('patient/reports.html')
-
 
 @app.route('/patient/account')
 def patient_account():

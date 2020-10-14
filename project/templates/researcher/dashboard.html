@@ -1,12 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Page Title</title>
-</head>
-<body>
+{% extends "sidebar.html" %}
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 
-<h1>This is dashboard for researcher</h1>
-<p>to be continue</p>
+<script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
-</body>
-</html>
+{% block sidebar %}
+{{ super() }}
+  {% block content %}
+  <main class="s-layout__content">
+    <div class="container" style="justify-content: start;">
+      <div class="grid-container">
+        <div class="grid-header">
+          <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
+          <br />
+          <p>This is the Researcher dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  {% endblock %}
+{% endblock %}

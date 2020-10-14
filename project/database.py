@@ -198,22 +198,13 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
         cur = conn.cursor()
         try:
             # Try executing the SQL and get from the database
-            if type == 'researcher':
-                sql = """
-                    SELECT tingleserver.add_researcher(%s,%s,%s,%s,%s,%s,%s,%s);
-                """
-            elif type == 'clinician':
-                sql = """
-                    SELECT tingleserver.add_clinician(%s,%s,%s,%s,%s,%s,%s,%s);
-                """
-            elif type == 'patient':
-                sql = """
-                    SELECT tingleserver.add_patient(%s,%s,%s,%s,%s,%s,%s,%s);
-                """
-            cur.execute(sql, (firstname, lastname, gender, age, mobile, email, password_hash, role))
+            sql = """
+                SELECT tingleserver.add_account(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cur.execute(sql, (firstname, lastname, gender, age, mobile, email, password_hash, role, consent))
             conn.commit()
             patient_id = cur.fetchone()[0]
-            if type == 'patient':
+            if role == 'patient':
                 if treatment is not None and len(treatment) > 0:
                     for t in treatment:
                         sql = """

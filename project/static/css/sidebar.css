@@ -132,6 +132,12 @@ a {
   transform: translate(-50%, -50%);
 }
 
+#logout {
+  width: 100%; 
+  margin: 0px 10px 15px 3px;
+  font-size:12px;
+}
+
 /* Mobile First */
 @media (min-width: 42em) {
   .s-layout__content {
@@ -188,6 +194,11 @@ a {
 
   .logo{
     display: block;
+  }
+
+  #logout {
+    margin: 0px 10px 15px 10px;
+    font-size:18px;
   }
 
 }

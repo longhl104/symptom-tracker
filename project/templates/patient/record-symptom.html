@@ -4,6 +4,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/record-symptom.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
 {% endblock %}
 {% block title %}Record a Symptom{% endblock %}
 {% block sidebar %}
@@ -17,12 +18,10 @@
           <label for="symptom">Symptom<sup>*</sup></label>
           <select name="symptom" onchange="checkvalue(this)" required>
             <option label=" "></option>
-            <option value="Buzzing">Buzzing</option>
             <option value="Cramping">Cramping</option>
             <option value="Discomfort">Discomfort</option>
             <option value="Numbness">Numbness</option>
             <option value="Pain">Pain</option>
-            <option value="Ringing">Ringing</option>
             <option value="Tingling">Tingling</option>
             <option value="Weakness">Weakness</option>
             <option value="Other">Other</option>
@@ -31,37 +30,28 @@
           <span class="error-message" id="symptom-error-message"></span>
           <label for="location">Location<sup>*</sup></label>
           <select name="location" onchange="checkvalue(this)" required>
-            <option label=" "></option>
-            <option value="Arms">Arms</option>
-            <option value="Ears">Ears</option>
-            <option value="Eyes">Eyes</option>
-            <option value="Feet">Feet</option>
-            <option value="Hands">Hands</option>
-            <option value="Legs">Legs</option>
-            <option value="Other">Other</option>
+              <option label=" "></option>
+              <option value="Hands">Hands</option>
+              <option value="Arms">Arms</option>
+              <option value="Feet">Feet</option>
+              <option value="Legs">Legs</option>
+              <option value="Other">Other</option>
           </select>
           <input type="text" id="location" placeholder="Enter a location here" name="location" style="display: none;"/>
           <span class="error-message" id="location-error-message"></span>
-          <label for="activity">Activity<sup>*</sup></label>
-          <select name="activity" onchange="checkvalue(this)" required>
-            <option label=" "></option>
-            <option value="Walking">Walking</option>
-            <option value="Running">Running</option>
-            <option value="Swimming">Swimming</option>
-            <option value="Other">Other</option>
-          </select>
-          <input type="text" id="activity" placeholder="Enter an activity here" name="activity" style="display: none;"/>
-          <span class="error-message" id="activity-error-message"></span>
           <label for="severity">Severity<sup>*</sup></label>
-          <select name="severity" required>
-            <option label=" "></option>
-            <option value="Not at all">Not at all</option>
-            <option value="A little bit">A little bit</option>
-            <option value="Somewhat">Somewhat</option>
-            <option value="Quite a bit">Quite a bit</option>
-            <option value="Very much">Very much</option>
-          </select>
-          <label for="occurence">Occurence<sup>*</sup></label>
+          <div class="range-wrap">
+            <input value="0" type="range" class="range" min="0" max="4" step="1" name="severity" list="severity" required>
+            <datalist id="severity">
+              <option value="0">Not at all</option>
+              <option value="1">A little bit</option>
+              <option value="2">Somewhat</option>
+              <option value="3">Quite a bit</option>
+              <option value="4">Very much</option>
+            </datalist>
+            <output class="bubble"></output>
+          </div>
+          <label for="occurence" style="margin-top: 25px;">When did it occur during the day?<sup>*</sup></label>
           <select name="occurence" required>
             <option label=" "></option>
             <option value="Morning">Morning</option>
@@ -70,16 +60,8 @@
             <option value="All the time">All the time</option>
             <option value="Sporadic">Sporadic</option>
           </select>
-          <div class="grid two-equal-columns">
-            <div class="col">
-              <label for="date">Date</label>
-              <input type="date" id="date" name="date">
-            </div>
-            <div class="col">
-              <label for="time">Time</label>
-              <input type="time" id="time" name="time">
-            </div>
-          </div>
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date">
           <label for="notes">Notes</label>
           <textarea name="notes" maxlength="255" rows="4" style="resize: none;"></textarea>
           {% with messages = get_flashed_messages(with_categories=true) %}

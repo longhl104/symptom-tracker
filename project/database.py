@@ -153,7 +153,8 @@ def get_all_treatments():
         cur = conn.cursor()
         try:
             sql = """
-                SELECT tingleserver."Treatment".treatment_name FROM tingleserver."Treatment"
+                SELECT tingleserver."Treatment".treatment_name 
+                FROM tingleserver."Treatment"
             """
 
             r = dictfetchall(cur, sql)

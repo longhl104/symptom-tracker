@@ -91,6 +91,10 @@ def register():
                 # TODO: return error message
                 return redirect(url_for('register'))
             else:
+                session['logged_in'] = True
+                login_return_data = database.get_account(request.form['email-address'])
+                global user_details
+                user_details = login_return_data[0]
                 return redirect(url_for('patient_dashboard'))
         except Exception as e:
             print(e)

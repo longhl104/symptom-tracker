@@ -46,7 +46,7 @@ def login():
 
     elif request.method == 'GET':
         if not session.get('logged_in', None):
-            return(render_template('index.html', session=session, page=page))
+            return render_template('index.html', session=session, page=page)
         else:
             # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
@@ -56,7 +56,7 @@ def logout():
     session['logged_in'] = False
     user_details = {}
     page = {}
-    return(render_template('index.html', session=session, page=page))
+    return redirect(url_for('login'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -106,11 +106,6 @@ def register():
 @app.route('/register-extra')
 def register_extra():
     return render_template('register-extra.html')
-
-@app.route('/logout', methods=['GET'])
-def logout():
-    session['logged_in'] = False
-    return(render_template('index.html', session=session, page=page))
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
@@ -170,6 +165,7 @@ def record_symptom():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if request.method == 'POST':
+        severity_scale = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
         form_data = dict(request.form.lists())
         print(form_data)
         symptom = form_data.get('symptom')[0]
@@ -180,7 +176,7 @@ def record_symptom():
         if location == 'Other':
             location = form_data.get('location')[1]
         print(location)
-        severity = form_data.get('severity')[0]
+        severity = severity_scale[int(form_data.get('severity')[0])]
         date = form_data.get('date')[0]
         notes = form_data.get('notes')[0]
 

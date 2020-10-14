@@ -4,6 +4,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/record-symptom.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
 {% endblock %}
 {% block title %}Record a Symptom{% endblock %}
 {% block sidebar %}
@@ -38,15 +39,18 @@
           <input type="text" id="location" placeholder="Enter a location here" name="location" style="display: none;"/>
           <span class="error-message" id="location-error-message"></span>
           <label for="severity">Severity<sup>*</sup></label>
-          <select name="severity" required>
-            <option label=" "></option>
-            <option value="Not at all">Not at all</option>
-            <option value="A little bit">A little bit</option>
-            <option value="Somewhat">Somewhat</option>
-            <option value="Quite a bit">Quite a bit</option>
-            <option value="Very much">Very much</option>
-          </select>
-          <label for="occurence">When did it occur during the day?<sup>*</sup></label>
+          <div class="range-wrap">
+            <input value="0" type="range" class="range" min="0" max="4" step="1" name="severity" list="severity" required>
+            <datalist id="severity">
+              <option value="0">Not at all</option>
+              <option value="1">A little bit</option>
+              <option value="2">Somewhat</option>
+              <option value="3">Quite a bit</option>
+              <option value="4">Very much</option>
+            </datalist>
+            <output class="bubble"></output>
+          </div>
+          <label for="occurence" style="margin-top: 25px;">When did it occur during the day?<sup>*</sup></label>
           <select name="occurence" required>
             <option label=" "></option>
             <option value="Morning">Morning</option>
@@ -74,5 +78,6 @@
   {% block bodyscripts %}
     {{ super() }}
     <script type="text/javascript" src="{{ url_for('static', filename='js/record-symptom.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/slider.js') }}"></script>
   {% endblock %}
 {% endblock %}

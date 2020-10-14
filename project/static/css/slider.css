@@ -119,6 +119,5 @@ input[type=range]:focus::-ms-fill-upper {
   border-radius: 4px;
   left: 50%;
   transform: translateX(-50%);
-  top: 90%;
-  margin-bottom: 5px;
+  top: 80%;
 }

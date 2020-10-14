@@ -46,7 +46,7 @@ def login():
 
     elif request.method == 'GET':
         if not session.get('logged_in', None):
-            return(render_template('index.html', session=session, page=page))
+            return render_template('index.html', session=session, page=page)
         else:
             # TODO: How do we handle redirecting to the correct dashboard?
             return redirect(url_for('patient_dashboard'))
@@ -56,7 +56,7 @@ def logout():
     session['logged_in'] = False
     user_details = {}
     page = {}
-    return(render_template('index.html', session=session, page=page))
+    return redirect(url_for('login'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -106,11 +106,6 @@ def register():
 @app.route('/register-extra')
 def register_extra():
     return render_template('register-extra.html')
-
-@app.route('/logout', methods=['GET'])
-def logout():
-    session['logged_in'] = False
-    return(render_template('index.html', session=session, page=page))
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():

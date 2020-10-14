@@ -17,6 +17,9 @@ function setBubble(range, bubble) {
   const severity = val == 0 ? "Not at all" : val == 1 ? "A little bit" : val == 2 ? "Somewhat" : val == 3 ? "Quite a bit" : "Very much"
   bubble.innerText = severity;
 
+  const translateX = val == 0 ? '-10%' : val == 4 ? '-90%' : '-50%';
+
   // Shift the bubble to the left based on the current value of the range
   bubble.style.left = `calc(${newVal}% + (${8 - newVal * 0.15}px))`;
+  bubble.style.transform = `translateX(${translateX})`;
 }

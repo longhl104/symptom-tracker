@@ -275,7 +275,7 @@ def get_all_symptoms(email):
         try:
             sql = """
                 SELECT (symptom_id, recorded_date, symptom_name, location, severity, occurence, notes)
-                FROM tingleserver."Symptom" WHERE patient_username = %s
+                FROM tingleserver."Symptom" WHERE patient_username = %s ORDER BY recorded_date DESC
             """
 
             r = dictfetchall(cur, sql, (email,))

@@ -42,14 +42,10 @@ def login():
         session['logged_in'] = True
         session['name'] = user_details['ac_firstname']
 
-        if user_details['ac_type'] == 'clinician':
-            return redirect(url_for('clinician_dashboard'))
-        elif user_details['ac_type'] == 'researcher':
-            return redirect(url_for('researcher_dashboard'))
-        elif user_details['ac_type'] == 'patient':
-            return redirect(url_for('patient_dashboard'))
+        if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
+            return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
         else:
-            print('Error: Attempted logging in with Unknown')
+            print('Error: Attempted logging in with an unknown role')
             raise
 
     elif request.method == 'GET':
@@ -158,15 +154,9 @@ def researcher_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
-    if user_details['ac_type'] == 'clinician':
-        print('Error: Attempted accessing researcher dashboard as Clinician')
-        return redirect(url_for('clinician_dashboard'))
-    elif user_details['ac_type'] == 'patient':
-        print('Error: Attempted accessing researcher dashboard as Patient')
-        return redirect(url_for('patient_dashboard'))
-    elif user_details['ac_type'] != 'researcher':
-        print('Error: Attempted accessing researcher dashboard as Unknown')
-        raise
+    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
     return render_template('researcher/dashboard.html', session=session)
@@ -176,15 +166,9 @@ def clinician_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
-    if user_details['ac_type'] == 'researcher':
-        print('Error: Attempted accessing clinician dashboard as Researcher')
-        return redirect(url_for('researcher_dashboard'))
-    elif user_details['ac_type'] == 'patient':
-        print('Error: Attempted accessing clinician dashboard as Patient')
-        return redirect(url_for('patient_dashboard'))
-    elif user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+    if user_details['ac_type'] in ['researcher', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
     return render_template('clinician/dashboard.html', session=session)
@@ -217,15 +201,9 @@ def patient_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
-    if user_details['ac_type'] == 'clinician':
-        print('Error: Attempted accessing patient dashboard as Clinician')
-        return redirect(url_for('clinician_dashboard'))
-    elif user_details['ac_type'] == 'researcher':
-        print('Error: Attempted accessing patient dashboard as Researcher')
-        return redirect(url_for('researcher_dashboard'))
-    elif user_details['ac_type'] != 'patient':
-        print('Error: Attempted accessing patient dashboard as Unknown')
-        raise
+    if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
     return render_template('patient/dashboard.html', session=session)
@@ -312,7 +290,16 @@ def patient_reports():
 def patient_account():
     return render_template('patient/account.html')
 
-# PWA-related routes
+@app.route('/admin/')
+def admin_dashboard():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'researcher', 'patient']:
+        print('Error: Attempted accessing admin dashboard as a', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+
+    return render_template('admin/dashboard.html', session=session)
 
 # PWA-related routes
 @app.route('/service-worker.js')

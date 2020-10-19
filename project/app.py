@@ -6,7 +6,8 @@ import urllib.parse
 import random
 import string
 import pg8000
-from datetime import datetime
+import pygal
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -304,11 +305,42 @@ def symptom_history():
         list_of_symptoms.append(symptom_dict)
     return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
 
-@app.route('/patient/reports')
+@app.route('/patient/reports', methods=['GET', 'POST'])
 def patient_reports():
-    return render_template('patient/reports.html')
+    graph_data = None
+    if request.method == 'POST':
+        form_data = dict(request.form.lists())
 
-@app.route('/patient/account')
+        symptom = form_data.get('symptom')[0]
+        if symptom == 'Other':
+            symptom = form_data.get('symptom')[1]
+        
+        location = form_data.get('location')[0]
+        if location == 'Other':
+            location = form_data.get('location')[1]
+        
+        startDate = form_data.get('startDate')[0]
+        endDate = form_data.get('endDate')[0]
+        data = database.get_graph_data(user_details['ac_email'], symptom, location)
+        date = []
+        sev = []
+        s = {"Not at all" : 1, "A little bit" : 2, "Somewhat" : 3, "Quite a bit" : 4, "Very much" : 5}
+        for d in data:
+            d = d["row"][1:-1].split(",")
+            date += [d[0]]
+            sev += [d[1]]
+            #sev += [s[d[1][1:]]]
+        print(date)
+        graph = pygal.Line()
+        graph.title = symptom + ' in my ' + location
+        graph.x_labels = date
+        graph.y_labels = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
+        graph.add('Severity',     sev)
+        #graph_data = graph.render_data_uri()
+        graph_data = [date, sev]
+    return render_template("patient/reports.html", graph_data = graph_data)
+
+@app.route('/patient/account') 
 def patient_account():
     return render_template('patient/account.html')
 

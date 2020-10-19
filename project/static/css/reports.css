@@ -1,0 +1,126 @@
+.container {
+    width: 65%;
+    padding: 1rem;
+    justify-content: normal;
+    align-items: normal;
+  }
+  
+  .card {
+    margin-top: 15px;
+    width: 100%;
+  }
+  
+  .title {
+    color: #333333;
+    font-size: 50px;
+  }
+  
+  textarea {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px;
+    border: 1px solid #BCBCC4;
+    border-radius: 5px;
+  }
+
+  embed {
+    margin-top: 15px;
+  }
+  
+  
+  /*
+    Device = Desktops
+    Screen = 1281px to higher resolution desktops
+  */
+  
+  @media (min-width: 1281px) {
+    .container {
+      width: 50%;
+    }
+  }
+  
+  /*
+    Device = Tablets, iPads (Portrait)
+    Screen = 768px to 1024px
+  */
+  
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .card {
+      width: 100%;
+      margin-top: 10px;
+    }
+  
+    .container {
+      width: 90%;
+    }
+  
+    .title {
+      font-size: 40px;
+    }
+  }
+  
+  /*
+    Device = Tablets, iPads (Landscape)
+    Screen = 768px to 1024px
+  */
+  
+  @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .card {
+      width: 100%;
+      margin-top: 10px;
+    }
+  
+    .container {
+      width: 100%;
+    }
+  
+    .title {
+      font-size: 40px;
+    }
+  }
+  
+  /*
+    Device = Low Resolution Tablets, Smartphones (Landscape)
+    Screen = 481px to 767px
+  */
+  
+  @media (min-width: 481px) and (max-width: 767px) {
+    .card {
+      width: 100%;
+      margin-top: 10px;
+    }
+  
+    .container {
+      width: 90%;
+    }
+  
+    .title {
+      font-size: 36px;
+    }
+  }
+  
+  /*
+    Device = Most Smartphones (Portrait)
+    Screen = 320px to 479px
+  */
+  
+  @media (min-width: 320px) and (max-width: 480px) {
+    .card {
+      width: 100%;
+      margin-top: 10px;
+    }
+  
+    .container {
+      width: 100%;
+    }
+  
+    .title {
+      font-size: 32px;
+    }
+  
+    .two-equal-columns {
+      grid-template-columns: unset;
+      grid-template-rows: 1fr 1fr;
+    }
+  }
+ 

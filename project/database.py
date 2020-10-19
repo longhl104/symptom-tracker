@@ -292,6 +292,31 @@ def get_all_symptoms(email):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_graph_data(email, symptom, location):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (recorded_date, severity) 
+                FROM tingleserver."Symptom"
+                WHERE patient_username=%s AND symptom_name=%s AND location=%s
+            """
+    
+            r = dictfetchall(cur, sql, (email, symptom, location))
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def check_key_exists(email):
     conn = database_connect()
     if conn:

@@ -1,21 +1,67 @@
 {% extends "sidebar.html" %}
 {% block head %}
-{{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reports.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
 {% endblock %}
-{% block title %}Report{% endblock %}
-
+{% block title %}Record a Symptom{% endblock %}
 {% block sidebar %}
-{{ super() }}
-{% block content %}
-<main class="s-layout__content">
-  <div class="container">
-    <div class="grid-container">
-      <div class="grid-header">
-        <h5 class="title">Reports</h5>
+  {{ super() }}
+  {% block content %}
+    <div class="container">
+      <h5 class="title">Track Symptom</h5>
+      <div class="card">
+        <form name="make-graph" class="form col" action="{{url_for('patient_reports')}}" onsubmit="return validateForm()" method="POST">
+          <input type="hidden" name="id"/>
+          <label for="symptom">Symptom<sup>*</sup></label>
+          <select name="symptom" onchange="checkvalue(this)" required>
+            <option label=" "></option>
+            <option value="Cramping">Cramping</option>
+            <option value="Discomfort">Discomfort</option>
+            <option value="Numbness">Numbness</option>
+            <option value="Pain">Pain</option>
+            <option value="Tingling">Tingling</option>
+            <option value="Weakness">Weakness</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
+          <span class="error-message" id="symptom-error-message"></span>
+          <label for="location">Location<sup>*</sup></label>
+          <select name="location" onchange="checkvalue(this)" required>
+              <option label=" "></option>
+              <option value="Hands">Hands</option>
+              <option value="Arms">Arms</option>
+              <option value="Feet">Feet</option>
+              <option value="Legs">Legs</option>
+              <option value="Other">Other</option>
+          </select>
+          <input type="text" id="location" placeholder="Enter a location here" name="location" style="display: none;"/>
+          <span class="error-message" id="location-error-message"></span>
+          <label for="startDate">From</label>
+          <input type="date" id="startDate" name="startDate">
+          <label for="endDate">To</label>
+          <input type="date" id="endDate" name="endDate">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <span class="{{ category }}-message">{{ message }}</span>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          <input class="btn green" type="submit" style="margin-top: 20px;" value="Submit">
+        </form>
+        {% if graph_data != none %}
+          <!--<embed type="image/svg+xml" src={{graph_data|safe}} style='max-width:1000px'>-->
+            <h1>{{graph_data}}</h1>
+        {% endif %}
       </div>
+      
     </div>
-  </div>
-</main>
-{% endblock %}
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/reports.js') }}"></script>
+  {% endblock %}
 {% endblock %}

@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 config = configparser.ConfigParser()
-config.read('sample-config.ini')
+config.read('config.ini')
 
 def setup_email(to, key):
     base_url = config['EMAIL']['base_url']

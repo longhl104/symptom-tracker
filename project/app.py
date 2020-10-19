@@ -73,6 +73,7 @@ def register():
     if request.method == 'POST':
         
         try:
+            print(request.form)
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
@@ -85,13 +86,14 @@ def register():
             mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
+            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 request.form.get('first-name'),
                 request.form.get('last-name'),
                 request.form.get('gender', ""), # gender,
                 age,
                 mobile, 
-                request.form.getlist('treatment', []),
+                request.form.get('treatment'),
                 request.form.get('email-address'),
                 request.form.get('password'),
                 generate_password_hash(request.form.get('password')),
@@ -105,6 +107,7 @@ def register():
                 session['logged_in'] = True
                 login_return_data = database.get_account(request.form['email-address'])
                 global user_details
+                print('login====', login_return_data)
                 user_details = login_return_data[0]
                 return redirect(url_for('patient_dashboard'))
         except:
@@ -146,7 +149,7 @@ def forgot_password():
                 flash('There is no account associated with that email. Please try again.', "error")
                 return render_template('forgot-password.html')
         else: 
-            print(result)
+            # print(result)
             unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)

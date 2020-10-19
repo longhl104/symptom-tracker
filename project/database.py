@@ -11,7 +11,7 @@ def database_connect():
     """
     # Read the config file
     config = configparser.ConfigParser()
-    config.read('sample-config.ini')
+    config.read('config.ini')
     if 'database' not in config['DATABASE']:
         config['DATABASE']['database'] = config['DATABASE']['user']
 
@@ -158,8 +158,8 @@ def get_all_treatments():
             """
 
             r = dictfetchall(cur, sql)
-            print("return val is:")
-            print(r)
+            # print("return val is:")
+            # print(r)
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r

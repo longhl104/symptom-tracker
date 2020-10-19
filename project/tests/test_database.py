@@ -50,10 +50,6 @@ class DatabaseTest(unittest.TestCase):
                 output, "SELECT * FROM tingleserver.\"Treatment\" WHERE 'name'='long'")
         pass
 
-    def test_check_login(self):
-
-        pass
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -330,8 +330,6 @@ def get_all_patients(email):
             """
 
             r = dictfetchall(cur, sql, (email,))
-            print("return val is:")
-            print(r)
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r
@@ -342,7 +340,30 @@ def get_all_patients(email):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+def check_clinician_link(clinician_id, patient_email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
+                WHERE tingleserver."Patient_Clinician".clinician_id =%s
+                AND tingleserver."Account".ac_email = %s
+            """
 
+            cur.execute(sql,(clinician_id,patient_email))
+            r = dictfetchall(cur, sql, (clinician_id,patient_email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting link: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
 def check_key_exists(email):
     conn = database_connect()
     if conn:

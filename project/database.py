@@ -292,7 +292,7 @@ def get_all_symptoms(email):
         conn.close()                    # Close the connection to the db
     return None
 
-def get_graph_data(email, symptom, location):
+def get_graph_data(email, symptom, location, startDate, endDate):
     conn = database_connect()
     if conn:
         cur = conn.cursor()
@@ -300,10 +300,11 @@ def get_graph_data(email, symptom, location):
             sql = """
                 SELECT (recorded_date, severity) 
                 FROM tingleserver."Symptom"
-                WHERE patient_username=%s AND symptom_name=%s AND location=%s
+                WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date BETWEEN %s AND %s
+                ORDER BY recorded_date 
             """
     
-            r = dictfetchall(cur, sql, (email, symptom, location))
+            r = dictfetchall(cur, sql, (email, symptom, location, startDate, endDate))
             print("return val is:")
             print(r)
             cur.close()                     # Close the cursor

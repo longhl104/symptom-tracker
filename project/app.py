@@ -7,6 +7,10 @@ import random
 import string
 import pg8000
 import pygal
+import StringIO
+import io
+import csv
+from pygal.style import Style
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -321,23 +325,23 @@ def patient_reports():
         
         startDate = form_data.get('startDate')[0]
         endDate = form_data.get('endDate')[0]
-        data = database.get_graph_data(user_details['ac_email'], symptom, location)
+        data = database.get_graph_data(user_details['ac_email'], symptom, location, startDate, endDate)
         date = []
         sev = []
-        s = {"Not at all" : 1, "A little bit" : 2, "Somewhat" : 3, "Quite a bit" : 4, "Very much" : 5}
+        s = {'Not at all': 0, 'A little bit': 1, 'Somewhat': 2, 'Quite a bit': 3, 'Very much': 4}
         for d in data:
             d = d["row"][1:-1].split(",")
             date += [d[0]]
-            sev += [d[1]]
-            #sev += [s[d[1][1:]]]
-        print(date)
-        graph = pygal.Line()
+            sev += [s[d[1].strip('"')]]
+        #graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
+        # plot_background='#FFFFFF',background='#FFFFFF'))
+        graph = pygal.Bar(range=(0, 4))
         graph.title = symptom + ' in my ' + location
-        graph.x_labels = date
+        #graph.x_labels = date
+        graph.x_labels = ['2020-09-16','2020-09-16','2020-09-16','2020-09-16','2020-09-16']
         graph.y_labels = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
-        graph.add('Severity',     sev)
-        #graph_data = graph.render_data_uri()
-        graph_data = [date, sev]
+        graph.add('Severity', [0, 1, None, 3, 4])
+        graph_data = graph.render_data_uri()
     return render_template("patient/reports.html", graph_data = graph_data)
 
 @app.route('/patient/account') 

@@ -1,0 +1,45 @@
+{% extends "sidebar.html" %}
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+{% endblock %}
+{% block title %}Patient List{% endblock %}
+{% block sidebar %}
+{{ super() }}
+  {% block content %}
+    <div class="container">
+      <h5 class="title">Patient List</h5>
+      <div class="card">
+          <table>
+              <thead>
+                  <tr>
+                      <th>first-name</th>
+                      <th>last-name</th>
+                      <th>age</th>
+                      <th>gender</th>
+                      <th>survey/report</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for patient in patients %}
+                      <tr>
+                        <td>{{patient.ac_firstname}}</td>
+                        <td>{{patient.ac_lastname}}</td>
+                        <td>{{patient.ac_age}}</td>
+                        <td>{{patient.ac_gender}}</td>
+                        <td><button class="btn blue"onclick="viewHistory('{{ patient.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
+                        <button class="btn red" ></button><i class="fa fa-trash fa-lg" style="color: #ffffff"></i></button></td>
+                      </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      </div>
+    </div>
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/view-patients.js') }}"></script>
+  {% endblock %}
+{% endblock %}

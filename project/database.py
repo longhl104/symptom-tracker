@@ -298,7 +298,35 @@ def get_all_symptoms(email):
         try:
             sql = """
                 SELECT (symptom_id, recorded_date, symptom_name, location, severity, occurence, notes)
-                FROM tingleserver."Symptom" WHERE patient_username = %s ORDER BY recorded_date DESC
+                FROM tingleserver."Symptom" 
+                WHERE patient_username = %s 
+                ORDER BY recorded_date DESC
+            """
+
+            r = dictfetchall(cur, sql, (email,))
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+
+def get_all_patients(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (tingleserver."Account".ac_id,tingleserver."Account".ac_email,tingleserver."Account".ac_firstname,tingleserver."Account".ac_lastname,tingleserver."Account".ac_age,tingleserver."Account".ac_gender)
+                FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
+                WHERE tingleserver."Patient_Clinician".clinician_id =%s
             """
 
             r = dictfetchall(cur, sql, (email,))

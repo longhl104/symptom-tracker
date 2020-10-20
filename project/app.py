@@ -286,9 +286,76 @@ def symptom_history():
 def patient_reports():
     return render_template('patient/reports.html')
 
-@app.route('/patient/account')
-def patient_account():
-    return render_template('patient/account.html')
+@app.route('/patient/account/', methods=['GET', 'POST'])
+@app.route('/patient/account/<clinician_email>', methods=['DELETE'])
+def patient_account(clinician_email=None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] == 'clinician':
+        print('Error: Attempted accessing patient account as Clinician')
+        return redirect(url_for('clinician_dashboard'))
+    elif user_details['ac_type'] == 'researcher':
+        print('Error: Attempted accessing patient account as Researcher')
+        return redirect(url_for('researcher_dashboard'))
+    elif user_details['ac_type'] != 'patient':
+        print('Error: Attempted accessing patient account as Unknown')
+        raise
+
+    if request.method == 'POST':
+        form_data = dict(request.form.lists())
+        clinician_email = form_data.get('clinician_email', [''])[0]
+        if clinician_email == '':
+            flash('Please enter a clinician email address.', 'error')
+
+        acc = database.get_account(clinician_email)
+        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+            flash('This email address is not associated with a clinician account.', 'error')
+            return redirect(url_for('patient_account'))
+
+        clinician_id = acc[0]['ac_id']
+        
+        try:
+            link = database.add_patient_clinician_link(
+                user_details['ac_id'],
+                clinician_id
+            )
+        except pg8000.IntegrityError:
+            flash('This clinician account is already linked to your account.', 'error')
+            return redirect(url_for('patient_account'))
+
+        if link is None:
+            flash('Unable to link clinician account, please try again.', 'error')
+            return redirect(url_for('patient_account'))
+        else:
+            flash('Clinician successfully linked to your account.', 'success')
+            return redirect(url_for('patient_account'))
+
+    if request.method == 'DELETE':
+        acc = database.get_account(clinician_email)
+        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+            print('Error: Attempted to delete clinician-patient link for non-existent clinician account')
+            return redirect(url_for('patient_account'))
+        result = database.delete_patient_clinician_link(
+            user_details['ac_id'],
+            acc[0]['ac_id']
+        )
+        if result is None:
+            flash('Clinician account link could not be deleted.', 'error')
+            return redirect(url_for('patient_account'))
+
+    clinicians_raw = database.get_linked_clinicians(user_details['ac_id'])
+    clinicians = []
+    if clinicians_raw is None:
+        flash('Error retrieving clinicians list.', 'error')
+        clinicians = ''
+    else:
+        for clinician in clinicians_raw:
+            acc = database.get_account_by_id(clinician['clinician_id'])
+            if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
+                clinicians.append(acc[0]['ac_email'])
+        clinicians = ",".join(clinicians)
+    return render_template('patient/account.html', clinicians=clinicians)
 
 @app.route('/admin/')
 def admin_dashboard():

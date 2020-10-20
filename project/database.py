@@ -146,6 +146,29 @@ def get_account(email):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_account_by_id(id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Account"
+                WHERE ac_id=%s
+            """
+            cur.execute(sql, (id,))
+            # r = cur.fetchone()
+
+            r = dictfetchone(cur, sql, (id,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get hashed password")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
 
 def get_all_treatments():
     conn = database_connect()
@@ -411,6 +434,70 @@ def delete_symptom_record(email, id):
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error deleting:", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_patient_clinician_link(patient_id, clinician_id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Patient_Clinician"(
+                    patient_id, clinician_id)
+                    VALUES(%s, %s);
+            """
+            cur.execute(sql, (patient_id, clinician_id))
+            conn.commit()
+            cur.close()
+            return patient_id
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error linking patient and clinician ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def delete_patient_clinician_link(patient_id, clinician_id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Patient_Clinician" WHERE patient_id = %s AND clinician_id = %s
+            """
+            cur.execute(sql, (patient_id,clinician_id,))
+            conn.commit()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return patient_id
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error deleting patient-clinician link:", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def get_linked_clinicians(patient_id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT clinician_id
+                FROM tingleserver."Patient_Clinician" WHERE patient_id = %s
+            """
+            r = dictfetchall(cur, sql, (patient_id,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all clinicians: ", sys.exc_info()[0])
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

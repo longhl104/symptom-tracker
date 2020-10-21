@@ -72,8 +72,9 @@ body {
 
 .subtitle {
   color: #4b4b4b;
-  font-size: 1rem;
+  font-size: 1.6rem;
   font-weight: 400;
+  margin-bottom: 10px;
 }
 
 form {

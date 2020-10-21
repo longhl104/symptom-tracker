@@ -1,0 +1,123 @@
+input[type=range] {
+  -webkit-appearance: none;
+  margin: 10px 0;
+  width: 100%;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 12.8px;
+  cursor: pointer;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+  border-radius: 25px;
+  border: 0px solid #000101;
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 0px 0px 5px  rgba(0,0,0,0.4);
+  -moz-box-shadow: 0px 0px 5px rgba(0,0,0,0.4);
+  -webkit-box-shadow: 0px 0px 5px rgba(0,0,0,0.4);
+  -o-box-shadow: 0px 0px 5px rgba(0,0,0,0.4);
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -3.6px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 12.8px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+  border-radius: 25px;
+  border: 0px solid #000101;
+}
+input[type=range]::-moz-range-thumb {
+    box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -moz-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -webkit-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -o-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  height: 12.8px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  border-width: 39px 0;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+  border: 0px solid #000101;
+  border-radius: 50px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+}
+input[type=range]::-ms-fill-upper {
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+  border: 0px solid #000101;
+  border-radius: 50px;
+  box-shadow: 0px 0px 0px #000000, 0px 0px 0px #0d0d0d;
+}
+input[type=range]::-ms-thumb {
+    box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -moz-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -webkit-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  -o-box-shadow: 10px -10px  rgba(0,0,0,0.6);
+  border: 0px solid #000000;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: rgb(75,213,51);
+  background: linear-gradient(90deg, rgba(75,213,51,1) 0%, rgba(161,218,81,1) 20%, rgba(228,228,78,1) 40%, rgba(238,207,74,1) 60%, rgba(246,131,71,1) 80%, rgba(252,69,69,1) 100%);
+}
+
+.range-wrap {
+  position: relative;
+}
+
+.range {
+  width: 100%;
+  border: 0px;
+}
+
+.bubble {
+  background: #fff;
+  color: #333333;
+  padding: 4px 6px;
+  position: absolute;
+  border-radius: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 80%;
+}

@@ -34,6 +34,33 @@ def setup_email(to, key):
 
     return message
 
+def setup_invitation(role, to, key):
+    base_url = config['EMAIL']['base_url']
+    sender = str(config['EMAIL']['email'])
+    recipient = to
+    role = 'an ' + role.title() if role.lower() == 'admin' else 'a ' + role.title()
+    text = """
+
+    You are receiving this email because you have been invited to join Brain and Mind Centre's Symptom Tracker as {role}.
+
+    Copy and paste the link below into your browser to create a new account:
+
+    {base_url}/register/{key}
+
+    This link will expire in 24 hours.
+
+    If you did not request an invitation, you may disregard this message.
+
+    Thank you,
+
+    The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key, role=role)
+    message = MIMEText(text, "plain")
+    message["Subject"] = "Symptom Tracker Invitation"
+    message["From"] = sender
+    message["To"] = recipient
+
+    return message
+
 def send_email(message):
 
     port = 465  # For SSL

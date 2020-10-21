@@ -230,7 +230,6 @@ def view_patients_history(id = None):
     check_link = None
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
-        flash('unable to connect to not linked patient account', 'error')
         return(redirect(url_for('clinician_dashboard')))
     if id != None:
         symptoms = None

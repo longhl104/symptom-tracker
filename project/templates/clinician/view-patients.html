@@ -15,11 +15,11 @@
           <table>
               <thead>
                   <tr>
-                      <th>first-name</th>
-                      <th>last-name</th>
-                      <th>age</th>
-                      <th>gender</th>
-                      <th>survey/report</th>
+                      <th>First Name</th>
+                      <th>Last Name</th>
+                      <th>Age</th>
+                      <th>Gender</th>
+                      <th>Survey/Report</th>
                   </tr>
               </thead>
               <tbody>
@@ -30,7 +30,6 @@
                         <td>{{patient.ac_age}}</td>
                         <td>{{patient.ac_gender}}</td>
                         <td><button class="btn blue"onclick="viewHistory('{{ patient.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
-                        <button class="btn red" ></button><i class="fa fa-trash fa-lg" style="color: #ffffff"></i></button></td>
                       </tr>
                   {% endfor %}
               </tbody>

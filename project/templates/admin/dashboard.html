@@ -3,6 +3,8 @@
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}">
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
@@ -16,8 +18,37 @@
       <div class="grid-container">
         <div class="grid-header">
           <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
-          <br />
-          <p>This is the Admin dashboard.</p>
+          <div class="card">
+            <h6>Invite a user</h6>
+            <form class="form" action="{{url_for('invite_user')}}" method="POST">
+              <div class="col">
+                <div class="grid two-equal-columns">
+                  <div class="col">
+                    <label for="email-address">Email Address</label>
+                    <input type="email" class="input" name="email-address" required>
+                  </div>
+                  <div class="col">
+                    <label for="role">Role</label>
+                    <select name="role" id="role">
+                      <option value="admin">Admin</option>
+                      <option value="clinician">Clinician</option>
+                      <option value="researcher">Researcher</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="grid">
+                  {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                      {% for category, message in messages %}
+                        <span class="{{ category }}-message">{{ message }}</span>
+                      {% endfor %}
+                    {% endif %}
+                  {% endwith %}
+                  <input class="btn green" type="submit" value="Send Invitation"/>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ import random
 import string
 import pg8000
 import pygal
-import StringIO
 import io
 import csv
 from pygal.style import Style
@@ -333,16 +332,43 @@ def patient_reports():
             d = d["row"][1:-1].split(",")
             date += [d[0]]
             sev += [s[d[1].strip('"')]]
-        #graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
-        # plot_background='#FFFFFF',background='#FFFFFF'))
-        graph = pygal.Bar(range=(0, 4))
+        graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
+            plot_background='#FFFFFF',background='#FFFFFF'))
+        # graph = pygal.Bar(range=(0, 4))
         graph.title = symptom + ' in my ' + location
-        #graph.x_labels = date
-        graph.x_labels = ['2020-09-16','2020-09-16','2020-09-16','2020-09-16','2020-09-16']
+        graph.x_labels = date
+        # graph.x_labels = ['2020-09-16','2020-09-16','2020-09-16','2020-09-16','2020-09-16']
         graph.y_labels = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
-        graph.add('Severity', [0, 1, None, 3, 4])
+        graph.add('Severity', sev)
+        # graph.add('Severity', [0, 1, None, 3, 4])
         graph_data = graph.render_data_uri()
     return render_template("patient/reports.html", graph_data = graph_data)
+
+@app.route('/patient/reports/download', methods=['POST']) 
+def download_file():
+    si = io.StringIO()
+    cw = csv.writer(si)
+    form_data = dict(request.form.lists())
+    symptom = form_data.get('symptom')[0]
+    if symptom == 'Other':
+        symptom = form_data.get('symptom')[1]
+    location = form_data.get('location')[0]
+    if location == 'Other':
+        location = form_data.get('location')[1]
+    startDate = form_data.get('startDate')[0]
+    endDate = form_data.get('endDate')[0]
+    data = database.get_graph_data(user_details['ac_email'], symptom, location, startDate, endDate)
+    d = []
+    for r in data:
+        r = r["row"][1:-1].split(",")
+        d += [(r[0], r[1].strip('"'))]
+    head = ('Date', 'Severity')
+    cw.writerow(head)
+    cw.writerows(d)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 @app.route('/patient/account') 
 def patient_account():

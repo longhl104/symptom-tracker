@@ -218,6 +218,64 @@ def clinician_dashboard():
     print(session)
     return render_template('clinician/dashboard.html', session=session)
 
+@app.route('/clinician/create_survey/')
+def create_survey():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'clinician':
+        print('Error: Attempted accessing clinician dashboard as Unknown')
+        raise
+    return render_template('clinician/dashboard.html', session=session)
+
+@app.route('/clinician/view_patients/')
+def view_patients():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'clinician':
+        print('Error: Attempted accessing clinician dashboard as Unknown')
+        raise
+    patients = None
+    patients = database.get_all_patients(user_details['ac_id'])
+    print(patients)
+    list_of_patients = []
+    patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_age", "ac_gender"]
+    for patient in patients:
+        patient = patient['row'][1:-1]
+        patient_dict = {}
+        for i, col in enumerate(patient.split(",")):
+            patient_dict[patient_col_order[i]] = col.strip('"')
+        list_of_patients.append(patient_dict)
+    print(list_of_patients)
+
+    return render_template('clinician/view-patients.html', patients=list_of_patients)
+
+@app.route('/clinician/view_patients/<id>', methods=['GET'])
+def view_patients_history(id = None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'clinician':
+        print('Error: Attempted accessing clinician dashboard as Unknown')
+        raise
+    check_link = None
+    check_link = database.check_clinician_link(user_details['ac_id'],id)
+    if len(check_link) == 0:
+        return(redirect(url_for('clinician_dashboard')))
+    if id != None:
+        symptoms = None
+        symptoms = database.get_all_symptoms(id)
+        list_of_symptoms = []
+        symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+        for symptom in symptoms:
+            symptom = symptom["row"][1:-1]
+            symptom_dict = {}
+            for i, col in enumerate(symptom.split(",")):
+                if i == 1 and col[-3:] == ":00":
+                    col = col[:-3]
+                symptom_dict[symptom_col_order[i]] = col.strip('"')
+            list_of_symptoms.append(symptom_dict)
+        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    return(redirect(url_for('clinician_dashboard')))
+
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
     if request.method == 'POST':

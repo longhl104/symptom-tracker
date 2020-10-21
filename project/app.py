@@ -310,7 +310,7 @@ def symptom_history():
 
 @app.route('/patient/reports', methods=['GET', 'POST'])
 def patient_reports():
-    graph_data = None
+    graph_data = symptom = location = startDate = endDate = None
     if request.method == 'POST':
         form_data = dict(request.form.lists())
 
@@ -342,7 +342,7 @@ def patient_reports():
         graph.add('Severity', sev)
         # graph.add('Severity', [0, 1, None, 3, 4])
         graph_data = graph.render_data_uri()
-    return render_template("patient/reports.html", graph_data = graph_data)
+    return render_template("patient/reports.html", graph_data = graph_data, symptom = symptom, location = location, startDate = startDate, endDate = endDate)
 
 @app.route('/patient/reports/download', methods=['POST']) 
 def download_file():

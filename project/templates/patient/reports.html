@@ -13,17 +13,17 @@
     <div class="container">
       <h5 class="title">Track Symptom</h5>
       <div class="card">
-        <form name="make-graph" class="form col" action="{{url_for('patient_reports')}}" onsubmit="return validateForm()" method="POST">
+        <form name="make-graph" class="form col" action="{{url_for('patient_reports')}}" onsubmit="return validateForm()" method="POsT">
           <input type="hidden" name="id"/>
           <label for="symptom">Symptom<sup>*</sup></label>
           <select name="symptom" onchange="checkvalue(this)" required>
             <option label=" "></option>
-            <option value="Cramping">Cramping</option>
-            <option value="Discomfort">Discomfort</option>
-            <option value="Numbness">Numbness</option>
-            <option value="Pain">Pain</option>
-            <option value="Tingling">Tingling</option>
-            <option value="Weakness">Weakness</option>
+            <option value="Cramping" {% if (symptom == "Cramping") %} selected="selected" {% endif %}>Cramping</option>
+            <option value="Discomfort" {% if (symptom == "Discomfort") %} selected="selected" {% endif %}>Discomfort</option>
+            <option value="Numbness" {% if (symptom == "Numbness") %} selected="selected" {% endif %}>Numbness</option>
+            <option value="Pain" {% if (symptom == "Pain") %} selected="selected" {% endif %}>Pain</option>
+            <option value="Tingling" {% if (symptom == "Tingling") %} selected="selected" {% endif %}>Tingling</option>
+            <option value="Weakness" {% if (symptom == "Weakness") %} selected="selected" {% endif %}>Weakness</option>
             <option value="Other">Other</option>
           </select>
           <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
@@ -31,18 +31,18 @@
           <label for="location">Location<sup>*</sup></label>
           <select name="location" onchange="checkvalue(this)" required>
               <option label=" "></option>
-              <option value="Hands">Hands</option>
-              <option value="Arms">Arms</option>
-              <option value="Feet">Feet</option>
-              <option value="Legs">Legs</option>
+              <option value="Hands" {% if (location == "Hands") %} selected="selected" {% endif %}>Hands</option>
+              <option value="Arms" {% if (location == "Arms") %} selected="selected" {% endif %}>Arms</option>
+              <option value="Feet" {% if (location == "Feet") %} selected="selected" {% endif %}>Feet</option>
+              <option value="Legs" {% if (location == "Legs") %} selected="selected" {% endif %}>Legs</option>
               <option value="Other">Other</option>
           </select>
           <input type="text" id="location" placeholder="Enter a location here" name="location" style="display: none;"/>
           <span class="error-message" id="location-error-message"></span>
           <label for="startDate">From</label>
-          <input type="date" id="startDate" name="startDate">
+          <input type="date" id="startDate" name="startDate" value={{ startDate }}>
           <label for="endDate">To</label>
-          <input type="date" id="endDate" name="endDate">
+          <input type="date" id="endDate" name="endDate" value={{ endDate }}>
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
               {% for category, message in messages %}

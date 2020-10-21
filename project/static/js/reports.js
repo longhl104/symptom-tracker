@@ -25,7 +25,6 @@ function setDate() {
   }
   
   function checkQueryParams() {
-    const id = getParameterByName('id');
     let name = getParameterByName('name');
     let location = getParameterByName('location');
     const startDate = getParameterByName('startDate');
@@ -61,7 +60,7 @@ function setDate() {
   }
   
   window.onload = function() {
-    setDate();
+    //setDate();
     checkQueryParams();
   };
   
@@ -91,4 +90,8 @@ function setDate() {
     }
   
     return valid;
+  }
+
+  function editRecord(name, location, startDate, endDate) {
+    window.location.href = '/patient/reports?' + encodeURI(`name=${name}&location=${location}&startDate=${startDate}&endDate=${endDate}`);
   }

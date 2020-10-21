@@ -82,18 +82,6 @@ def register(token=None):
             if (mobile == ""):
                 mobile = None
             add_patient_ret = database.add_patient(
-<<<<<<< HEAD
-                request.form['first-name'],
-                request.form['last-name'],
-                request.form.get('gender', ''),
-                request.form.get('age', ''),
-                request.form.get('mobile-number', ''),
-                request.form.getlist('treatment'),
-                request.form['email-address'],
-                request.form['password'],
-                generate_password_hash(request.form['password']),
-                request.form.get('consent', 'no')
-=======
                 request.form.get('first-name'),
                 request.form.get('last-name'),
                 request.form.get('gender', ""), # gender,
@@ -105,7 +93,6 @@ def register(token=None):
                 generate_password_hash(request.form.get('password')),
                 'patient',
                 'yes' if request.form.get('consent') == 'on' else 'no'
->>>>>>> origin/master
             )
             if add_patient_ret is None:
                 # TODO: return error message
@@ -185,13 +172,6 @@ def register(token=None):
                 return redirect(url_for('login'))
 
 
-<<<<<<< HEAD
-@app.route('/register-extra')
-def register_extra():
-    return render_template('register-extra.html')
-
-=======
->>>>>>> origin/master
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -395,11 +375,6 @@ def symptom_history():
         return redirect(url_for('login'))
     symptoms = None
     symptoms = database.get_all_symptoms(user_details['ac_email'])
-<<<<<<< HEAD
-
-    symptoms = [symptom['row'].split(",") for symptom in symptoms]
-    return render_template('patient/symptom-history.html', symptoms = symptoms)    
-=======
     list_of_symptoms = []
     symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
     for symptom in symptoms:
@@ -411,7 +386,6 @@ def symptom_history():
             symptom_dict[symptom_col_order[i]] = col.strip('"')
         list_of_symptoms.append(symptom_dict)
     return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
->>>>>>> origin/master
 
 @app.route('/patient/reports')
 def patient_reports():

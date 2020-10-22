@@ -333,14 +333,14 @@ def patient_reports():
             date += [d[0]]
             sev += [s[d[1].strip('"')]]
         graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
-            plot_background='#FFFFFF',background='#FFFFFF'))
-        # graph = pygal.Bar(range=(0, 4))
+            plot_background='#FFFFFF',background='#FFFFFF')) 
+        #graph = pygal.Bar(range=(0, 4))
         graph.title = symptom + ' in my ' + location
         graph.x_labels = date
-        # graph.x_labels = ['2020-09-16','2020-09-16','2020-09-16','2020-09-16','2020-09-16']
+        #graph.x_labels = ['2020-09-16','2020-09-16','2020-09-16','2020-09-16','2020-09-16']
         graph.y_labels = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
         graph.add('Severity', sev)
-        # graph.add('Severity', [0, 1, None, 3, 4])
+        #graph.add('Severity', [0, 1, None, 3, 4])
         graph_data = graph.render_data_uri()
     return render_template("patient/reports.html", graph_data = graph_data, symptom = symptom, location = location, startDate = startDate, endDate = endDate)
 

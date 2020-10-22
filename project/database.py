@@ -297,14 +297,42 @@ def get_graph_data(email, symptom, location, startDate, endDate):
     if conn:
         cur = conn.cursor()
         try:
-            sql = """
-                SELECT (recorded_date, severity) 
-                FROM tingleserver."Symptom"
-                WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date BETWEEN %s AND %s
-                ORDER BY recorded_date 
-            """
-    
-            r = dictfetchall(cur, sql, (email, symptom, location, startDate, endDate))
+            sql = None
+            r = None
+            if startDate == "":
+                if endDate == "":
+                    sql = """
+                        SELECT (recorded_date, severity) 
+                        FROM tingleserver."Symptom"
+                        WHERE patient_username=%s AND symptom_name=%s AND location=%s
+                        ORDER BY recorded_date 
+                    """
+                    r = dictfetchall(cur, sql, (email, symptom, location))
+                else:
+                    sql = """
+                        SELECT (recorded_date, severity) 
+                        FROM tingleserver."Symptom"
+                        WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date <= %s
+                        ORDER BY recorded_date 
+                    """
+                    r = dictfetchall(cur, sql, (email, symptom, location, endDate))
+            elif endDate == "":
+                sql = """
+                    SELECT (recorded_date, severity) 
+                    FROM tingleserver."Symptom"
+                    WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date >= %s
+                    ORDER BY recorded_date 
+                """
+                r = dictfetchall(cur, sql, (email, symptom, location, startDate))
+            else:
+                sql = """
+                    SELECT (recorded_date, severity) 
+                    FROM tingleserver."Symptom"
+                    WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date BETWEEN %s AND %s
+                    ORDER BY recorded_date 
+                """
+                r = dictfetchall(cur, sql, (email, symptom, location, startDate, endDate))
+            
             print("return val is:")
             print(r)
             cur.close()                     # Close the cursor

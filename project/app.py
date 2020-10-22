@@ -354,12 +354,12 @@ def download_file():
         location = form_data.get('location')[1]
     startDate = form_data.get('startDate')[0]
     endDate = form_data.get('endDate')[0]
-    data = database.get_graph_data(user_details['ac_email'], symptom, location, startDate, endDate)
+    data = database.get_export_data(user_details['ac_email'], symptom, location, startDate, endDate)
     d = []
     for r in data:
         r = r["row"][1:-1].split(",")
-        d += [(r[0], r[1].strip('"'))]
-    head = ('Date', 'Severity')
+        d += [(r[0], r[1].strip('"'), r[2], r[3])]
+    head = ('Date', 'Severity', 'Time of Day', 'Notes')
     cw.writerow(head)
     cw.writerows(d)
     output = make_response(si.getvalue())

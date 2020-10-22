@@ -346,6 +346,60 @@ def get_graph_data(email, symptom, location, startDate, endDate):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_export_data(email, symptom, location, startDate, endDate):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = None
+            r = None
+            if startDate == "":
+                if endDate == "":
+                    sql = """
+                        SELECT (recorded_date, severity, occurence, notes) 
+                        FROM tingleserver."Symptom"
+                        WHERE patient_username=%s AND symptom_name=%s AND location=%s
+                        ORDER BY recorded_date 
+                    """
+                    r = dictfetchall(cur, sql, (email, symptom, location))
+                else:
+                    sql = """
+                        SELECT (recorded_date, severity, occurence, notes) 
+                        FROM tingleserver."Symptom"
+                        WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date <= %s
+                        ORDER BY recorded_date 
+                    """
+                    r = dictfetchall(cur, sql, (email, symptom, location, endDate))
+            elif endDate == "":
+                sql = """
+                    SELECT (recorded_date, severity, occurence, notes) 
+                    FROM tingleserver."Symptom"
+                    WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date >= %s
+                    ORDER BY recorded_date 
+                """
+                r = dictfetchall(cur, sql, (email, symptom, location, startDate))
+            else:
+                sql = """
+                    SELECT (recorded_date, severity, occurence, notes) 
+                    FROM tingleserver."Symptom"
+                    WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date BETWEEN %s AND %s
+                    ORDER BY recorded_date 
+                """
+                r = dictfetchall(cur, sql, (email, symptom, location, startDate, endDate))
+            
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def check_key_exists(email):
     conn = database_connect()
     if conn:

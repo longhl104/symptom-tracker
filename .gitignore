@@ -154,6 +154,4 @@ cython_debug/
 # Personal config files
 project/config.ini
 config.ini
-project/tests/test_app.py
-project/tests/test_database.py
 project/local_tests/

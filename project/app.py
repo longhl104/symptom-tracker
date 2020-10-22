@@ -37,6 +37,9 @@ def login():
         global user_details
         user_details = login_return_data[0]
 
+        print(check_password_hash(
+            user_details['ac_password'], request.form['password']))
+
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))
@@ -47,8 +50,7 @@ def login():
         if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
             return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
         else:
-            print('Error: Attempted logging in with an unknown role')
-            raise
+            raise Exception('Error: Attempted logging in with an unknown role')
 
     elif request.method == 'GET':
         if not session.get('logged_in', None):
@@ -210,6 +212,7 @@ def researcher_dashboard():
 
 @app.route('/clinician/')
 def clinician_dashboard():
+    print(session)
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
@@ -225,8 +228,7 @@ def create_survey():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     return render_template('clinician/dashboard.html', session=session)
 
 @app.route('/clinician/view_patients/')
@@ -234,8 +236,7 @@ def view_patients():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     print(patients)
@@ -256,12 +257,13 @@ def view_patients_history(id = None):
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
+        
     check_link = None
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
+    print('id = {}'.format(id))
     if id != None:
         symptoms = None
         symptoms = database.get_all_symptoms(id)
@@ -326,8 +328,7 @@ def record_symptom(id=None):
         print('Error: Attempted accessing recording symptom as Researcher')
         return redirect(url_for('researcher_dashboard'))
     elif user_details['ac_type'] != 'patient':
-        print('Error: Attempted accessing recording symptom as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing recording symptom as Unknown')
 
     if request.method == 'POST':
         severity_scale = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
@@ -404,8 +405,7 @@ def patient_account(clinician_email=None):
         print('Error: Attempted accessing patient account as Researcher')
         return redirect(url_for('researcher_dashboard'))
     elif user_details['ac_type'] != 'patient':
-        print('Error: Attempted accessing patient account as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing patient account as Unknown')
 
     if request.method == 'POST':
         form_data = dict(request.form.lists())

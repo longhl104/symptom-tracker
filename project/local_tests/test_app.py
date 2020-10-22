@@ -4,6 +4,8 @@ from app import app as tingle
 from unittest import mock
 from flask import url_for, request
 from werkzeug.security import generate_password_hash, check_password_hash
+import pg8000
+
 
 class AppTest(unittest.TestCase):
     def setUp(self):
@@ -97,6 +99,23 @@ class AppTest(unittest.TestCase):
     @mock.patch('database.add_patient')
     def test_register_post_no_token(self, db, ga, dai, citv):
         with tingle.test_client() as client:
+            response = client.post('/register', data={
+                'password': '12345678',
+                'confirm-password': '123'
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('register'))
+
+            db.return_value = None
+            response = client.post('/register', data={
+                'password': '12345678',
+                'confirm-password': '12345678',
+                'age': '',
+                'mobile-number': ''
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('register'))
+
             db.return_value = True
             ga.return_value = [{
                 'ac_type': 'patient'
@@ -124,6 +143,15 @@ class AppTest(unittest.TestCase):
             }, follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('patient_dashboard'))
+        pass
+
+    @mock.patch('app.session', {'logged_in': False})
+    def test_register_post_no_token_exception(self):
+        with tingle.test_client() as client:
+            response = client.post('/register', data={
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('register'))
         pass
 
     @mock.patch('app.session', {'logged_in': False})
@@ -180,6 +208,11 @@ class AppTest(unittest.TestCase):
     @mock.patch('app.session', {'logged_in': False})
     def test_register_post_has_token_exception(self):
         with tingle.test_client() as client:
+            response = client.post('/register/0', data={
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('register', token='0'))
+
             response = client.get('/researcher', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('login'))
@@ -258,6 +291,33 @@ class AppTest(unittest.TestCase):
             apk.return_value = None
             sue.return_value = 'hi'
             see.return_value = None
+            response = client.post('/forgot-password', data={
+                'email': 'test@example.com',
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('forgot_password'))
+        pass
+
+    @mock.patch('email_handler.send_email')
+    @mock.patch('email_handler.setup_email')
+    @mock.patch('database.add_password_key')
+    @mock.patch('database.check_key_exists')
+    def test_forgot_password_post_key_exists(self, cke, apk, sue, see):
+        with tingle.test_client() as client:
+            cke.return_value = False
+            apk.return_value = None
+            apk.side_effect = Mock(side_effect=pg8000.core.IntegrityError())
+            sue.return_value = 'hi'
+            see.return_value = None
+            response = client.post('/forgot-password', data={
+                'email': 'test@example.com',
+            }, follow_redirects=True)
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(request.path, url_for('forgot_password'))
+
+            cke.return_value = False
+            apk.return_value = None
+            apk.side_effect = Mock(side_effect=pg8000.core.ProgrammingError())
             response = client.post('/forgot-password', data={
                 'email': 'test@example.com',
             }, follow_redirects=True)
@@ -480,6 +540,22 @@ class AppTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('record_symptom'))
 
+            rs.return_value = True
+            response = client.post(
+                '/patient/record-symptom',
+                data={
+                    'id': ['1'],
+                    'symptom': ['Other', 'abc'],
+                    'location': ['Other', 'abc'],
+                    'severity': ['0'],
+                    'occurence': ['sometimes'],
+                    'date': ['2014'],
+                    'notes': ['This is']
+                },
+                follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('symptom_history'))
+
             dsr.return_value = None
             rs.return_value = True
             response = client.delete(
@@ -560,6 +636,57 @@ class AppTest(unittest.TestCase):
                 follow_redirects=True))
         pass
 
+    @mock.patch('database.add_patient_clinician_link')
+    @mock.patch('database.get_account')
+    @mock.patch('app.session', {'logged_in': True})
+    @mock.patch('app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    def test_patient_account_post(self, ga, apcl):
+        with tingle.test_client() as client:
+            ga.return_value = None
+            response = client.post(
+                '/patient/account',
+                data={
+                    'clinician_email': ['']
+                },
+                follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_account'))
+
+            ga.return_value = [{'ac_id': '1', 'ac_type': 'clinician'}]
+            apcl.return_value = None
+            response = client.post(
+                '/patient/account',
+                data={
+                    'clinician_email': ['clinic@gmail.com']
+                },
+                follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_account'))
+
+            ga.return_value = [{'ac_id': '1', 'ac_type': 'clinician'}]
+            apcl.return_value = True
+            response = client.post(
+                '/patient/account',
+                data={
+                    'clinician_email': ['clinic@gmail.com']
+                },
+                follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_account'))
+
+            apcl.side_effect = Mock(side_effect=pg8000.core.IntegrityError())
+            ga.return_value = [{'ac_id': '1', 'ac_type': 'clinician'}]
+            apcl.return_value = None
+            response = client.post(
+                '/patient/account',
+                data={
+                    'clinician_email': ['clinic@gmail.com']
+                },
+                follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(request.path, url_for('patient_account'))
+        pass
+
     @mock.patch('database.get_account_by_id')
     @mock.patch('database.get_linked_clinicians')
     @mock.patch('database.delete_patient_clinician_link')
@@ -633,7 +760,7 @@ class AppTest(unittest.TestCase):
     @mock.patch('app.user_details', {'ac_type': 'admin', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
     @mock.patch('app.session', {'logged_in': True})
     @mock.patch('database.get_account')
-    def test_invite_user_post(self, ga, ceiai, uriai, aai, si, se):
+    def test_invite_user_post(self, ga, ceiai, uriai, aai, si,se):
         with tingle.test_client() as client:
             ga.return_value = True
             response = client.post(
@@ -679,12 +806,32 @@ class AppTest(unittest.TestCase):
                 }, follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('admin_dashboard'))
-        pass
 
+            ga.return_value = False
+            ceiai.return_value = False
+            aai.return_value = None
+            aai.side_effect = Mock(side_effect=pg8000.core.IntegrityError())
+            si.return_value = None
+            se.return_value = None
+            uriai.return_value = [{
+                'token': '1',
+                'role': 'labor'
+            }]
+            response = client.post(
+                '/admin/invite',
+                data={
+                    'email-address': ['admin@example.com'],
+                    'role': ['admin'],
+                }, follow_redirects=True)
+            self.assertEqual(response.status_code, 500)
+            self.assertEqual(request.path, url_for('invite_user'))
+        pass
+    
     def test_service_worker_js(self):
         with tingle.test_client() as client:
             response = client.get('/service-worker.js', content_type='html/text')
             self.assertEqual(response.status_code, 200)
+        pass
 
 
 if __name__ == '__main__':

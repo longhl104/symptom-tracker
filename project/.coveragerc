@@ -7,3 +7,4 @@ omit = /* Omit testing for these files */
     /* my (Long's) virtual environment is named "flask", you guys need to change to other name if needed */
     flask/* 
     flask/Lib/*
+    local_tests/*

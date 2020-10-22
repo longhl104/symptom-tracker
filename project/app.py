@@ -19,7 +19,7 @@ page = {}  # Determines the page information
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('sample-config.ini')
 
 app.secret_key = config['DATABASE']['secret_key']
 

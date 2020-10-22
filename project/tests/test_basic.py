@@ -3,6 +3,9 @@ from app import app
 
 
 class BasicTestCase(unittest.TestCase):
+    def symptom(self):
+        pass
+    
     #! test methods' name must start with "test_"
     def tearDown(self):
         pass

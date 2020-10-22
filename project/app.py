@@ -311,60 +311,77 @@ def symptom_history():
 @app.route('/patient/reports', methods=['GET', 'POST'])
 def patient_reports():
     graph_data = symptom = location = startDate = endDate = None
+
     if request.method == 'POST':
         form_data = dict(request.form.lists())
 
         symptom = form_data.get('symptom')[0]
+
         if symptom == 'Other':
             symptom = form_data.get('symptom')[1]
         
         location = form_data.get('location')[0]
+
         if location == 'Other':
             location = form_data.get('location')[1]
         
         startDate = form_data.get('startDate')[0]
         endDate = form_data.get('endDate')[0]
+
         data = database.get_graph_data(user_details['ac_email'], symptom, location, startDate, endDate)
         date = []
-        sev = []
-        s = {'Not at all': 0, 'A little bit': 1, 'Somewhat': 2, 'Quite a bit': 3, 'Very much': 4}
-        for d in data:
-            d = d["row"][1:-1].split(",")
-            date += [d[0]]
-            sev += [s[d[1].strip('"')]]
+        severity = []
+        severity_dict = {'Not at all': 0, 'A little bit': 1, 'Somewhat': 2, 'Quite a bit': 3, 'Very much': 4}
+
+        for row in data:
+            row = row["row"][1:-1].split(",")
+            date += [row[0]]
+            severity += [severity_dict[row[1].strip('"')]]
+
         graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
             plot_background='#FFFFFF',background='#FFFFFF'))
         graph.title = symptom + ' in my ' + location
         graph.x_labels = date
-        graph.y_labels = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
-        graph.add('Severity', sev)
+        graph.y_labels = list(severity_dict.keys())
+        graph.add('Severity', severity)
         graph_data = graph.render_data_uri()
+
     return render_template("patient/reports.html", graph_data = graph_data, symptom = symptom, location = location, startDate = startDate, endDate = endDate)
 
 @app.route('/patient/reports/download', methods=['POST']) 
 def download_file():
-    si = io.StringIO()
-    cw = csv.writer(si)
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
     form_data = dict(request.form.lists())
+
     symptom = form_data.get('symptom')[0]
+
     if symptom == 'Other':
         symptom = form_data.get('symptom')[1]
+
     location = form_data.get('location')[0]
+
     if location == 'Other':
         location = form_data.get('location')[1]
-    startDate = form_data.get('startDate')[0]
-    endDate = form_data.get('endDate')[0]
-    data = database.get_export_data(user_details['ac_email'], symptom, location, startDate, endDate)
-    d = []
-    for r in data:
-        r = r["row"][1:-1].split(",")
-        d += [(r[0], r[1].strip('"'), r[2], r[3])]
+
+    start_date = form_data.get('startDate')[0]
+    end_date = form_data.get('endDate')[0]
+
+    data = database.get_export_data(user_details['ac_email'], symptom, location, start_date, end_date)
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        row_data += [(row[0], row[1].strip('"'), row[2], row[3])]
+
     head = ('Date', 'Severity', 'Time of Day', 'Notes')
-    cw.writerow(head)
-    cw.writerows(d)
-    output = make_response(si.getvalue())
+    csv_writer.writerow(('Date', 'Severity', 'Time of Day', 'Notes'))
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
     output.headers["Content-Disposition"] = "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv"
     output.headers["Content-type"] = "text/csv"
+
     return output
 
 @app.route('/patient/account') 

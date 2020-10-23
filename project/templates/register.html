@@ -32,10 +32,10 @@
           <div class="col">
             <label for="gender">Gender</label>
             <select name="gender">
-              <option value="NA"></option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+              <option value="NA"{% if (gender == "NA") %} selected="selected" {% endif %}>NA</option>
+              <option value="Male"{% if (gender == "Male") %} selected="selected" {% endif %}>Male</option>
+              <option value="Female"{% if (gender == "Female") %} selected="selected" {% endif %}>Female</option>
+              <option value="Other"{% if (gender == "Other") %} selected="selected" {% endif %}>Other</option>
             </select>
           </div>
         </div>
@@ -51,7 +51,7 @@
           </ul>
         </div> -->
         <label for="mobile-number">Mobile number</label>
-        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}" value={{mobile}}>
+        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}" {% if (mobile != "") %}value={{mobile}}{% endif %}>
         <label for="email-address">Email<sup>*</sup></label>
         <input type="email" class="input" name="email-address" required value={{emailAddress}}>
         <label for="password">Password<sup>*</sup></label>

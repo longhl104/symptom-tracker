@@ -17,17 +17,17 @@
         <div class="grid two-equal-columns">
           <div class="col">
             <label for="first-name">First name<sup>*</sup></label>
-            <input type="text" class="input" name="first-name" required>
+            <input type="text" class="input" name="first-name" required value={{firstName}}>
           </div>
           <div class="col">
             <label for="last-name">Last name<sup>*</sup></label>
-            <input type="text" class="input" name="last-name" required>
+            <input type="text" class="input" name="last-name" required value={{lastName}}>
           </div>
         </div>
         <div class="grid two-equal-columns">
           <div class="col">
             <label for="age">Age</label>
-            <input type="number" class="input" name="age">
+            <input type="number" class="input" name="age" value={{age}}>
           </div>
           <div class="col">
             <label for="gender">Gender</label>
@@ -51,9 +51,9 @@
           </ul>
         </div> -->
         <label for="mobile-number">Mobile number</label>
-        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}">
+        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}" value={{mobile}}>
         <label for="email-address">Email<sup>*</sup></label>
-        <input type="email" class="input" name="email-address" required>
+        <input type="email" class="input" name="email-address" required value={{emailAddress}}>
         <label for="password">Password<sup>*</sup></label>
         <input type="password" class="input" name="password" minlength="8" required>
         <label for="confirm-password">Confirm Password<sup>*</sup></label>

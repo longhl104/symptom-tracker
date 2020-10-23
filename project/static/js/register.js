@@ -42,6 +42,21 @@ function validateForm() {
   const form = document.forms["register-form"];
   let valid = true;
 
+  if (form["first-name"].value == "") {
+    document.getElementById("error-message").innerText = "First name must be filled out";
+    valid = false;
+  }
+
+  if (form["last-name"].value == "") {
+    document.getElementById("error-message").innerText = "Last name must be filled out";
+    valid = false;
+  }
+
+  if (form["email"].value == "") {
+    document.getElementById("error-message").innerText = "Email must be filled out";
+    valid = false;
+  }
+
   if (form["password"].value !== form["confirm-password"].value) {
     document.getElementById("error-message").innerText = "Passwords do not match";
     valid = false;

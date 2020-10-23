@@ -338,8 +338,11 @@ def patient_reports():
             date += [row[0]]
             severity += [severity_dict[row[1].strip('"')]]
 
-        graph = pygal.Line(fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
-            plot_background='#FFFFFF',background='#FFFFFF'))
+        #graph = pygal.Line(x_label_rotation=90, show_legend=False, x_title='Date', y_title='Severity', fill=True, range=(0, 4), style=Style(font_family='googlefont:Oxygen',
+        #  plot_background='#FFFFFF',background='#FFFFFF', x_label_font_size=20, title_font_size=20))
+        config = pygal.Config()
+        config.css.append('./../static/css/vis.css')
+        graph = pygal.Line(config)
         graph.title = symptom + ' in my ' + location
         graph.x_labels = date
         graph.y_labels = list(severity_dict.keys())

@@ -1,0 +1,42 @@
+{% extends "sidebar.html" %}
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+{% endblock %}
+{% block title %}Symptom History{% endblock %}
+{% block sidebar %}
+{{ super() }}
+  {% block content %}
+    <div class="container">
+      <h5 class="title">Symptom History</h5>
+      <div class="card">
+          <table>
+              <thead>
+                  <tr>
+                      <th>Date</th>
+                      <th>Symptom</th>
+                      <th>Location</th>
+                      <th>Severity</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for symptom in symptoms %}
+                      <tr>
+                        <td>{{symptom.recorded_date}}</td>
+                        <td>{{symptom.symptom_name}}</td>
+                        <td>{{symptom.location}}</td>
+                        <td>{{symptom.severity}}</td>
+                      </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      </div>
+    </div>
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/symptom-history.js') }}"></script>
+  {% endblock %}
+{% endblock %}

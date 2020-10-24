@@ -302,34 +302,54 @@ def get_graph_data(email, symptom, location, startDate, endDate):
             if startDate == "":
                 if endDate == "":
                     sql = """
-                        SELECT (recorded_date, severity) 
+                        SELECT (recorded_date, severity, occurence) 
                         FROM tingleserver."Symptom"
                         WHERE patient_username=%s AND symptom_name=%s AND location=%s
-                        ORDER BY recorded_date 
+                        ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
+                                                 WHEN occurence = 'Daytime' THEN 2
+                                                 WHEN occurence = 'Night-time' THEN 3
+                                                 WHEN occurence = 'All the time' THEN 4
+                                                 WHEN occurence = 'Sporadic' THEN 5 
+                                            END
                     """
                     r = dictfetchall(cur, sql, (email, symptom, location))
                 else:
                     sql = """
-                        SELECT (recorded_date, severity) 
+                        SELECT (recorded_date, severity, occurence) 
                         FROM tingleserver."Symptom"
                         WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date <= %s
-                        ORDER BY recorded_date 
+                        ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
+                                                 WHEN occurence = 'Daytime' THEN 2
+                                                 WHEN occurence = 'Night-time' THEN 3
+                                                 WHEN occurence = 'All the time' THEN 4
+                                                 WHEN occurence = 'Sporadic' THEN 5 
+                                            END 
                     """
                     r = dictfetchall(cur, sql, (email, symptom, location, endDate))
             elif endDate == "":
                 sql = """
-                    SELECT (recorded_date, severity) 
+                    SELECT (recorded_date, severity, occurence) 
                     FROM tingleserver."Symptom"
                     WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date >= %s
-                    ORDER BY recorded_date 
+                    ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
+                                                 WHEN occurence = 'Daytime' THEN 2
+                                                 WHEN occurence = 'Night-time' THEN 3
+                                                 WHEN occurence = 'All the time' THEN 4
+                                                 WHEN occurence = 'Sporadic' THEN 5 
+                                            END
                 """
                 r = dictfetchall(cur, sql, (email, symptom, location, startDate))
             else:
                 sql = """
-                    SELECT (recorded_date, severity) 
+                    SELECT (recorded_date, severity, occurence) 
                     FROM tingleserver."Symptom"
                     WHERE patient_username=%s AND symptom_name=%s AND location=%s AND recorded_date BETWEEN %s AND %s
-                    ORDER BY recorded_date 
+                    ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
+                                                 WHEN occurence = 'Daytime' THEN 2
+                                                 WHEN occurence = 'Night-time' THEN 3
+                                                 WHEN occurence = 'All the time' THEN 4
+                                                 WHEN occurence = 'Sporadic' THEN 5 
+                                            END
                 """
                 r = dictfetchall(cur, sql, (email, symptom, location, startDate, endDate))
             
@@ -359,7 +379,12 @@ def get_export_data(email, symptom, location, startDate, endDate):
                         SELECT (recorded_date, severity, occurence, notes) 
                         FROM tingleserver."Symptom"
                         WHERE patient_username=%s AND symptom_name=%s AND location=%s
-                        ORDER BY recorded_date 
+                        ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
+                                                 WHEN occurence = 'Daytime' THEN 2
+                                                 WHEN occurence = 'Night-time' THEN 3
+                                                 WHEN occurence = 'All the time' THEN 4
+                                                 WHEN occurence = 'Sporadic' THEN 5 
+                                            END
                     """
                     r = dictfetchall(cur, sql, (email, symptom, location))
                 else:

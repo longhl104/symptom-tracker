@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/slider.css') }}">
 {% endblock %}
-{% block title %}Record a Symptom{% endblock %}
+{% block title %}Track a Symptom{% endblock %}
 {% block sidebar %}
   {{ super() }}
   {% block content %}
@@ -54,7 +54,7 @@
           <input class="btn green" type="submit" style="margin-top: 20px;" value="Export Data" formaction="{{url_for('download_file')}}">
         </form>
         {% if graph_data != none %}
-          <embed type="image/svg+xml" src={{graph_data|safe}} style='max-width:1000px'>
+          <embed type="image/svg+xml" src={{graph_data|safe}}>
         {% endif %}
       </div>
     </div>

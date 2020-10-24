@@ -24,10 +24,9 @@
   }
 
   embed {
-    margin-top: 15px;
+    margin-top: 0px;
+    width: 95%;
   }
-  
-  
   /*
     Device = Desktops
     Screen = 1281px to higher resolution desktops
@@ -35,7 +34,7 @@
   
   @media (min-width: 1281px) {
     .container {
-      width: 50%;
+      width: 75%;
     }
   }
   

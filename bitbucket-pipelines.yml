@@ -9,6 +9,6 @@ pipelines:
         script:
           - cd project
           - pip install -r requirements.txt
-          - nose2
+          - nose2 -s tests
           - coverage run -m nose2 -s tests
           - coverage report -m

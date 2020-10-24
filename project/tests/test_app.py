@@ -28,14 +28,6 @@ class AppTest(unittest.TestCase):
                 password='12345678'
             ), follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-
-    @mock.patch('database.check_login')
-    def test_login_has_data(self, db):
-        with tingle.test_client() as client:
-            db.return_value = [{'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
-                                'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456', 'ac_type': 'patient'}]
-=======
             self.assertEqual(request.path, url_for('login'))
 
             db.return_value = [{
@@ -44,14 +36,11 @@ class AppTest(unittest.TestCase):
                 'ac_type': 'clinician',
             }]
             cph.return_value = False
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
             response = client.post('/', data=dict(
                 email='long',
                 password='12345678'
             ), follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('login'))
 
             cph.return_value = True
@@ -73,18 +62,14 @@ class AppTest(unittest.TestCase):
                 password='12345678'
             ), follow_redirects=True))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     # @mock.patch('app.session', {'logged_in': True})
     def test_login_get_method(self):
         with tingle.test_client() as client:
             response = client.get('/', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('login'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('app.user_details', {
         'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
@@ -94,28 +79,10 @@ class AppTest(unittest.TestCase):
     @mock.patch('app.session', {'logged_in': True})
     def test_login_get_method_logged_in(self):
         with tingle.test_client() as client:
-<<<<<<< HEAD
-            db.return_value = None
-            response = client.post('/register', data={
-                'first-name': 'foo',
-                'last-name': 'bar',
-                'gender': 'Male',
-                'age': '12',
-                'mobile-number': '04123456789',
-                'treatment': ['Treatment 1'],
-                'email-address': 'foo@bar.com',
-                'password': '12345678',
-                'confirm-password': '12345678',
-                'consent': 'yes',
-                'role': 'patient'
-            }, follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-=======
             response = client.get('/', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('patient_dashboard'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     def test_logout(self):
         with tingle.test_client() as client:
@@ -135,38 +102,6 @@ class AppTest(unittest.TestCase):
                 'ac_type': 'patient'
             }]
             response = client.post('/register', data={
-<<<<<<< HEAD
-                'first-name': 'foo',
-                'last-name': 'bar',
-                'gender': 'Male',
-                'age': '12',
-                'mobile-number': '04123456789',
-                'treatment': ['Treatment 1'],
-                'email-address': 'foo@bar.com',
-                'password': '12345678',
-                'confirm-password': '12345678',
-                'consent': 'yes'
-            }, follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-
-    @mock.patch('database.add_patient')
-    def test_register_post_method_exception(self, db):
-        with tingle.test_client() as client:
-            db.side_effect = Exception('Database error')
-            response = client.post('/register', data={
-                'first-name': 'foo',
-                'last-name': 'bar',
-                'gender': 'Male',
-                'age': '12',
-                'mobile-number': '04123456789',
-                'treatment': ['Treatment 1'],
-                'email-address': 'foo@bar.com',
-                'password': '12345678',
-                'confirm-password': '12345678',
-                'consent': 'yes'
-            }, follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-=======
                 'password': '12345678',
                 'confirm-password': '12345678',
                 'age': '',
@@ -190,7 +125,6 @@ class AppTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('patient_dashboard'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('app.session', {'logged_in': False})
     @mock.patch('database.get_all_treatments')
@@ -199,11 +133,8 @@ class AppTest(unittest.TestCase):
             gat.return_value = None
             response = client.get('/register', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('register'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('app.session', {'logged_in': True})
     @mock.patch('database.get_all_treatments')
@@ -212,11 +143,8 @@ class AppTest(unittest.TestCase):
             gat.return_value = None
             response = client.get('/register', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('patient_dashboard'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('database.add_patient')
     @mock.patch('database.check_invitation_token_validity')
@@ -227,8 +155,6 @@ class AppTest(unittest.TestCase):
                 'email-address': 'long@gmail.com'
             }, follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('register', token='0'))
 
             citv.return_value = [{'ac_email': 'long@gmail.com'}]
@@ -250,7 +176,6 @@ class AppTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('register', token='0'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('app.session', {'logged_in': False})
     def test_register_post_has_token_exception(self):
@@ -266,8 +191,6 @@ class AppTest(unittest.TestCase):
             response = client.get(
                 '/clinician/create_survey', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('login'))
 
             response = client.get(
@@ -300,7 +223,6 @@ class AppTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('login'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('database.check_invitation_token_validity')
     def test_register_get_has_token(self, citv):
@@ -515,24 +437,6 @@ class AppTest(unittest.TestCase):
             response = client.get(
                 '/patient/record-symptom', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-
-    @mock.patch('database.record_symptom')
-    def test_record_symptom_logged_in_symptom_none_record(self, db):
-        with tingle.test_client() as client:
-            db.return_value = None
-            response = client.post('/patient/record-symptom',
-                                   data={
-                                       'symptom': ['Tingling'],
-                                       'location': ['Feet'],
-                                       'severity': ['Quite a bit'],
-                                       'date': ['13/10/2020'],
-                                       'occurence': ['Morning'],
-                                       'notes': ['Note']
-                                   },
-                                   follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-=======
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
@@ -553,26 +457,9 @@ class AppTest(unittest.TestCase):
             self.assertRaises(Exception, client.get(
                 '/patient/record-symptom', follow_redirects=True))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('database.delete_symptom_record')
     @mock.patch('database.record_symptom')
-<<<<<<< HEAD
-    def test_record_symptom_logged_in_other_symptom_not_none_record(self, db):
-        with tingle.test_client() as client:
-            db.return_value = True
-            response = client.post('/patient/record-symptom',
-                                   data={
-                                       'symptom': ['Tingling'],
-                                       'location': ['Feet'],
-                                       'severity': ['Quite a bit'],
-                                       'date': ['13/10/2020'],
-                                       'occurence': ['Morning'],
-                                       'notes': ['Note']
-                                   },
-                                   follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-=======
     @mock.patch('app.session', {'logged_in': True})
     @mock.patch('app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com'})
     def test_record_symptom_is_patient_post(self, rs, dsr):
@@ -609,7 +496,6 @@ class AppTest(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('record_symptom', id='1'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('app.session', {'logged_in': False})
     @mock.patch('app.user_details', {'ac_type': 'unknown', 'ac_email': None})
@@ -619,11 +505,8 @@ class AppTest(unittest.TestCase):
                 '/patient/symptom-history',
                 follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('login'))
         pass
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
     @mock.patch('database.get_all_symptoms')
     @mock.patch('app.user_details', {'ac_type': 'unknown', 'ac_email': 'long@gmail.com'})
@@ -726,19 +609,9 @@ class AppTest(unittest.TestCase):
     @mock.patch('app.session', {'logged_in': True})
     def test_admin_dashboard_not_admin(self):
         with tingle.test_client() as client:
-<<<<<<< HEAD
-            db.return_value = [
-                {
-                    'row': '2020/10/13,Tingling,Feet,Quite a bit'
-                }
-            ]
-=======
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
             response = client.get(
                 '/admin', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
-<<<<<<< HEAD
-=======
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
@@ -813,7 +686,6 @@ class AppTest(unittest.TestCase):
             response = client.get('/service-worker.js', content_type='html/text')
             self.assertEqual(response.status_code, 200)
 
->>>>>>> ab1706031c2096b319c2c8ac1f8d60cdfcf0481c
 
 if __name__ == '__main__':
     unittest.main()

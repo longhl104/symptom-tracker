@@ -37,9 +37,6 @@ def login():
         global user_details
         user_details = login_return_data[0]
 
-        print(check_password_hash(
-            user_details['ac_password'], request.form['password']))
-
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))

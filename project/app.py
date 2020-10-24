@@ -161,7 +161,7 @@ def register(token=None):
                     login_return_data = database.get_account(request.form['email-address'])
                     user_details = login_return_data[0]
                     session['name'] = user_details['ac_firstname']
-                    return redirect(url_for(str(token_valid[0].get('role', 'patient'))+'_dashboard'))
+                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')

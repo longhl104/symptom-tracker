@@ -133,7 +133,14 @@ a {
 #logout {
   width: 100%; 
   margin: 0px 10px 15px 3px;
-  font-size:12px;
+  font-size: 12px;
+}
+
+#button-install {
+  margin: 0px 10px 15px 3px;
+  height: auto;
+  width: 100%;
+  font-size: 12px;
 }
 
 /* Mobile First */
@@ -199,6 +206,10 @@ a {
     font-size:18px;
   }
 
+  #button-install {
+    margin: 0px 10px 0px 10px;
+    font-size: 18px;
+  }
 }
 
 .logo-holder {

@@ -486,10 +486,11 @@ def invite_user():
         already_invited = database.check_email_in_account_invitation(email)
         token = None
         if already_invited:
+            token = already_invited[0].get('token')
             if already_invited[0].get('role') != role:
                 result = database.update_role_in_account_invitation(email, role)
-                token = result[0].get("token")
-                role = result[0].get("role")
+                token = result[0].get('token')
+                role = result[0].get('role')
         else:
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:

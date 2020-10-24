@@ -36,7 +36,6 @@ def login():
 
         global user_details
         user_details = login_return_data[0]
-
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))
@@ -102,8 +101,9 @@ def register(token=None):
                 session['logged_in'] = True
                 login_return_data = database.get_account(request.form['email-address'])
                 global user_details
-                print('login====', login_return_data)
                 user_details = login_return_data[0]
+                session['logged_in'] = True
+                session['name'] = user_details['ac_firstname']
                 return redirect(url_for('patient_dashboard'))
         except:
             traceback.print_exc(file=sys.stdout)
@@ -125,7 +125,6 @@ def register(token=None):
             return redirect(url_for('patient_dashboard'))
     elif token:
         token_valid = database.check_invitation_token_validity(token)
-        print('token_valid', token_valid)
         if request.method == 'POST':
             try:
                 if request.form['email-address'] != token_valid[0].get("ac_email"):
@@ -161,7 +160,8 @@ def register(token=None):
                     session['logged_in'] = True
                     login_return_data = database.get_account(request.form['email-address'])
                     user_details = login_return_data[0]
-                    return redirect(url_for('patient_dashboard'))
+                    session['name'] = user_details['ac_firstname']
+                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')

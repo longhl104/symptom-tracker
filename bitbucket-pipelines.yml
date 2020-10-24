@@ -9,6 +9,5 @@ pipelines:
         script:
           - cd project
           - pip install -r requirements.txt
-          - nose2
-          - coverage run -m nose2
-          - coverage report -m
+          - chmod +x test.sh
+          - ./test.sh

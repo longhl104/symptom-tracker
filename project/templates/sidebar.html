@@ -10,15 +10,15 @@
 <div class="s-layout">
 {% block sidebar %}
   <div class="s-layout__sidebar">
-    <a class="s-sidebar__trigger" href="#0">
+    <a class="s-sidebar__trigger" href="#">
       <i class="fa fa-bars fa-lg"></i>
     </a>
 
     <nav class="s-sidebar__nav">
       <ul>
-        <li>
+        <li class="logo-holder">
           <img class="logo" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
-          <em class="logo-title" style="margin-bottom: 20px;">Symptom Tracker</em>
+          <em class="logo-title">Symptom Tracker</em>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_dashboard')}}">

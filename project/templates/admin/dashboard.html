@@ -2,7 +2,6 @@
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}">
 
@@ -14,7 +13,7 @@
 {{ super() }}
   {% block content %}
   <main class="s-layout__content">
-    <div class="container" style="justify-content: start;">
+    <div class="container">
       <div class="grid-container">
         <div class="grid-header">
           <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>

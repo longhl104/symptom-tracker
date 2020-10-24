@@ -38,7 +38,7 @@
 }
 
 .survey-text {
-    padding-left: 10px;
+    font-size: 1.3rem;
     margin: auto auto auto 10px;
 }
 
@@ -49,13 +49,23 @@
     text-align: center;
 }
 
+.message {
+    font-size: 1rem;
+    margin-top: 5px;
+    color: #393939;
+    font-weight: 400;
+}
 
+.subtitle {
+    color: #393939;
+    font-weight: 700;
+}
 /*
   Device = Desktops
   Screen = 1281px to higher resolution desktops
 */
 
-@media (min-width: 1281px) {
+@media (min-width: 1025px) {
     .aligned {
         font-size: 1.5rem;
         padding: 40px;
@@ -70,8 +80,11 @@
 
 @media (min-width: 768px) and (max-width: 1024px) {
     .aligned {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         padding: 40px;
+    }
+    .container {
+        width: 80%;
     }
 }
 
@@ -94,14 +107,17 @@
 
 @media (min-width: 481px) and (max-width: 767px) {
     .aligned {
-        font-size: 0.8rem;
-        padding: 20px;
+        font-size: 1rem;
+        padding: 30px;
     }
     .survey-status {
         min-width: 80px; 
     }
     .survey-text {
         font-size: 16px; 
+    }
+    .container {
+        width: 80%;
     }
 }
 
@@ -112,19 +128,22 @@
 
 @media (max-width: 480px) {
     .aligned {
-        font-size: 0.8rem;
+        font-size: 1.1rem;
         padding: 20px;
     }
     .title {
         font-size: 1.4rem !important;
       }
     .subtitle {
-        font-size: 1rem !important;
+        font-size: 1.3rem !important;
       }
     .survey-status {
         min-width: 60px; 
     }
     .survey-text {
-        font-size: 12px; 
+        font-size: 0.9rem; 
+    }
+    .container {
+        width: 100%;
     }
 }

@@ -398,112 +398,127 @@ def patient_reports():
                 for n in range(int((end_date - start_date).days)):
                     yield start_date + timedelta(n)
 
-            first_row = data[0]["row"][1:-1].split(",")
-            last_row = data[-1]["row"][1:-1].split(",")
-            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
-            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
+            def clean_data(start_date, end_date, data):
+                date = []
+                severity = []
+                severity_dict = {
+                    "Not at all": 0,
+                    "A little bit": 1,
+                    "Somewhat": 2,
+                    "Quite a bit": 3,
+                    "Very much": 4,
+                }
+                r = {}
+                for row in data:
+                    row = row["row"][1:-1].split(",")
+                    if row[0] in r:
+                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
+                    else:
+                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
 
-            r = {}
-            for row in data:
-                row = row["row"][1:-1].split(",")
-                if row[0] in r:
-                    r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                else:
-                    r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
+                for single_date in daterange(start_date, end_date + timedelta(1)):
 
-            for single_date in daterange(start_date, end_date + timedelta(1)):
-                d = single_date.strftime("%Y-%m-%d")
-                date += [d + " "]
-                date += [d + ""]
-                date += [d + "\n"]
-                if d in r:
-                    if len(r[d]) == 3:
-                        severity += [
-                            {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                        ]
-                        severity += [
-                            {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
-                        ]
-                        severity += [
-                            {"value": severity_dict[r[d][2][0]], "label": "Night-time"}
-                        ]
-
-                    elif len(r[d]) == 2:
-                        if r[d][0][1] == "Morning" and r[d][1][1] == "Daytime":
+                    d = single_date.strftime("%Y-%m-%d")
+                    date += [d + " "]
+                    date += [d + ""]
+                    date += [d + "\n"]
+                    if d in r:
+                        if len(r[d]) == 3:
                             severity += [
                                 {"value": severity_dict[r[d][0][0]], "label": "Morning"}
                             ]
                             severity += [
                                 {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
                             ]
-                            severity += [None]
-                        elif r[d][0][1] == "Morning" and r[d][1][1] == "Night-time":
                             severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                            ]
-                            severity += [None]
-                            severity += [
-                                {
-                                    "value": severity_dict[r[d][1][0]],
-                                    "label": "Night-time",
-                                }
-                            ]
-                        else:
-                            severity += [None]
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                            ]
-                            severity += [
-                                {
-                                    "value": severity_dict[r[d][1][0]],
-                                    "label": "Night-time",
-                                }
-                            ]
-                    else:
-                        if r[d][0][1] == "All the time":
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                            ]
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                            ]
-                            severity += [
-                                {
-                                    "value": severity_dict[r[d][0][0]],
-                                    "label": "Night-time",
-                                }
-                            ]
-                        elif r[d][0][1] == "Sporadic":
-                            severity += [
-                                {
-                                    "value": severity_dict[r[d][0][0]],
-                                    "label": "Sporadic",
-                                }
-                            ] * 3
-                        elif r[d][0][1] == "Morning":
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                            ]
-                            severity += [None]
-                            severity += [None]
-                        elif r[d][0][1] == "Daytime":
-                            severity += [None]
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                            ]
-                            severity += [None]
-                        else:
-                            severity += [None]
-                            severity += [None]
-                            severity += [
-                                {
-                                    "value": severity_dict[r[d][0][0]],
-                                    "label": "Night-time",
-                                }
+                                {"value": severity_dict[r[d][2][0]], "label": "Night-time"}
                             ]
 
-                else:
-                    severity += [None] * 3
+                        elif len(r[d]) == 2:
+                            if r[d][0][1] == "Morning" and r[d][1][1] == "Daytime":
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
+                                ]
+                                severity += [
+                                    {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
+                                ]
+                                severity += [None]
+                            elif r[d][0][1] == "Morning" and r[d][1][1] == "Night-time":
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
+                                ]
+                                severity += [None]
+                                severity += [
+                                    {
+                                        "value": severity_dict[r[d][1][0]],
+                                        "label": "Night-time",
+                                    }
+                                ]
+                            else:
+                                severity += [None]
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
+                                ]
+                                severity += [
+                                    {
+                                        "value": severity_dict[r[d][1][0]],
+                                        "label": "Night-time",
+                                    }
+                                ]
+                        else:
+                            if r[d][0][1] == "All the time":
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
+                                ]
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
+                                ]
+                                severity += [
+                                    {
+                                        "value": severity_dict[r[d][0][0]],
+                                        "label": "Night-time",
+                                    }
+                                ]
+                            elif r[d][0][1] == "Sporadic":
+                                severity += [
+                                    {
+                                        "value": severity_dict[r[d][0][0]],
+                                        "label": "Sporadic",
+                                    }
+                                ] * 3
+                            elif r[d][0][1] == "Morning":
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
+                                ]
+                                severity += [None]
+                                severity += [None]
+                            elif r[d][0][1] == "Daytime":
+                                severity += [None]
+                                severity += [
+                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
+                                ]
+                                severity += [None]
+                            else:
+                                severity += [None]
+                                severity += [None]
+                                severity += [
+                                    {
+                                        "value": severity_dict[r[d][0][0]],
+                                        "label": "Night-time",
+                                    }
+                                ]
+
+                    else:
+                        severity += [None] * 3
+
+                return date, severity
+
+            first_row = data[0]["row"][1:-1].split(",")
+            last_row = data[-1]["row"][1:-1].split(",")
+            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
+            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
+
+            date, severity = clean_data(start_date, end_date, data)
 
             # for single_date in daterange(start_date, end_date + timedelta(1)):
             #     d = single_date.strftime("%Y-%m-%d")

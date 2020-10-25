@@ -568,69 +568,75 @@ def patient_reports():
             #     i += 1
             # freq = pow(3, i)
 
-            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
-            #     show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
-            # graph.title = symptom + ' in my ' + location
+            graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+                y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
+                show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
+            graph.title = symptom + ' in my ' + location
 
-            # graph.x_labels = date
-            # graph.y_labels = list(severity_dict.keys())
-            # graph.add('Severity', severity, allow_interruptions=True)
+            graph.x_labels = date
+            graph.y_labels = list(severity_dict.keys())
+            graph.add('Severity', severity, allow_interruptions=True)
 
-            custom_style = Style(
-                background="transparent",
-                plot_background="transparent",
-                foreground="#53E89B",
-                foreground_strong="#53A0E8",
-                foreground_subtle="#630C0D",
-                opacity=".6",
-                opacity_hover=".9",
-                transition="400ms ease-in",
-                colors=("#E853A0", "#E853A0"),
-            )
+            
 
-            graph = pygal.Line(style=custom_style)
-            graph.add(
-                "Serie",
-                [
-                    1,
-                    {
-                        "value": 2,
-                        "node": {
-                            "fill": "black",
-                            "fill-opacity": "100%",
-                            "stroke": "black",
-                            "stroke-opacity": "100%",
-                        },
-                    },
-                    3,
-                ],
-            )
-            graph.add(
-                "Serie",
-                [
-                    None,
-                    None,
-                    None,
-                    1,
-                    {
-                        "value": 2,
-                        "node": {
-                            "fill": "black",
-                            "fill-opacity": "100%",
-                            "stroke": "black",
-                            "stroke-opacity": "100%",
-                        },
-                    },
-                    3,
-                ],
-                stroke_style={
-                    "width": 5,
-                    "dasharray": "3, 6",
-                    "linecap": "round",
-                    "linejoin": "round",
-                },
-            )
+            # Additional Sporadic Label https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
+            # Change size, colour, opacity etc of specific shapes
+            # Change shapes seems to be possible but a lot more work
+            # Change stroke between sporadic points, each set of sporadic points would be disconnected from graph
+            # graph = pygal.Line(style=custom_style)
+            # graph.add(
+            #     "Serie",
+            #     [
+            #         1,
+            #         {
+            #             "value": 2,
+            #             "node": {
+            #                 "fill": "black",
+            #                 "fill-opacity": "100%",
+            #                 "stroke": "black",
+            #                 "stroke-opacity": "100%",
+            #             },
+            #         },
+            #         3,
+            #     ],
+            # )
+            # graph.add(
+            #     "Serie",
+            #     [
+            #         None,
+            #         None,
+            #         None,
+            #         1,
+            #         {
+            #             "value": 2,
+            #             "node": {
+            #                 "fill": "black",
+            #                 "fill-opacity": "100%",
+            #                 "stroke": "black",
+            #                 "stroke-opacity": "100%",
+            #             },
+            #         },
+            #         3,
+            #     ],
+            #     stroke_style={
+            #         "width": 5,
+            #         "dasharray": "3, 6",
+            #         "linecap": "round",
+            #         "linejoin": "round",
+            #     },
+            # )
+
+            # custom_style = Style(
+            #     background="transparent",
+            #     plot_background="transparent",
+            #     foreground="#53E89B",
+            #     foreground_strong="#53A0E8",
+            #     foreground_subtle="#630C0D",
+            #     opacity=".6",
+            #     opacity_hover=".9",
+            #     transition="400ms ease-in",
+            #     colors=("#E853A0", "#E853A0"),
+            # )
 
         graph_data = graph.render_data_uri()
 
@@ -670,7 +676,11 @@ def download_file():
 
     for row in data:
         row = row["row"][1:-1].split(",")
-        row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3])]
+        print(row[3], flush=True)
+        if row[3] == '""':
+            row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), 'N/A')]
+        else:   
+            row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3].strip('"'))]
 
     head = ("Date", "Severity", "Time of Day", "Notes")
     csv_writer.writerow(("Date", "Severity", "Time of Day", "Notes"))

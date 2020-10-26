@@ -330,7 +330,7 @@ def patient_account(clinician_email=None):
         if clinician_email == '':
             flash('Please enter a clinician email address.', 'error')
 
-        acc = database.get_account(clinician_email)
+        acc = database.get_account(clinician_email.lower())
         if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
             flash('This email address is not associated with a clinician account.', 'error')
             return redirect(url_for('patient_account'))

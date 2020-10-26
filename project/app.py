@@ -74,9 +74,10 @@ def register(token=None):
             age = request.form.get('age', "")
             if (age == ""):
                 age = None
-            # gender = request.form.get('gender', "NA")
-            # if (gender == "NA"):
-            #     gender = None
+            gender = request.form.get('gender', "NA")
+            if (gender == "NA"):
+                gender = None
+            print(request.form.get(gender))
             mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
@@ -84,7 +85,7 @@ def register(token=None):
             add_patient_ret = database.add_patient(
                 request.form.get('first-name'),
                 request.form.get('last-name'),
-                request.form.get('gender', ""), # gender,
+                gender,
                 age,
                 mobile, 
                 request.form.get('treatment'),

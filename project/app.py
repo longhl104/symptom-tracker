@@ -370,14 +370,13 @@ def patient_account(clinician_email=None):
     clinicians = []
     if clinicians_raw is None:
         flash('Error retrieving clinicians list.', 'error')
-        clinicians = ''
+        clinicians = []
     else:
         for clinician in clinicians_raw:
             acc = database.get_account_by_id(clinician['clinician_id'])
             if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
                 clinicians.append(acc[0]['ac_email'])
 
-        clinicians = ",".join(clinicians)
     return render_template('patient/account.html', clinicians=clinicians)
 # PWA-related routes
 

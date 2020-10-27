@@ -102,7 +102,6 @@ def register(token=None):
                 global user_details
                 user_details = login_return_data[0]
                 session['logged_in'] = True
-                print("hey {}".format(user_details))
                 session['name'] = user_details['ac_firstname']
                 return redirect(url_for('patient_dashboard'))
         except:

@@ -1,11 +1,10 @@
 import unittest
 from unittest.mock import Mock
-from app import app as tingle
+from ..app import app as tingle
 from unittest import mock
 from flask import url_for, request
 from werkzeug.security import generate_password_hash, check_password_hash
 import pg8000
-
 
 class AppTest(unittest.TestCase):
     def setUp(self):
@@ -20,8 +19,8 @@ class AppTest(unittest.TestCase):
         pass
 
 #     # add mock patch to the function you want to mock
-    @mock.patch('app.check_password_hash')
-    @mock.patch('database.get_account')
+    @mock.patch('project.app.check_password_hash')
+    @mock.patch('project.database.get_account')
     def test_login_post(self, db, cph):
         with tingle.test_client() as client:
             db.return_value = None
@@ -65,7 +64,7 @@ class AppTest(unittest.TestCase):
             ), follow_redirects=True))
         pass
 
-    # @mock.patch('app.session', {'logged_in': True})
+    # @mock.patch('project.app.session', {'logged_in': True})
     def test_login_get_method(self):
         with tingle.test_client() as client:
             response = client.get('/', follow_redirects=True)
@@ -73,12 +72,12 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
         pass
 
-    @mock.patch('app.user_details', {
+    @mock.patch('project.app.user_details', {
         'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
         'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456',
         'ac_type': 'patient',
     })
-    @mock.patch('app.session', {'logged_in': True})
+    @mock.patch('project.app.session', {'logged_in': True})
     def test_login_get_method_logged_in(self):
         with tingle.test_client() as client:
             response = client.get('/', follow_redirects=True)
@@ -93,10 +92,10 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
         pass
 
-    @mock.patch('database.check_invitation_token_validity')
-    @mock.patch('database.delete_account_invitation')
-    @mock.patch('database.get_account')
-    @mock.patch('database.add_patient')
+    @mock.patch('project.database.check_invitation_token_validity')
+    @mock.patch('project.database.delete_account_invitation')
+    @mock.patch('project.database.get_account')
+    @mock.patch('project.database.add_patient')
     def test_register_post_no_token(self, db, ga, dai, citv):
         with tingle.test_client() as client:
             response = client.post('/register', data={
@@ -118,7 +117,8 @@ class AppTest(unittest.TestCase):
 
             db.return_value = True
             ga.return_value = [{
-                'ac_type': 'patient'
+                'ac_type': 'patient',
+                'ac_firstname': 'Long'
             }]
             response = client.post('/register', data={
                 'password': '12345678',
@@ -131,7 +131,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('patient_dashboard'))
 
             ga.return_value = [{
-                'ac_type': 'patient'
+                'ac_type': 'patient',
+                'ac_firstname': 'Long'
             }]
             dai.return_value = 0
             db.return_value = True
@@ -145,7 +146,7 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('patient_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': False})
+    @mock.patch('project.app.session', {'logged_in': False})
     def test_register_post_no_token_exception(self):
         with tingle.test_client() as client:
             response = client.post('/register', data={
@@ -154,8 +155,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('register'))
         pass
 
-    @mock.patch('app.session', {'logged_in': False})
-    @mock.patch('database.get_all_treatments')
+    @mock.patch('project.app.session', {'logged_in': False})
+    @mock.patch('project.database.get_all_treatments')
     def test_register_get_no_token(self, gat):
         with tingle.test_client() as client:
             gat.return_value = None
@@ -164,8 +165,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('register'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('database.get_all_treatments')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.database.get_all_treatments')
     def test_register_get_no_token_logged_in(self, gat):
         with tingle.test_client() as client:
             gat.return_value = None
@@ -174,8 +175,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('patient_dashboard'))
         pass
 
-    @mock.patch('database.add_patient')
-    @mock.patch('database.check_invitation_token_validity')
+    @mock.patch('project.database.add_patient')
+    @mock.patch('project.database.check_invitation_token_validity')
     def test_register_post_has_token(self, citv, ap):
         with tingle.test_client() as client:
             citv.return_value = [{'ac_email': 'foo@bar.com'}]
@@ -205,7 +206,7 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('register', token='0'))
         pass
 
-    @mock.patch('app.session', {'logged_in': False})
+    @mock.patch('project.app.session', {'logged_in': False})
     def test_register_post_has_token_exception(self):
         with tingle.test_client() as client:
             response = client.post('/register/0', data={
@@ -257,7 +258,7 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
         pass
 
-    @mock.patch('database.check_invitation_token_validity')
+    @mock.patch('project.database.check_invitation_token_validity')
     def test_register_get_has_token(self, citv):
         with tingle.test_client() as client:
             citv.return_value = True
@@ -271,10 +272,10 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
         pass
 
-    @mock.patch('email_handler.send_email')
-    @mock.patch('email_handler.setup_email')
-    @mock.patch('database.add_password_key')
-    @mock.patch('database.check_key_exists')
+    @mock.patch('project.email_handler.send_email')
+    @mock.patch('project.email_handler.setup_email')
+    @mock.patch('project.database.add_password_key')
+    @mock.patch('project.database.check_key_exists')
     def test_forgot_password_post(self, cke, apk, sue, see):
         with tingle.test_client() as client:
             cke.return_value = False
@@ -298,10 +299,10 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('forgot_password'))
         pass
 
-    @mock.patch('email_handler.send_email')
-    @mock.patch('email_handler.setup_email')
-    @mock.patch('database.add_password_key')
-    @mock.patch('database.check_key_exists')
+    @mock.patch('project.email_handler.send_email')
+    @mock.patch('project.email_handler.setup_email')
+    @mock.patch('project.database.add_password_key')
+    @mock.patch('project.database.check_key_exists')
     def test_forgot_password_post_key_exists(self, cke, apk, sue, see):
         with tingle.test_client() as client:
             cke.return_value = False
@@ -332,8 +333,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('forgot_password'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
     def test_researcher_dashboard_logged_in(self):
         with tingle.test_client() as client:
             response = client.get('/researcher', follow_redirects=True)
@@ -341,8 +342,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_researcher_dashboard_logged_in_is_researcher(self):
         with tingle.test_client() as client:
             response = client.get('/researcher', follow_redirects=True)
@@ -350,8 +351,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('researcher_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_clinician_dashboard_logged_in(self):
         with tingle.test_client() as client:
             response = client.get('/clinician', follow_redirects=True)
@@ -359,8 +360,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('researcher_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
     def test_clinician_dashboard_logged_in_is_clinician(self):
         with tingle.test_client() as client:
             response = client.get('/clinician', follow_redirects=True)
@@ -368,33 +369,33 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_create_survey_not_clinician(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
                 '/clinician/create_survey', follow_redirects=True))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
     def test_create_survey_is_clinician(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
                 '/clinician/create_survey', follow_redirects=True))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_view_patients_not_clinician(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
                 '/clinician/view_patients', follow_redirects=True))
         pass
 
-    @mock.patch('database.get_all_patients')
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {
+    @mock.patch('project.database.get_all_patients')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {
         'ac_type': 'clinician',
         'ac_id': '1'
     })
@@ -407,18 +408,18 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('view_patients'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_view_patients_with_id_not_clinician(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
                 '/clinician/view_patients/1', follow_redirects=True))
         pass
 
-    @mock.patch('database.get_all_symptoms')
-    @mock.patch('database.check_clinician_link')
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician', 'ac_id': '1'})
+    @mock.patch('project.database.get_all_symptoms')
+    @mock.patch('project.database.check_clinician_link')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician', 'ac_id': '1'})
     def test_view_patients_history_is_clinician(self, ccl, gap):
         with tingle.test_client() as client:
             ccl.return_value = []
@@ -436,8 +437,8 @@ class AppTest(unittest.TestCase):
                 'view_patients_history', id=1))
         pass
 
-    @mock.patch('database.delete_token')
-    @mock.patch('database.update_password')
+    @mock.patch('project.database.delete_token')
+    @mock.patch('project.database.update_password')
     def test_reset_password_post(self, up, dt):
         with tingle.test_client() as client:
             response = client.post(
@@ -480,8 +481,8 @@ class AppTest(unittest.TestCase):
                 'reset_password', url_key='abc'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
     def test_patient_dashboard_not_patient(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -490,8 +491,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
     def test_record_symptom_is_clinician(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -500,8 +501,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
     def test_record_symptom_is_researcher(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -510,18 +511,18 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('researcher_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'unknown'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'unknown'})
     def test_record_symptom_is_unknown(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
                 '/patient/record-symptom', follow_redirects=True))
         pass
 
-    @mock.patch('database.delete_symptom_record')
-    @mock.patch('database.record_symptom')
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com'})
+    @mock.patch('project.database.delete_symptom_record')
+    @mock.patch('project.database.record_symptom')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com'})
     def test_record_symptom_is_patient_post(self, rs, dsr):
         with tingle.test_client() as client:
             rs.return_value = None
@@ -573,8 +574,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('record_symptom', id='1'))
         pass
 
-    @mock.patch('app.session', {'logged_in': False})
-    @mock.patch('app.user_details', {'ac_type': 'unknown', 'ac_email': None})
+    @mock.patch('project.app.session', {'logged_in': False})
+    @mock.patch('project.app.user_details', {'ac_type': 'unknown', 'ac_email': None})
     def test_symptom_history_no_user(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -584,8 +585,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
         pass
 
-    @mock.patch('database.get_all_symptoms')
-    @mock.patch('app.user_details', {'ac_type': 'unknown', 'ac_email': 'long@gmail.com'})
+    @mock.patch('project.database.get_all_symptoms')
+    @mock.patch('project.app.user_details', {'ac_type': 'unknown', 'ac_email': 'long@gmail.com'})
     def test_symptom_history_has_user(self, gas):
         with tingle.test_client() as client:
             gas.return_value = [{'row': '1,:00,3,4,5,6,7'}]
@@ -605,8 +606,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('patient_reports'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'clinician', 'ac_email': 'long@gmail.com'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician', 'ac_email': 'long@gmail.com'})
     def test_patient_account_not_patient_is_clinician(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -616,8 +617,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'researcher', 'ac_email': 'long@gmail.com'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'researcher', 'ac_email': 'long@gmail.com'})
     def test_patient_account_not_patient_is_researcher(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -627,8 +628,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('researcher_dashboard'))
         pass
 
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'unknown', 'ac_email': 'long@gmail.com'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'unknown', 'ac_email': 'long@gmail.com'})
     def test_patient_account_not_patient_is_unknown(self):
         with tingle.test_client() as client:
             self.assertRaises(Exception, client.get(
@@ -636,10 +637,10 @@ class AppTest(unittest.TestCase):
                 follow_redirects=True))
         pass
 
-    @mock.patch('database.add_patient_clinician_link')
-    @mock.patch('database.get_account')
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    @mock.patch('project.database.add_patient_clinician_link')
+    @mock.patch('project.database.get_account')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
     def test_patient_account_post(self, ga, apcl):
         with tingle.test_client() as client:
             ga.return_value = None
@@ -687,12 +688,12 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('patient_account'))
         pass
 
-    @mock.patch('database.get_account_by_id')
-    @mock.patch('database.get_linked_clinicians')
-    @mock.patch('database.delete_patient_clinician_link')
-    @mock.patch('database.get_account')
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    @mock.patch('project.database.get_account_by_id')
+    @mock.patch('project.database.get_linked_clinicians')
+    @mock.patch('project.database.delete_patient_clinician_link')
+    @mock.patch('project.database.get_account')
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'patient', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
     def test_patient_account_delete(self, ga, dpcl, glc, gabi):
         with tingle.test_client() as client:
             ga.return_value = None
@@ -732,8 +733,8 @@ class AppTest(unittest.TestCase):
                 'patient_account', clinician_email='clinic.gmail.com'))
         pass
 
-    @mock.patch('app.user_details', {'ac_type': 'clinician', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
-    @mock.patch('app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'clinician', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    @mock.patch('project.app.session', {'logged_in': True})
     def test_admin_dashboard_not_admin(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -742,8 +743,8 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('clinician_dashboard'))
         pass
 
-    @mock.patch('app.user_details', {'ac_type': 'admin', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
-    @mock.patch('app.session', {'logged_in': True})
+    @mock.patch('project.app.user_details', {'ac_type': 'admin', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    @mock.patch('project.app.session', {'logged_in': True})
     def test_admin_dashboard_is_admin(self):
         with tingle.test_client() as client:
             response = client.get(
@@ -752,14 +753,14 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('admin_dashboard'))
         pass
 
-    @mock.patch('email_handler.send_email')
-    @mock.patch('email_handler.setup_invitation')
-    @mock.patch('database.add_account_invitation')
-    @mock.patch('database.update_role_in_account_invitation')
-    @mock.patch('database.check_email_in_account_invitation')
-    @mock.patch('app.user_details', {'ac_type': 'admin', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
-    @mock.patch('app.session', {'logged_in': True})
-    @mock.patch('database.get_account')
+    @mock.patch('project.email_handler.send_email')
+    @mock.patch('project.email_handler.setup_invitation')
+    @mock.patch('project.database.add_account_invitation')
+    @mock.patch('project.database.update_role_in_account_invitation')
+    @mock.patch('project.database.check_email_in_account_invitation')
+    @mock.patch('project.app.user_details', {'ac_type': 'admin', 'ac_email': 'long@gmail.com', 'ac_id': '1'})
+    @mock.patch('project.app.session', {'logged_in': True})
+    @mock.patch('project.database.get_account')
     def test_invite_user_post(self, ga, ceiai, uriai, aai, si,se):
         with tingle.test_client() as client:
             ga.return_value = True

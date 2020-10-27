@@ -1,7 +1,6 @@
 from flask import *
-import database
+from project import database, email_handler
 import configparser
-import email_handler
 import urllib.parse
 import random
 import string

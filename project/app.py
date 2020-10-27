@@ -275,6 +275,8 @@ def view_patients_history(id = None):
             for i, col in enumerate(symptom.split(",")):
                 if i == 1 and col[-3:] == ":00":
                     col = col[:-3]
+                if i == 6 and (col == '""' or len(col) == 0):
+                    col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
         return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
@@ -384,7 +386,9 @@ def symptom_history():
         for i, col in enumerate(symptom.split(",")):
             if i == 1 and col[-3:] == ":00":
                 col = col[:-3]
-            symptom_dict[symptom_col_order[i]] = col.strip('"')
+            if i == 6 and (col == '""' or len(col) == 0):
+                col = "None"
+            symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
     return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
 

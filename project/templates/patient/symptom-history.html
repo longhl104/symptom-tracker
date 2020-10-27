@@ -42,9 +42,17 @@
               </div>
               <div class="flex col padding">
                 <div class="label">
-                  Notes
+                  Time of Day
                 </div>
                 <div class="symptom-value">
+                  {{symptom.occurence}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label" onclick="showHideNotes('{{ symptom.symptom_id }}')">
+                  Notes <i id="notes-arrow-{{ symptom.symptom_id }}" class="fa fa-caret-down fa-md" style="color: #333333"></i>
+                </div>
+                <div id="notes-{{ symptom.symptom_id }}" class="symptom-value" style="display: none;">
                   {{symptom.notes}}
                 </div>
               </div>

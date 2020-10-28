@@ -1,11 +1,12 @@
 from flask import *
-import database
+from project import database, email_handler
 import configparser
-import email_handler
 import urllib.parse
 import random
 import string
 import pg8000
+import traceback
+import sys
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -17,7 +18,7 @@ page = {}  # Determines the page information
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('sample-config.ini')
 
 app.secret_key = config['DATABASE']['secret_key']
 
@@ -34,7 +35,6 @@ def login():
 
         global user_details
         user_details = login_return_data[0]
-
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'error')
             return redirect(url_for('login'))
@@ -45,8 +45,7 @@ def login():
         if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
             return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
         else:
-            print('Error: Attempted logging in with an unknown role')
-            raise
+            raise Exception('Error: Attempted logging in with an unknown role')
 
     elif request.method == 'GET':
         if not session.get('logged_in', None):
@@ -76,6 +75,7 @@ def register(token=None):
         password = request.form.get('password')
 
         try:
+            print(request.form)
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
@@ -88,15 +88,17 @@ def register(token=None):
             mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
+            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
                 gender,
                 age,
                 mobile,
-                treatment,
-                password,
-                generate_password_hash(password),
+                request.form.get('treatment'),
+                request.form.get('email-address'),
+                request.form.get('password'),
+                generate_password_hash(request.form.get('password')),
                 'patient',
                 'yes' if request.form.get('consent') == 'on' else 'no'
             )
@@ -108,9 +110,11 @@ def register(token=None):
                 login_return_data = database.get_account(request.form['email-address'])
                 global user_details
                 user_details = login_return_data[0]
+                session['logged_in'] = True
+                session['name'] = user_details['ac_firstname']
                 return redirect(url_for('patient_dashboard'))
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc(file=sys.stdout)
             print('Exception occurred. Please try again')
             flash('Email address already in use. Please try again', 'error')
             # return redirect(url_for('register'))
@@ -130,7 +134,6 @@ def register(token=None):
             return redirect(url_for('patient_dashboard'))
     elif token:
         token_valid = database.check_invitation_token_validity(token)
-        print('token_valid', token_valid)
         if request.method == 'POST':
             try:
                 if request.form['email-address'] != token_valid[0].get("ac_email"):
@@ -166,7 +169,8 @@ def register(token=None):
                     session['logged_in'] = True
                     login_return_data = database.get_account(request.form['email-address'])
                     user_details = login_return_data[0]
-                    return redirect(url_for('patient_dashboard'))
+                    session['name'] = user_details['ac_firstname']
+                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')
@@ -194,7 +198,7 @@ def forgot_password():
                 flash('There is no account associated with that email. Please try again.', "error")
                 return render_template('forgot-password.html')
         else:
-            print(result)
+            # print(result)
             unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)
@@ -217,6 +221,7 @@ def researcher_dashboard():
 
 @app.route('/clinician/')
 def clinician_dashboard():
+    print(session)
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
@@ -232,8 +237,7 @@ def create_survey():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     return render_template('clinician/dashboard.html', session=session)
 
 @app.route('/clinician/view_patients/')
@@ -241,8 +245,7 @@ def view_patients():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     print(patients)
@@ -263,27 +266,28 @@ def view_patients_history(id = None):
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
-        print('Error: Attempted accessing clinician dashboard as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
+
     check_link = None
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
-    if id != None:
-        symptoms = None
-        symptoms = database.get_all_symptoms(id)
-        list_of_symptoms = []
-        symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
-        for symptom in symptoms:
-            symptom = symptom["row"][1:-1]
-            symptom_dict = {}
-            for i, col in enumerate(symptom.split(",")):
-                if i == 1 and col[-3:] == ":00":
-                    col = col[:-3]
-                symptom_dict[symptom_col_order[i]] = col.strip('"')
-            list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
-    return(redirect(url_for('clinician_dashboard')))
+    print('id = {}'.format(id))
+    # if id != None:
+    symptoms = None
+    symptoms = database.get_all_symptoms(id)
+    list_of_symptoms = []
+    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+    for symptom in symptoms:
+        symptom = symptom["row"][1:-1]
+        symptom_dict = {}
+        for i, col in enumerate(symptom.split(",")):
+            if i == 1 and col[-3:] == ":00":
+                col = col[:-3]
+            symptom_dict[symptom_col_order[i]] = col.strip('"')
+        list_of_symptoms.append(symptom_dict)
+    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    # return(redirect(url_for('clinician_dashboard')))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
@@ -333,8 +337,7 @@ def record_symptom(id=None):
         print('Error: Attempted accessing recording symptom as Researcher')
         return redirect(url_for('researcher_dashboard'))
     elif user_details['ac_type'] != 'patient':
-        print('Error: Attempted accessing recording symptom as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing recording symptom as Unknown')
 
     if request.method == 'POST':
         severity_scale = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
@@ -411,8 +414,7 @@ def patient_account(clinician_email=None):
         print('Error: Attempted accessing patient account as Researcher')
         return redirect(url_for('researcher_dashboard'))
     elif user_details['ac_type'] != 'patient':
-        print('Error: Attempted accessing patient account as Unknown')
-        raise
+        raise Exception('Error: Attempted accessing patient account as Unknown')
 
     if request.method == 'POST':
         form_data = dict(request.form.lists())
@@ -493,10 +495,11 @@ def invite_user():
         already_invited = database.check_email_in_account_invitation(email)
         token = None
         if already_invited:
+            token = already_invited[0].get('token')
             if already_invited[0].get('role') != role:
                 result = database.update_role_in_account_invitation(email, role)
-                token = result[0].get("token")
-                role = result[0].get("role")
+                token = result[0].get('token')
+                role = result[0].get('role')
         else:
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:

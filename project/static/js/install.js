@@ -1,8 +1,12 @@
 let deferredInstallPrompt = null;
 const installButton = document.getElementById('button-install');
-console.log('install', installButton)
+
 if (installButton !== null) {
-  installButton.addEventListener('click', installPWA);
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    installButton.style.display = 'none';
+  } else {
+    installButton.addEventListener('click', installPWA);
+  }
 }
 
 window.addEventListener('beforeinstallprompt', saveBeforeInstallPromptEvent);

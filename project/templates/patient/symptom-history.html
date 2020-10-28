@@ -1,9 +1,9 @@
 {% extends "sidebar.html" %}
 {% block head %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
 {% endblock %}
 {% block title %}Symptom History{% endblock %}
 {% block sidebar %}
@@ -11,32 +11,64 @@
   {% block content %}
     <div class="container">
       <h5 class="title">Symptom History</h5>
-      <div class="card">
-          <table>
-              <thead>
-                  <tr>
-                      <th>Date</th>
-                      <th>Symptom</th>
-                      <th>Location</th>
-                      <th>Severity</th>
-                      <th>Edit/Delete</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  {% for symptom in symptoms %}
-                      <tr>
-                        <td>{{symptom.recorded_date}}</td>
-                        <td>{{symptom.symptom_name}}</td>
-                        <td>{{symptom.location}}</td>
-                        <td>{{symptom.severity}}</td>
-                        <td><button class="btn blue editbtn" onclick="editRecord('{{ symptom.symptom_id }}', '{{ symptom.symptom_name }}', '{{ symptom.location }}', '{{ symptom.severity }}', '{{ symptom.occurence }}', '{{ symptom.recorded_date }}', '{{ symptom.notes }}')"><img class="icon" src="{{ url_for('static', filename='images/icons/edit.png' ) }}"></img></button>
-                        <button class="btn red deletebtn" onclick="deleteRecord('{{ symptom.symptom_id }}')"><img class="icon" src="{{ url_for('static', filename='images/icons/delete.png' ) }}"></img></button></td>
-            
-
-                      </tr>
-                  {% endfor %}
-              </tbody>
-          </table>
+      <div class="cards-holder">
+        {% for symptom in symptoms %}
+          <div>
+            <div class="symptom-card">
+              <div class="flex row symptom-value right">{{symptom.recorded_date}}</div>
+              <div class="flex col">
+                <div class="label">
+                  Symptom
+                </div>
+                <div class="symptom-value">
+                  {{symptom.symptom_name}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Location
+                </div>
+                <div class="symptom-value">
+                  {{symptom.location}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Severity
+                </div>
+                <div class="symptom-value">
+                  {{symptom.severity}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Time of Day
+                </div>
+                <div class="symptom-value">
+                  {{symptom.occurence}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label" onclick="showHideNotes('{{ symptom.symptom_id }}')">
+                  Notes <i id="notes-arrow-{{ symptom.symptom_id }}" class="fa fa-caret-down fa-md" style="color: #333333"></i>
+                </div>
+                <div id="notes-{{ symptom.symptom_id }}" class="symptom-value" style="display: none;">
+                  {{symptom.notes}}
+                </div>
+              </div>
+            </div>
+            <div class="flex row">
+              <button class="btn blue" onclick="editRecord('{{ symptom.symptom_id }}', '{{ symptom.symptom_name }}', '{{ symptom.location }}', '{{ symptom.severity }}', '{{ symptom.occurence }}', '{{ symptom.recorded_date }}', '{{ symptom.notes }}')">
+                <i class="fa fa-pen fa-sm" style="color: #ffffff"></i>
+                Edit
+              </button>
+              <button class="btn red" onclick="deleteRecord('{{ symptom.symptom_id }}')">
+                <i class="fa fa-trash fa-sm" style="color: #ffffff"></i>
+                Delete
+              </button>
+            </div>
+          </div>
+        {% endfor %}
       </div>
     </div>
   {% endblock %}

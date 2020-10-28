@@ -18,7 +18,7 @@ page = {}  # Determines the page information
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
-config.read('sample-config.ini')
+config.read('config.ini')
 
 app.secret_key = config['DATABASE']['secret_key']
 
@@ -208,6 +208,17 @@ def researcher_dashboard():
 
     print(session)
     return render_template('researcher/dashboard.html', session=session)
+@app.route('/researcher/patient-data')
+def researcher_data():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+
+    print(session)
+    return render_template('researcher/patient-research.html', session=session)
 
 @app.route('/clinician/')
 def clinician_dashboard():

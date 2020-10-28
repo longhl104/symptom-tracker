@@ -85,7 +85,6 @@ def register(token=None):
             gender = request.form.get('gender', "NA")
             if (gender == "NA"):
                 gender = None
-            print(request.form.get(gender))
             mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None

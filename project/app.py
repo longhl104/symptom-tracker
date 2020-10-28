@@ -273,21 +273,23 @@ def view_patients_history(id = None):
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
     print('id = {}'.format(id))
-    # if id != None:
-    symptoms = None
-    symptoms = database.get_all_symptoms(id)
-    list_of_symptoms = []
-    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
-    for symptom in symptoms:
-        symptom = symptom["row"][1:-1]
-        symptom_dict = {}
-        for i, col in enumerate(symptom.split(",")):
-            if i == 1 and col[-3:] == ":00":
-                col = col[:-3]
-            symptom_dict[symptom_col_order[i]] = col.strip('"')
-        list_of_symptoms.append(symptom_dict)
-    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
-    # return(redirect(url_for('clinician_dashboard')))
+    if id != None:
+        symptoms = None
+        symptoms = database.get_all_symptoms(id)
+        list_of_symptoms = []
+        symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+        for symptom in symptoms:
+            symptom = symptom["row"][1:-1]
+            symptom_dict = {}
+            for i, col in enumerate(symptom.split(",")):
+                if i == 1 and col[-3:] == ":00":
+                    col = col[:-3]
+                if i == 6 and (col == '""' or len(col) == 0):
+                    col = "None"
+                symptom_dict[symptom_col_order[i]] = col.strip('"')
+            list_of_symptoms.append(symptom_dict)
+        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    return(redirect(url_for('clinician_dashboard')))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
@@ -393,7 +395,9 @@ def symptom_history():
         for i, col in enumerate(symptom.split(",")):
             if i == 1 and col[-3:] == ":00":
                 col = col[:-3]
-            symptom_dict[symptom_col_order[i]] = col.strip('"')
+            if i == 6 and (col == '""' or len(col) == 0):
+                col = "None"
+            symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
     return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
 

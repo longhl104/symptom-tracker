@@ -11,7 +11,7 @@
 {% block sidebar %}
   <div class="s-layout__sidebar">
     <a class="s-sidebar__trigger" href="#">
-      <i class="fa fa-bars fa-lg"></i>
+      <img class="icon" src="{{ url_for('static', filename='images/icons/menu.png' ) }}"></img>
     </a>
 
     <nav class="s-sidebar__nav">
@@ -22,32 +22,32 @@
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_dashboard')}}">
-            <i class="fa fa-home fa-lg"></i><em class="sidebar-text">Home</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/home.png' ) }}"></img><em class="sidebar-text">Home</em>
           </a>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_reports')}}">
-            <i class="fa fa-chart-area fa-lg"></i><em class="sidebar-text">Reports</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/graph.png' ) }}"></img><em class="sidebar-text">Reports</em>
           </a>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_account')}}">
-            <i class="fa fa-user fa-lg"></i><em class="sidebar-text">Account</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/profile.png' ) }}"></img><em class="sidebar-text">Account</em>
           </a>
         </li>
         <li>
-          <a class="s-sidebar__nav-link">
-              <i class="fa fa-caret-square-o-down fa-lg"></i><em class="sidebar-text">Cancer Council Resources</em>
-          </a>
+          <div class="subheading-holder">
+            <i class="fa fa-caret-square-o-down fa-lg"></i><em class="sidebar-subheading">Cancer Council Resources</em>
+          </div>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="https://www.cancercouncil.com.au/cancer-information/managing-cancer-side-effects/peripheral-neuropathy/symptoms-of-peripheral-neuropathy/" target="_blank">
-            <i class="fa fa-info fa-lg"></i><em class="sidebar-text">About Symptoms</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/info.png' ) }}"></img><em style="top: 20%;" class="sidebar-text">About Symptoms</em>
           </a>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="https://www.cancercouncil.com.au/cancer-information/managing-cancer-side-effects/peripheral-neuropathy/key-questions-about-peripheral-neuropathy/" target="_blank">
-            <i class="fa fa-question fa-lg"></i><em class="sidebar-text">FAQ</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/question.png' ) }}"></img><em class="sidebar-text">CIPN FAQ</em>
           </a>
         </li>
       </ul>

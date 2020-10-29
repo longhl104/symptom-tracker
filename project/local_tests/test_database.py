@@ -20,6 +20,24 @@ def captured_output():
 
 
 class DatabaseTest(unittest.TestCase):
+    def sql_helper_void(self, sql, args=()):
+        conn = database.database_connect()
+        cur = conn.cursor()
+        cur.execute(sql, args)
+        conn.commit()
+        cur.close()                 # Close the cursor
+        conn.close()
+        pass
+
+    def sql_helper_fetchone(self, sql, args=()):
+        conn = database.database_connect()
+        cur = conn.cursor()
+        ret = database.dictfetchone(cur, sql, args)
+        conn.commit()
+        cur.close()                 # Close the cursor
+        conn.close()
+        return ret[0]
+
     def setUp(self):
         pass
 
@@ -110,18 +128,10 @@ class DatabaseTest(unittest.TestCase):
         self.assertIsNone(ret)
         pass
 
-    def sql_helper(self, sql, args):
-        conn = database.database_connect()
-        cur = conn.cursor()
-        cur.execute(sql, args)
-        conn.commit()
-        cur.close()                 # Close the cursor
-        conn.close()
-        pass
-
-    def test_add_patient(self):
+    def test_add_patient_has_connection(self):
         long_str = "0" * 256
-        ret = database.add_patient(long_str, 'Nguyen', 'male', '22', '0415147439', 'no treatment', 'long@gmail.com', '12345678', 'hashed', 'admin', 'yes')
+        ret = database.add_patient(long_str, 'Nguyen', 'male', '22', '0415147439',
+                                   'no treatment', 'long@gmail.com', '12345678', 'hashed', 'admin', 'yes')
         self.assertIsNone(ret)
 
         ret = database.add_patient('Long', long_str, 'male', '22', '0415147439',
@@ -133,23 +143,85 @@ class DatabaseTest(unittest.TestCase):
         self.assertIsNone(ret)
 
         ret = database.add_patient('Long', 'Nguyen', 'male', '22', '0415147439',
-                                   'no treatment',long_str, '12345678', 'hashed', 'admin', 'yes')
+                                   'no treatment', long_str, '12345678', 'hashed', 'admin', 'yes')
         self.assertIsNone(ret)
 
         ret = database.add_patient('Long', 'Nguyen', 'male', '22', '0415147439',
-                                   'no treatment','long@gmail.com', '12345678', 'hashed', 'admin', 'yes')
+                                   'no treatment', 'long@gmail.com', '12345678', 'hashed', 'admin', 'yes')
         self.assertIsNotNone(ret)
-        self.sql_helper("delete from tingleserver.\"Account\" where ac_id=%s", (ret, ))
+        self.sql_helper_void(
+            "delete from tingleserver.\"Account\" where ac_id=%s", (ret, ))
 
-        # ret = database.add_patient('Long', 'Nguyen', 'male', '22', '0415147439',
-        #                            'no treatment', 'long@gmail.com', '12345678', 'hashed', 'patient', 'yes')
-        # self.assertIsNotNone(ret)
-        # self.sql_helper(
-        #     "delete from tingleserver.\"Account\" where ac_id=%s", (ret, ))
-        
+        ret = database.add_patient('Long', 'Nguyen', 'male', '22', '0415147439',
+                                   ['Oxaliplatin (Eloxatin, Oxalatin, Oxaliccord, Xalox, FOLFOX, XELOX)'], 'long@gmail.com', '12345678', 'hashed', 'patient', 'yes')
+        self.assertIsNotNone(ret)
+        self.sql_helper_void(
+            "delete from tingleserver.\"Account\" where ac_id=%s", (ret, ))
+        pass
+
+    @mock.patch('pg8000.connect')
+    def test_add_patient_no_connection(self, conn):
+        conn.return_value = None
+        ret = database.add_patient('Long', 'Nguyen', 'male', '22', '0415147439',
+                                   ['Oxaliplatin (Eloxatin, Oxalatin, Oxaliccord, Xalox, FOLFOX, XELOX)'], 'long@gmail.com', '12345678', 'hashed', 'patient', 'yes')
+        self.assertIsNone(ret)
+        pass
+
+    def test_record_symptom_has_connection(self):
+        ret = database.record_symptom(
+            '', 'patient@test.com', 'Numbness', 'Hands', 'Quite a bit', 'Daytime', '2020-10-08', '')
+        self.assertEqual(ret, 'patient@test.com')
+        id = self.sql_helper_fetchone(
+            "select max(symptom_id) from tingleserver.\"Symptom\"")['max']
+
+        ret = database.record_symptom(str(
+            id), 'patient@test.com', 'Numbness', 'Hands', 'Quite a bit', 'Daytime', '2020-10-08', '')
+        self.assertEqual(ret, 'patient@test.com')
+
+        self.sql_helper_void(
+            "delete from tingleserver.\"Symptom\" where symptom_id=%s", (id, ))
 
         pass
 
+    @mock.patch('pg8000.connect')
+    def test_record_symptom_no_connection(self, conn):
+        conn.return_value = None
+        ret = database.record_symptom(
+            '', 'patient@test.com', 'Numbness', 'Hands', 'Quite a bit', 'Daytime', '2020-10-08', '')
+        self.assertIsNone(ret)
+        pass
+
+    def test_get_all_symptoms_has_connection(self):
+        ret = database.get_all_symptoms('patient@test.com')
+        self.assertEqual(
+            [{'row': '(15,2020-10-14,Tingling,Hands,Somewhat,Daytime,"")'}, {'row': '(14,2020-10-13,Pain,Legs,"A little bit",Morning,"")'},
+             {'row': '(13,2020-10-08,Numbness,Hands,"Quite a bit",Daytime,"")'}],
+            ret
+        )
+        pass
+
+    @mock.patch('pg8000.connect')
+    def test_get_all_symptoms_no_connection(self, conn):
+        conn.return_value = None
+        ret = database.get_all_symptoms('patient@test.com')
+        self.assertIsNone(ret)
+        pass
+
+    # def test_get_all_patients_has_connection(self):
+    #     ret = database.get_all_patients('clinician@test.com')
+    #     print(ret)
+    #     pass
+
+    @mock.patch('pg8000.connect')
+    def test_get_all_patients_no_connection(self, conn):
+        conn.return_value = None
+        ret = database.get_all_patients('clinician@test.com')
+        self.assertIsNone(ret)
+        pass
+
+    def test_check_clinician_lick_has_connection(self):
+
+        pass
 
 if __name__ == '__main__':
     unittest.main()

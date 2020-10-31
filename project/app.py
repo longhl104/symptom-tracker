@@ -368,9 +368,10 @@ def patient_reports():
         startDate = form_data.get("startDate")[0]
         endDate = form_data.get("endDate")[0]
 
-        data = database.get_graph_data(
-            user_details["ac_email"], symptom, location, startDate, endDate
-        )
+        data = [1]
+        # data = database.get_graph_data(
+        #     user_details["ac_email"], symptom, location, startDate, endDate
+        # )
         graph = None
 
         if len(data) == 0:
@@ -513,7 +514,7 @@ def patient_reports():
 
                 return date, severity
 
-            def clean_data(start_date, end_date, data):
+            def clean_data_no_space(start_date, end_date, data):
                 date = []
                 severity = []
                 severity_dict = {
@@ -586,21 +587,21 @@ def patient_reports():
 
                 return date, severity
 
-            first_row = data[0]["row"][1:-1].split(",")
-            last_row = data[-1]["row"][1:-1].split(",")
-            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
-            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
+            # first_row = data[0]["row"][1:-1].split(",")
+            # last_row = data[-1]["row"][1:-1].split(",")
+            # start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
+            # end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
 
             # date, severity = clean_data_no_space(start_date, end_date, data)
 
-            # custom_style = Style(
-            #     background="#FFFFFF",
-            #     plot_background="#FFFFFF",
-            #     transition="400ms ease-in",
-            #     font_family="googlefont:Oxygen",
-            # )
+            custom_style = Style(
+                background="#FFFFFF",
+                plot_background="#FFFFFF",
+                transition="400ms ease-in",
+                font_family="googlefont:Oxygen",
+            )
 
-            # labels space
+            # #labels space
             # no_days = (end_date - start_date).days + 1
             # i = 0
             # while no_days / (7 * pow(3, i)) > 1:
@@ -627,24 +628,6 @@ def patient_reports():
             # Change size, colour, opacity etc of specific shapes
             # Change shapes seems to be possible but a lot more work
             # Change stroke between sporadic points, each set of sporadic points would be disconnected from graph
-            
-            # graph.add(
-            #     "Serie",
-            #     [
-            #         1,
-            #         {
-            #             "value": 2,
-            #             "node": {
-            #                  "r": 2,
-            #                 "fill": "black",
-            #                 "fill-opacity": "100%",
-            #                 "stroke": "black",
-            #                 "stroke-opacity": "100%",
-            #             },
-            #         },
-            #         3,
-            #     ],
-            # )
             # custom_style = Style(
             #     background="transparent",
             #     plot_background="transparent",
@@ -656,27 +639,132 @@ def patient_reports():
             #     transition="400ms ease-in",
             #     colors=("#E853A0", "#E853A0"),
             # )
-            # graph = pygal.Line(style=custom_style)
-            # graph.add("Serie 1", [1, 2, 1, 1, None, 2, 1.5, 1], allow_interruptions=True)
-            # graph.add(
-            #     "Serie 2",
-            #     [
-            #         None,
-            #         None,
-            #         None,
-            #         1,
-            #         {
-            #             "value": 1.5
-            #         },
-            #         2,
-            #     ],
-            #     stroke_style={
+
+            # stroke_style={
             #         "width": 5,
             #         "dasharray": "3, 6",
             #         "linecap": "round",
             #         "linejoin": "round",
             #     },
-            # )
+
+            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            #     y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3})
+            # graph.title = 'Symptoms in my Hands (C)'
+            # graph.y_labels = list(severity_dict.keys())
+            # graph.x_labels = ['2020-10-27 Morning', '2020-10-27  Daytime', '2020-10-27 Night-time', '2020-10-28 Morning',
+            #  '2020-10-28 Daytime', '2020-10-28 Night-time', '2020-10-29 Morning', '2020-10-29 Daytime', 
+            #  '2020-10-29 Night-time']            
+            # graph.add("Cramping", [2, 4, 3, 0, 0, 3, 4, 0, 0])
+            # graph.add("Discomfort", [2, 3, 2, 4, 3, 3, 0, 1, 2])
+            # graph.add("Numbness",[0, 2, 3, 1, 2, 4, 2, 3, 0])
+            # graph.add("Pain", [1, 3, 4, 1, 2, 0, 3, 2, 1])
+            # graph.add("Tingling", [3, 2, 2, 4, 1, 3, 0, 3, 2])
+            # graph.add("Weakness", [1, 2, 4, 0, 0, 3, 4,2 , 3])
+            # graph.x_labels = ['Morning','2020-10-27','','Daytime','2020-10-27','','Night-time','2020-10-27','','Morning',
+            #  '2020-10-28','', 'Daytime', '2020-10-28','', 'Night-time', '2020-10-28','','Morning', '2020-10-29','', 'Daytime', 
+            #  '2020-10-29','', 'Night-time','2020-10-29']
+            # graph.add("Cramping", [2, None, None, 4, None, None,3, None, None, 0, None, None,0, None, None,
+            #     3, None, None, 4, None, None, 0, None, None, 0])
+            # graph.add("Discomfort", [2, None, None, 3, None, None, 2, None, None, 4, None, None, 3, None, None, 
+            #     3, None, None, 0, None, None, 1, None, None, 2])
+            # graph.add("Numbness",[0, None, None, 2, None, None, 3, None, None, 1, None, None, 2, None, None, 
+            #     4, None, None, 2, None, None, 3, None, None, 0])
+            # graph.add("Pain", [1, None, None, 3, None, None, 4, None, None, 1, None, None, 2, None, None, 0, 
+            #     3, None, None, 2, None, None, 1])
+            # graph.add("Tingling", [3, None, None, 2, None, None, 2, None, None, 4, None, None, 1, None, None, 
+            #     3, None, None, 0, None, None, 3, None, None, 2])
+            # graph.add("Weakness", [1, None, None, 2, None, None, 4, None, None, 0, None, None, 0, None, None, 3, 
+            #     4, None, None, 2, None, None, 3])
+            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
+            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29', 
+            #  '2020-10-29']
+            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 0, 'label': 'Night-time'}])
+            # graph.add("Discomfort", [{'value': 2, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'}, 
+            #     {'value': 2, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 1, 'label': 'Daytime'},
+            #     {'value': 2, 'label': 'Night-time'}])
+            # graph.add("Numbness", [{'value': 0, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'}, 
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 1, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
+            #     {'value': 4, 'label': 'Night-time'}, {'value': 2, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
+            #     {'value': 0, 'label': 'Night-time'}])
+            # graph.add("Pain", [{'value': 1, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'}, 
+            #     {'value': 4, 'label': 'Night-time'}, {'value': 1, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
+            #     {'value': 0, 'label': 'Night-time'}, {'value': 3, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
+            #     {'value': 1, 'label': 'Night-time'}])
+            # graph.add("Weakness", [{'value': 3, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'}, 
+            #     {'value': 2, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 1, 'label': 'Daytime'},
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
+            #     {'value': 2, 'label': 'Night-time'}])
+            custom_style = Style(
+                background="#FFFFFF",
+                plot_background="#FFFFFF",
+                transition="400ms ease-in",
+                font_family="googlefont:Oxygen",
+                colors=("#E853A0", "#E853A0", "#E853A0")
+            )
+            graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+                y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3}, show_legend=False)
+            graph.y_labels = list(severity_dict.keys())
+            graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
+             '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
+            # graph.title = 'Cramping in my Hands (A)'
+            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+            #     {'value': 3, 'label': 'Night-time'}, None, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, None,
+            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
+            # graph.title = 'Cramping in my Hands (C)'
+            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
+            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
+            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+            #     {'value': 3, 'label': 'Night-time'}, None, None, None,
+            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
+            # graph.add("Cramping", [None, None, None, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'},
+            #     None], allow_interruptions=True)
+            # graph.add("Cramping", [None, None, 
+            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Daytime'},
+            #     None, {'value': 4, 'label': 'Morning'},
+            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True, stroke_style={"width": 5,
+            #         "dasharray": "3, 6"})
+            # graph.title = 'Sporadic Cramping in my Hands (A)'
+            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
+            #  '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
+            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+            #     {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, {'value': 3, 'label': 'Sporadic'},
+            #     {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 0, 'label': 'Night-time'}])
+            graph.title = 'Sporadic Cramping in my Hands (B)'
+            graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
+             '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
+            graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+                {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, None,
+                {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
+                {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
+            graph.add("Cramping", [None, None, 
+                None, {'value': 3, 'label': 'Sporadic', "node": {
+                                                    "r": 4,
+                                                    "fill": "black",
+                                                    "fill-opacity": "100%",
+                                                    "stroke": "black",
+                                                    "stroke-opacity": "100%",
+                                                },}, {'value': 3, 'label': 'Sporadic', "node": {
+                                                    "r": 4,
+                                                    "fill": "black",
+                                                    "fill-opacity": "100%",
+                                                    "stroke": "black",
+                                                    "stroke-opacity": "100%",
+                                                }},
+                {'value': 3, 'label': 'Sporadic', "node": {
+                                                    "r": 4,
+                                                    "fill": "black",
+                                                    "fill-opacity": "100%",
+                                                    "stroke": "black",
+                                                    "stroke-opacity": "100%",
+                                                }}, None, None,
+                None], allow_interruptions=True, stroke_style={"width": 5,"dasharray": "3, 6"})
 
         graph_data = graph.render_data_uri()
 
@@ -688,7 +776,6 @@ def patient_reports():
         startDate=startDate,
         endDate=endDate,
     )
-
 
 @app.route("/patient/reports/download", methods=["POST"])
 def download_file():

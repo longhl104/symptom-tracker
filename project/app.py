@@ -705,11 +705,11 @@ def patient_reports():
                 font_family="googlefont:Oxygen",
                 colors=("#E853A0", "#E853A0", "#E853A0")
             )
-            graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-                y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3}, show_legend=False)
-            graph.y_labels = list(severity_dict.keys())
-            graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
-             '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
+            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            #     y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3}, show_legend=False)
+            # graph.y_labels = list(severity_dict.keys())
+            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
+            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
             # graph.title = 'Cramping in my Hands (A)'
             # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
             #     {'value': 3, 'label': 'Night-time'}, None, {'value': 0, 'label': 'Daytime'},
@@ -736,35 +736,57 @@ def patient_reports():
             #     {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, {'value': 3, 'label': 'Sporadic'},
             #     {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
             #     {'value': 0, 'label': 'Night-time'}])
-            graph.title = 'Sporadic Cramping in my Hands (B)'
-            graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
-             '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
-            graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-                {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, None,
-                {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
-                {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
-            graph.add("Cramping", [None, None, 
-                None, {'value': 3, 'label': 'Sporadic', "node": {
-                                                    "r": 4,
-                                                    "fill": "black",
-                                                    "fill-opacity": "100%",
-                                                    "stroke": "black",
-                                                    "stroke-opacity": "100%",
-                                                },}, {'value': 3, 'label': 'Sporadic', "node": {
-                                                    "r": 4,
-                                                    "fill": "black",
-                                                    "fill-opacity": "100%",
-                                                    "stroke": "black",
-                                                    "stroke-opacity": "100%",
-                                                }},
-                {'value': 3, 'label': 'Sporadic', "node": {
-                                                    "r": 4,
-                                                    "fill": "black",
-                                                    "fill-opacity": "100%",
-                                                    "stroke": "black",
-                                                    "stroke-opacity": "100%",
-                                                }}, None, None,
-                None], allow_interruptions=True, stroke_style={"width": 5,"dasharray": "3, 6"})
+            # graph.title = 'Sporadic Cramping in my Hands (B)'
+            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
+            #  '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
+            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
+            #     {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, None,
+            #     {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
+            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
+            # graph.add("Cramping", [None, None, 
+            #     None, {'value': 3, 'label': 'Sporadic', "node": {
+            #                                         "r": 4,
+            #                                         "fill": "black",
+            #                                         "fill-opacity": "100%",
+            #                                         "stroke": "black",
+            #                                         "stroke-opacity": "100%",
+            #                                     },}, {'value': 3, 'label': 'Sporadic', "node": {
+            #                                         "r": 4,
+            #                                         "fill": "black",
+            #                                         "fill-opacity": "100%",
+            #                                         "stroke": "black",
+            #                                         "stroke-opacity": "100%",
+            #                                     }},
+            #     {'value': 3, 'label': 'Sporadic', "node": {
+            #                                         "r": 4,
+            #                                         "fill": "black",
+            #                                         "fill-opacity": "100%",
+            #                                         "stroke": "black",
+            #                                         "stroke-opacity": "100%",
+            #                                     }}, None, None,
+            #     None], allow_interruptions=True, stroke_style={"width": 5,"dasharray": "3, 6"})
+            graph = pygal.DateLine(x_label_rotation=35,
+                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
+            graph.y_labels = [
+                'Not at all',
+                'A little bit',
+                'Somewhat',
+                'Quite a bit',
+                'Very much'
+            ]
+            graph.add("Serie1", [
+                (datetime(2013, 1, 2), 3),
+                (datetime(2013, 1, 2), 0),
+                (datetime(2013, 8, 2), 1),
+                (datetime(2014, 12, 7), 1),
+                (datetime(2015, 3, 21), 2)
+            ])
+            graph.add("Serie2", [
+                {'value': (datetime(2013, 1, 2), 3), 'label': 'test'},
+                (datetime(2014, 8, 2), 1),
+                (datetime(2014, 12, 7), 1),
+                (datetime(2015, 3, 1), 0)
+            ])
 
         graph_data = graph.render_data_uri()
 

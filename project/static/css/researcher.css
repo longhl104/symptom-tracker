@@ -4,7 +4,7 @@
     padding: 10px 50px 10px 10px;
     border: 1px solid #ccc;
   }
-    
+
   .dropdown-check-list .anchor:after {
     position: absolute;
     content: "";
@@ -19,7 +19,7 @@
     -webkit-transform: rotate(-135deg);
     transform: rotate(-135deg);
   }
-    
+
   .dropdown-check-list ul.items {
     display: none;
     padding: 4px;
@@ -28,97 +28,105 @@
     background-color: #F5F6FA;
     border-top: none;
   }
-  
+
   .dropdown-check-list ul.items li {
     list-style: none;
     padding: 4px;
   }
-  
+
   .dropdown-check-list.visible .items {
     display: block;
   }
-  
+
   input, label {
     display: block;
   }
-  
+
   .container {
     width: 40%;
   }
-  
+
+  table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+  }
+
+  li:hover {
+    cursor: pointer;
+  }
+
   /*
     Device = Desktops
     Screen = 1281px to higher resolution desktops
   */
-  
+
   @media (min-width: 1281px) {
     .container {
       width: 50%;
     }
   }
-  
+
   /*
     Device = Tablets, iPads (Portrait)
     Screen = 768px to 1024px
   */
-  
+
   @media (min-width: 768px) and (max-width: 1024px) {
     .card {
       width: 100%;
     }
-  
+
     .container {
       width: 60%;
     }
   }
-  
+
   /*
     Device = Tablets, iPads (Landscape)
     Screen = 768px to 1024px
   */
-  
+
   @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
     .card {
       width: 80%;
     }
-  
+
     .container {
       width: 60%;
       justify-content: flex-start;
     }
   }
-  
+
   /*
     Device = Low Resolution Tablets, Smartphones (Landscape)
     Screen = 481px to 767px
   */
-  
+
   @media (min-width: 481px) and (max-width: 767px) {
     .card {
       width: 100%;
     }
-  
+
     .container {
       width: 100%;
       justify-content: flex-start;
-    }  
+    }
   }
-  
+
   /*
     Device = Most Smartphones (Portrait)
     Screen = 320px to 479px
   */
-  
+
   @media (min-width: 320px) and (max-width: 480px) {
     .card {
       width: 100%;
       padding: 25px;
     }
-  
+
     .container {
       width: 100%;
       align-items: normal;
       justify-content: flex-start;
-    } 
+    }
   }
-  

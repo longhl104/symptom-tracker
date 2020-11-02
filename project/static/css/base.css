@@ -82,6 +82,11 @@ body {
   margin-bottom: 10px;
 }
 
+.icon {
+  width: 1.5em;
+  height: 1.5em;
+}
+
 form {
   margin: 10px 0px;
 }

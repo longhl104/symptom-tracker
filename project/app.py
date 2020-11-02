@@ -65,6 +65,15 @@ def logout():
 @app.route('/register/<token>', methods=['GET', 'POST'])
 def register(token=None):
     if not token and request.method == 'POST':
+        firstName = request.form.get('first-name')
+        lastName = request.form.get('last-name')
+        gender = request.form.get('gender', "")
+        age = request.form.get('age', "")
+        mobile = request.form.get('mobile',"")
+        treatment = request.form.getlist('treatment', [])
+        emailAddress = request.form.get('email-address')
+        password = request.form.get('password')
+
         try:
             print(request.form)
             if request.form['password'] != request.form['confirm-password']:
@@ -73,19 +82,19 @@ def register(token=None):
             age = request.form.get('age', "")
             if (age == ""):
                 age = None
-            # gender = request.form.get('gender', "NA")
-            # if (gender == "NA"):
-            #     gender = None
+            gender = request.form.get('gender', "NA")
+            if (gender == "NA"):
+                gender = None
             mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
             print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
-                request.form.get('first-name'),
-                request.form.get('last-name'),
-                request.form.get('gender', ""), # gender,
+                firstName,
+                lastName,
+                gender,
                 age,
-                mobile, 
+                mobile,
                 request.form.get('treatment'),
                 request.form.get('email-address'),
                 request.form.get('password'),
@@ -107,8 +116,9 @@ def register(token=None):
         except:
             traceback.print_exc(file=sys.stdout)
             print('Exception occurred. Please try again')
-            flash('Something went wrong. Please try again', 'error')
-            return redirect(url_for('register'))
+            flash('Email address already in use. Please try again', 'error')
+            # return redirect(url_for('register'))
+            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
     elif not token and request.method == 'GET':
         if not session.get('logged_in', None):
             treatments = None
@@ -187,7 +197,7 @@ def forgot_password():
             except pg8000.core.ProgrammingError: # email not in database
                 flash('There is no account associated with that email. Please try again.', "error")
                 return render_template('forgot-password.html')
-        else: 
+        else:
             # print(result)
             unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
@@ -353,27 +363,29 @@ def view_patients_history(id = None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
         raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-        
+
     check_link = None
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
     print('id = {}'.format(id))
-    # if id != None:
-    symptoms = None
-    symptoms = database.get_all_symptoms(id)
-    list_of_symptoms = []
-    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
-    for symptom in symptoms:
-        symptom = symptom["row"][1:-1]
-        symptom_dict = {}
-        for i, col in enumerate(symptom.split(",")):
-            if i == 1 and col[-3:] == ":00":
-                col = col[:-3]
-            symptom_dict[symptom_col_order[i]] = col.strip('"')
-        list_of_symptoms.append(symptom_dict)
-    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
-    # return(redirect(url_for('clinician_dashboard')))
+    if id != None:
+        symptoms = None
+        symptoms = database.get_all_symptoms(id)
+        list_of_symptoms = []
+        symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+        for symptom in symptoms:
+            symptom = symptom["row"][1:-1]
+            symptom_dict = {}
+            for i, col in enumerate(symptom.split(",")):
+                if i == 1 and col[-3:] == ":00":
+                    col = col[:-3]
+                if i == 6 and (col == '""' or len(col) == 0):
+                    col = "None"
+                symptom_dict[symptom_col_order[i]] = col.strip('"')
+            list_of_symptoms.append(symptom_dict)
+        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    return(redirect(url_for('clinician_dashboard')))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
@@ -479,7 +491,9 @@ def symptom_history():
         for i, col in enumerate(symptom.split(",")):
             if i == 1 and col[-3:] == ":00":
                 col = col[:-3]
-            symptom_dict[symptom_col_order[i]] = col.strip('"')
+            if i == 6 and (col == '""' or len(col) == 0):
+                col = "None"
+            symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
     return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
 
@@ -514,7 +528,7 @@ def patient_account(clinician_email=None):
             return redirect(url_for('patient_account'))
 
         clinician_id = acc[0]['ac_id']
-        
+
         try:
             link = database.add_patient_clinician_link(
                 user_details['ac_id'],

@@ -208,7 +208,7 @@ def researcher_dashboard():
 
     print(session)
     return render_template('researcher/dashboard.html', session=session)
-@app.route('/researcher/patient-data')
+@app.route('/researcher/patient-data',methods=['GET', 'POST'])
 def researcher_data():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
@@ -216,9 +216,94 @@ def researcher_data():
     if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+    consents = None
+    consents = database.get_all_consent()
+    list_of_consents = []
+    consent_col_order = ["ac_email","ac_id", "ac_age", "ac_gender","treatment_name"]
+    for consent in consents:
+        consent = consent['row'][1:-1]
+        consent_dict = {}
+        for i, col in enumerate(consent.split(",")):
+            consent_dict[consent_col_order[i]] = col.strip('"')
+        list_of_consents.append(consent_dict)
+    if request.method =='GET':
+        return render_template('researcher/patient-research.html', consents=list_of_consents)
+    if request.method =='POST':
+        lage = request.form.get('lage', "")
+        if (lage == ""):
+            lage = None
+        hage = request.form.get('hage', "")
+        if (hage == ""):
+            hage = None
+        sym = request.form.get('symptom', "")
+        if (sym == ""):
+            sym = None
+        chemo = request.form.get('chemotherapy', "")
+        if (chemo == ""):
+            chemo = None
+        chemo = request.form.get('chemotherapy', "")
+        if (chemo == ""):
+            chemo = None
+        gen = request.form.get('gender', "")
+        if (gen == ""):
+            gen = None
+        print(lage,hage,sym,chemo,gen)
+        if lage is not None:
+            temp=[]
+            for x in list_of_consents:
+                if(x["ac_age"] >= lage):
+                    temp.append(x)
+            list_of_consents = temp
+        if hage is not None:
+            temp=[]
+            for x in list_of_consents:
+                if(x["ac_age"] <= hage):
+                    temp.append(x)
+            list_of_consents = temp
+        if gen is not None:
+            temp = []
+            for x in list_of_consents:
+                if(x["ac_gender"] == gen):
+                    temp.append(x)
+            list_of_consents = temp
+        if chemo is not None:
+            temp = []
+            for x in list_of_consents:
+                if(x["treatment_name"] == chemo):
+                    temp.append(x)
+            list_of_consents = temp
+        if sym is not None:
+            temp = []
+            for x in list_of_consents:
+                email = x["ac_email"]
+                symptom_list = database.get_name_symptoms(email)
+                for name in symptom_list:
+                    if (sym == name["symptom_name"]):
+                        temp.append(x)
+            list_of_consents = temp  
+        return render_template('researcher/patient-research.html', consents=list_of_consents)
 
-    print(session)
-    return render_template('researcher/patient-research.html', session=session)
+
+@app.route('/researcher/patient-data/<id>', methods=['GET'])
+def view_consent_history(id = None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'researcher':
+        raise Exception('Error: Attempted accessing researcher dashboard as Unknown')
+        
+    symptoms = None
+    symptoms = database.get_all_symptoms(id)
+    list_of_symptoms = []
+    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+    for symptom in symptoms:
+        symptom = symptom["row"][1:-1]
+        symptom_dict = {}
+        for i, col in enumerate(symptom.split(",")):
+            if i == 1 and col[-3:] == ":00":
+                col = col[:-3]
+            symptom_dict[symptom_col_order[i]] = col.strip('"')
+        list_of_symptoms.append(symptom_dict)
+    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
 
 @app.route('/clinician/')
 def clinician_dashboard():

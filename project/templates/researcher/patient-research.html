@@ -11,79 +11,91 @@
 {{ super() }}
   {% block content %}
     <div class="container">
-      <div class="grid three-equal-columns">
-        <div class="col">
-          <label for="age">Age</label>
-          <input type="number" class="input" name="age" style="width: 150px;">
+      <form name="reseacher-filter" class="form" method="POST" action="{{url_for('researcher_data')}}">
+        <div class="grid three-equal-columns">
+          <div class="col">
+            <label for="lower-age">Lowest-Age</label>
+            <input type="number" class="input" name="lage" style="width: 150px;">
+          </div>
+          <div class="col">
+            <label for="higher-age">Highest-Age</label>
+            <input type="number" class="input" name="hage" style="width: 150px;">
+          </div> 
+          <div class="col">
+            <label for="gender">Gender</label>
+            <select name="gender"style="width: 150px;">
+              <option value=""></option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
         </div>
-        <div class="col">
-          <label for="higher-age"></label>
-          <input type="number" class="input" name="h-age" style="width: 150px;">
-        </div> 
-        <div class="col">
-          <label for="gender">Gender</label>
-          <select name="gender"style="width: 150px;">
-            <option value="NA"></option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-      </div>
-      <label for="symptom">Symptom<sup>*</sup></label>
-        <select name="symptom" onchange="checkvalue(this)" required>
-          <option label=" "></option>
-          <option value="Cramping">Cramping</option>
-          <option value="Discomfort">Discomfort</option>
-          <option value="Numbness">Numbness</option>
-          <option value="Pain">Pain</option>
-          <option value="Tingling">Tingling</option>
-          <option value="Weakness">Weakness</option>
-          <option value="Other">Other</option>
-          </select>
-          <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
-        <span class="error-message" id="symptom-error-message"></span>
-      <label for="chemotherapy">Location<sup>*</sup></label>
-        <select name="chemotherapy" onchange="checkvalue(this)" required>
+        <label for="symptom">Symptom<sup>*</sup></label>
+          <select name="symptom">
             <option label=" "></option>
-            <option value="Hands">Hands</option>
-            <option value="Arms">Arms</option>
-            <option value="Feet">Feet</option>
-            <option value="Legs">Legs</option>
+            <option value="Cramping">Cramping</option>
+            <option value="Discomfort">Discomfort</option>
+            <option value="Numbness">Numbness</option>
+            <option value="Pain">Pain</option>
+            <option value="Tingling">Tingling</option>
+            <option value="Weakness">Weakness</option>
             <option value="Other">Other</option>
-        </select>
-        <input type="text" id="chemotherapy" placeholder="Enter a location here" name="location" style="display: none;"/>
-        <span class="error-message" id="location-error-message"></span>
-      <input class="btn green" type="submit" style="margin-top: 20px; width:150px;" value="Submit">
+            </select>
+            <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
+          <span class="error-message" id="symptom-error-message"></span>
+        <label for="chemotherapy">chemotherapy<sup>*</sup></label>
+          <select name="chemotherapy" >
+              <option label=" "></option>
+              <option value="Oxailplatin">Oxailplatin</option>
+              <option value="Cisplatin">Cisplatin</option>
+              <option value="Carboplatin">Carboplatin</option>
+              <option value="Paclitaxel">Paclitaxel</option>
+              <option value="Docetaxel">Docetaxel</option>
+              <option value="Cabazitaxel">Cabazitaxel</option>
+              <option value="Vincristine">Vincristine</option>
+              <option value="Vinblastine">Vinblastine</option>
+              <option value="Vinorelbine ">Vinorelbine </option>
+              <option value="Thalidomide">Thalidomide</option>
+              <option value="Bortezomib">Bortezomib</option>
+              <option value="Lenalidomide">Lenalidomide</option>
+              <option value="Pomalidomide">Pomalidomide</option>
+              <option value="Eribulin">Eribulin</option>
+          </select>
+          <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
+          <span class="error-message" id="location-error-message"></span>
+        <input class="btn green" type="submit" style="margin-top: 20px; width:150px;" value="Submit">
+      </form>
       <h5 class="title">Patient List</h5>
       <div class="card">
-          <table>
-              <thead>
-                  <tr>
-                      <th>age</th>
-                      <th>gender</th>
-                      <th>chemotherapy</th>
-                      <th>symptoms</th>
-                      <th>details</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  {% for patient in patients %}
-                      <tr>
-                        <td>{{patient.ac_firstname}}</td>
-                        <td>{{patient.ac_lastname}}</td>
-                        <td>{{patient.ac_age}}</td>
-                        <td>{{patient.ac_gender}}</td>
-                        <td><button class="btn blue"onclick="viewHistory('{{ patient.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
-                      </tr>
-                  {% endfor %}
-              </tbody>
-          </table>
-      </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Chemotherapy</th>
+                    <th>Symptoms</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for consent in consents %}
+                    <tr>
+                      <td>{{consent.ac_id}}</td>
+                      <td>{{consent.ac_age}}</td>
+                      <td>{{consent.ac_gender}}</td>
+                      <td>{{consent.treatment_name}}</td>
+                      <td><button class="btn blue"onclick="viewConsent('{{ consent.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     </div>
   {% endblock %}
   {% block bodyscripts %}
     {{ super() }}
-    <script type="text/javascript" src="{{ url_for('static', filename='js/view-patients.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/view_consents.js') }}"></script>
   {% endblock %}
 {% endblock %}

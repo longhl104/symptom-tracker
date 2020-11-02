@@ -316,8 +316,63 @@ def get_all_symptoms(email):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+def get_name_symptoms(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (symptom_name)
+                FROM tingleserver."Symptom" 
+                WHERE patient_username = %s 
+            """
+
+            r = dictfetchall(cur, sql, (email,))
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
 
 
+def get_all_consent():
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (A.ac_email, A.ac_id, A.ac_age, A.ac_gender, T.treatment_name)
+                FROM tingleserver."Patient" AS P
+                INNER JOIN 
+                tingleserver."Account" AS A
+                ON P.ac_id = A.ac_id 
+                INNER JOIN
+                tingleserver."Patient_Receives_Treatment" AS PRT
+                ON A.ac_id = PRT.patient_id
+                INNER JOIN
+                tingleserver."Treatment" AS T
+                ON PRT.treatment_id  = T.treatment_id
+                WHERE P.consent =%s
+            """
+
+            r = dictfetchall(cur, sql, ("yes",))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
 def get_all_patients(email):
     conn = database_connect()
     if conn:

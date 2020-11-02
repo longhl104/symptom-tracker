@@ -12,12 +12,18 @@
 {{ super() }}
   {% block content %}
   <main class="s-layout__content">
-    <div class="container" style="justify-content: start;">
+    <div class="container">
       <div class="grid-container">
         <div class="grid-header">
           <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
-          <br />
-          <p>This is the Clinician dashboard.</p>
+        </div>
+        <div class="grid-button-left">
+          <a href="{{url_for('create_survey')}}" class="btn green aligned">Create Survey</a>
+        </div>
+        <div class="grid-button-right">
+          <a href="{{url_for('view_patients')}}" class="btn blue aligned">View Patients</a>
+        </div>
+        <div class="grid-main">
         </div>
       </div>
     </div>

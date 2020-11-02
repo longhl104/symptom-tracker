@@ -74,8 +74,8 @@ def dictfetchall(cursor, sqltext, params=()):
 
     cursor.execute(sqltext, params)
     cols = [a[0].decode("utf-8") for a in cursor.description]
-    print(cols)
     returnres = cursor.fetchall()
+
     for row in returnres:
         result.append({a: b for a, b in zip(cols, row)})
     # cursor.close()
@@ -141,7 +141,7 @@ def get_account(email):
             return r
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Error: can't get hashed password")
+            print("Error: can't get account by email")
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
@@ -181,8 +181,8 @@ def get_all_treatments():
             """
 
             r = dictfetchall(cur, sql)
-            print("return val is:")
-            print(r)
+            # print("return val is:")
+            # print(r)
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r
@@ -298,7 +298,9 @@ def get_all_symptoms(email):
         try:
             sql = """
                 SELECT (symptom_id, recorded_date, symptom_name, location, severity, occurence, notes)
-                FROM tingleserver."Symptom" WHERE patient_username = %s ORDER BY recorded_date DESC
+                FROM tingleserver."Symptom" 
+                WHERE patient_username = %s 
+                ORDER BY recorded_date DESC
             """
 
             r = dictfetchall(cur, sql, (email,))
@@ -315,6 +317,53 @@ def get_all_symptoms(email):
         conn.close()                    # Close the connection to the db
     return None
 
+
+def get_all_patients(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (tingleserver."Account".ac_id,tingleserver."Account".ac_email,tingleserver."Account".ac_firstname,tingleserver."Account".ac_lastname,tingleserver."Account".ac_age,tingleserver."Account".ac_gender)
+                FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
+                WHERE tingleserver."Patient_Clinician".clinician_id =%s
+            """
+
+            r = dictfetchall(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+def check_clinician_link(clinician_id, patient_email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
+                WHERE tingleserver."Patient_Clinician".clinician_id =%s
+                AND tingleserver."Account".ac_email = %s
+            """
+
+            cur.execute(sql,(clinician_id,patient_email))
+            r = dictfetchall(cur, sql, (clinician_id,patient_email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting link: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
 def check_key_exists(email):
     conn = database_connect()
     if conn:
@@ -498,6 +547,118 @@ def get_linked_clinicians(patient_id):
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all clinicians: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def check_invitation_token_validity(token):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Account_Invitation"
+                WHERE token=%s
+            """
+            cur.execute(sql, (token,))
+            r = dictfetchone(cur, sql, (token,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get account invitation")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def check_email_in_account_invitation(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Account_Invitation"
+                WHERE ac_email=%s
+            """
+            cur.execute(sql, (email,))
+            r = dictfetchone(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get account invitation")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def update_role_in_account_invitation(email, role):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Account_Invitation"
+                SET role=%s
+                WHERE ac_email=%s
+                RETURNING token, role;
+            """
+            r = dictfetchone(cur, sql, (role, email,))
+            conn.commit()
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't update account invitation")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_account_invitation(token, email, role):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Account_Invitation" (token, ac_email, role)
+                VALUES(%s, %s, %s);
+            """
+            cur.execute(sql, (token, email, role))
+            conn.commit()
+            cur.close()
+            return email
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting invitation: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def delete_account_invitation(token, email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Account_Invitation"
+                WHERE ac_email=%s
+                AND token=%s;
+            """
+            cur.execute(sql, (email, token))
+            conn.commit()
+            cur.close()
+            return email
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting invitation: ", sys.exc_info()[0])
+            conn.rollback()
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

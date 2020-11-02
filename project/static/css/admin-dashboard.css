@@ -1,9 +1,25 @@
-input, label {
-  display: block;
+h6 {
+  font-size: 1.2em;
+}
+.two-equal-columns {
+  grid-column-gap: 10px;
+  grid-template-columns: 2fr 1fr;
 }
 
 .container {
-  width: 60%;
+  width: 90%;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-top: 9em;
+}
+
+.card {
+  width: 100%;
+  padding: 30px 30px;
+}
+
+.subtitle {
+  font-size: 1.1em;
 }
 
 /*
@@ -12,9 +28,7 @@ input, label {
 */
 
 @media (min-width: 1281px) {
-  .container {
-    width: 50%;
-  }
+
 }
 
 /*
@@ -23,12 +37,8 @@ input, label {
 */
 
 @media (min-width: 768px) and (max-width: 1024px) {
-  .card {
-    width: 80%;
-  }
-
-  .container {
-    width: 60%;
+  .title {
+    font-size: 1.7rem;
   }
 }
 
@@ -38,12 +48,8 @@ input, label {
 */
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-  .card {
-    width: 80%;
-  }
-
-  .container {
-    width: 60%;
+  .title {
+    font-size: 1.7rem;
   }
 }
 
@@ -53,14 +59,9 @@ input, label {
 */
 
 @media (min-width: 481px) and (max-width: 767px) {
-  .card {
-    width: 100%;
+  .title {
+    font-size: 1.7rem;
   }
-
-  .container {
-    width: 100%;
-    padding: 40px;
-  }  
 }
 
 /*
@@ -70,11 +71,6 @@ input, label {
 
 @media (min-width: 320px) and (max-width: 480px) {
   .card {
-    width: 100%;
+    padding: 20px 15px;
   }
-
-  .container {
-    width: 100%;
-    align-items: normal;
-  } 
 }

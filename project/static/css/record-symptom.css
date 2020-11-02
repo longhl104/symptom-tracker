@@ -1,5 +1,5 @@
 .container {
-  width: 65%;
+  width: 60%;
   padding: 1rem;
   justify-content: normal;
   align-items: normal;
@@ -47,7 +47,8 @@ textarea {
   }
 
   .container {
-    width: 90%;
+    width: 75%;
+    margin-left: 10%;
   }
 
   .title {
@@ -67,7 +68,7 @@ textarea {
   }
 
   .container {
-    width: 100%;
+    width: 80%;
   }
 
   .title {
@@ -87,7 +88,8 @@ textarea {
   }
 
   .container {
-    width: 90%;
+    width: 75%;
+    margin-top: 7em;
   }
 
   .title {
@@ -103,19 +105,25 @@ textarea {
 @media (min-width: 320px) and (max-width: 480px) {
   .card {
     width: 100%;
-    margin-top: 10px;
+    margin: 15px 0;
+    padding: 5px 20px;
   }
 
   .container {
     width: 100%;
+    margin-top: 7em;
   }
 
   .title {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .two-equal-columns {
     grid-template-columns: unset;
     grid-template-rows: 1fr 1fr;
+  }
+
+  .range-wrap {
+    position: absolute;
   }
 }

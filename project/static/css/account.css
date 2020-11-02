@@ -32,6 +32,22 @@ ul {
     font-size: 24px;
 }
 
+.container {
+  width: 75%;
+  justify-content: normal;
+  align-items: normal;
+  margin-top: 9em;
+}
+
+.card {
+  width: 100%;
+  padding: 30px 30px;
+}
+
+.subtitle {
+  font-size: 1.3em;
+}
+
 /*
   Device = Desktops
   Screen = 1281px to higher resolution desktops
@@ -59,7 +75,7 @@ ul {
   Screen = 1281px to higher resolution desktops
 */
 
-@media (min-width: 1281px) {
+@media (min-width: 1025px) {
     .container {
       width: 50%;
     }
@@ -72,7 +88,7 @@ ul {
   
   @media (min-width: 768px) and (max-width: 1024px) {
     .card {
-      width: 60%;
+      width: 100%;
     }
   }
   
@@ -82,8 +98,9 @@ ul {
   */
   
   @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-    .card {
-      width: 60%;
+    .container {
+      margin-top: 1em;
+      width: 75%;
     }
   }
   
@@ -93,11 +110,8 @@ ul {
   */
   
   @media (min-width: 481px) and (max-width: 767px) {
-    .card {
-      width: 70%;
-    }
-    .title {
-        margin-top: 40px;
+    .container {
+      width: 75%;
     }
   }
   
@@ -107,11 +121,11 @@ ul {
   */
   
   @media (min-width: 320px) and (max-width: 480px) {
-    .card {
-        width: 80%;
+    .container {
+        width: 90%;
     }
-    .title {
-        margin-top: 40px;
+    #cl-list-container li {
+      font-size: 16px;
     }
   }
   

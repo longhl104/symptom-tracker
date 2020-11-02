@@ -8,35 +8,51 @@
 <div class="s-layout">
 {% block sidebar %}
   <div class="s-layout__sidebar">
-    <a class="s-sidebar__trigger" href="#0">
-      <i class="fa fa-bars fa-lg"></i>
+    <a class="s-sidebar__trigger" href="#">
+      <img class="icon" src="{{ url_for('static', filename='images/icons/menu.png' ) }}"></img>
     </a>
 
     <nav class="s-sidebar__nav">
       <ul>
-        <li>
+        <li class="logo-holder">
           <img class="logo" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
-          <em class="logo-title" style="margin-bottom: 20px;">Symptom Tracker</em>
+          <em class="logo-title">Symptom Tracker</em>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_dashboard')}}">
-            <i class="fa fa-home fa-lg"></i><em class="sidebar-text">Home</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/home.png' ) }}"></img><em class="sidebar-text">Home</em>
           </a>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_reports')}}">
-            <i class="fa fa-chart-area fa-lg"></i><em class="sidebar-text">Reports</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/graph.png' ) }}"></img><em class="sidebar-text">Reports</em>
           </a>
         </li>
         <li>
           <a class="s-sidebar__nav-link" href="{{url_for('patient_account')}}">
-            <i class="fa fa-user fa-lg"></i><em class="sidebar-text">Account</em>
+            <img class="icon" src="{{ url_for('static', filename='images/icons/profile.png' ) }}"></img><em class="sidebar-text">Account</em>
+          </a>
+        </li>
+        <li>
+          <div class="subheading-holder">
+            <i class="fa fa-caret-square-o-down fa-lg"></i><em class="sidebar-subheading">Cancer Council Resources</em>
+          </div>
+        </li>
+        <li>
+          <a class="s-sidebar__nav-link" href="https://www.cancercouncil.com.au/cancer-information/managing-cancer-side-effects/peripheral-neuropathy/symptoms-of-peripheral-neuropathy/" target="_blank">
+            <img class="icon" src="{{ url_for('static', filename='images/icons/info.png' ) }}"></img><em style="top: 20%;" class="sidebar-text">About Symptoms</em>
+          </a>
+        </li>
+        <li>
+          <a class="s-sidebar__nav-link" href="https://www.cancercouncil.com.au/cancer-information/managing-cancer-side-effects/peripheral-neuropathy/key-questions-about-peripheral-neuropathy/" target="_blank">
+            <img class="icon" src="{{ url_for('static', filename='images/icons/question.png' ) }}"></img><em class="sidebar-text">CIPN FAQ</em>
           </a>
         </li>
       </ul>
       <div style="width: 90%; position: absolute; bottom: 0">
+        <input type="button" id="button-install" class="btn green" value="Install app">
         <form class="form" action="{{url_for('logout')}}">
-          <input id="logout" class="btn green" type="submit" value="Logout">
+          <input id="logout" class="btn red" type="submit" value="Logout">
         </form>
       </div>
     </nav>

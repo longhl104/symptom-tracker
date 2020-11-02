@@ -1,18 +1,18 @@
 from flask import *
-import database
+from project import database, email_handler
 import configparser
-import email_handler
 import urllib.parse
 import random
 import string
 import pg8000
+import traceback
+import sys
 import pygal
 import io
 import csv
 from pygal.style import Style
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -28,41 +28,33 @@ app.secret_key = config["DATABASE"]["secret_key"]
 # General routes
 
 
-@app.route("/", methods=["POST", "GET"])
+@app.route('/', methods=['POST', 'GET'])
 def login():
-    if request.method == "POST":
-        login_return_data = database.get_account(request.form["email"])
+    if request.method == 'POST':
+        login_return_data = database.get_account(request.form['email'])
         if login_return_data is None:
-            flash("Email does not exist, please register a new account", "error")
-            return redirect(url_for("login"))
+            flash('Email does not exist, please register a new account', 'error')
+            return redirect(url_for('login'))
 
         global user_details
         user_details = login_return_data[0]
+        if not check_password_hash(user_details['ac_password'], request.form['password']):
+            flash('Incorrect email/password, please try again', 'error')
+            return redirect(url_for('login'))
 
-        if not check_password_hash(
-            user_details["ac_password"], request.form["password"]
-        ):
-            flash("Incorrect email/password, please try again", "error")
-            return redirect(url_for("login"))
+        session['logged_in'] = True
+        session['name'] = user_details['ac_firstname']
 
-        session["logged_in"] = True
-        session["name"] = user_details["ac_firstname"]
-
-        if user_details["ac_type"] == "clinician":
-            return redirect(url_for("clinician_dashboard"))
-        elif user_details["ac_type"] == "researcher":
-            return redirect(url_for("researcher_dashboard"))
-        elif user_details["ac_type"] == "patient":
-            return redirect(url_for("patient_dashboard"))
+        if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
+            return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
         else:
-            print("Error: Attempted logging in with Unknown")
-            raise
+            raise Exception('Error: Attempted logging in with an unknown role')
 
-    elif request.method == "GET":
-        if not session.get("logged_in", None):
-            return render_template("index.html", session=session, page=page)
+    elif request.method == 'GET':
+        if not session.get('logged_in', None):
+            return render_template('index.html', session=session, page=page)
         else:
-            return redirect(url_for("patient_dashboard"))
+            return redirect(url_for('patient_dashboard'))
 
 
 @app.route("/logout", methods=["GET"])
@@ -73,52 +65,66 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
+@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register/<token>', methods=['GET', 'POST'])
+def register(token=None):
+    if not token and request.method == 'POST':
+        firstName = request.form.get('first-name')
+        lastName = request.form.get('last-name')
+        gender = request.form.get('gender', "")
+        age = request.form.get('age', "")
+        mobile = request.form.get('mobile',"")
+        treatment = request.form.getlist('treatment', [])
+        emailAddress = request.form.get('email-address')
+        password = request.form.get('password')
 
         try:
-            if request.form["password"] != request.form["confirm-password"]:
-                flash("Passwords do not match. Please try again", "error")
-                return redirect(url_for("register"))
-            age = request.form.get("age", "")
-            if age == "":
+            print(request.form)
+            if request.form['password'] != request.form['confirm-password']:
+                flash('Passwords do not match. Please try again', 'error')
+                return redirect(url_for('register'))
+            age = request.form.get('age', "")
+            if (age == ""):
                 age = None
-            # gender = request.form.get('gender', "NA")
-            # if (gender == "NA"):
-            #     gender = None
-            mobile = request.form.get("mobile-number", "")
-            if mobile == "":
+            gender = request.form.get('gender', "NA")
+            if (gender == "NA"):
+                gender = None
+            mobile = request.form.get('mobile-number', "")
+            if (mobile == ""):
                 mobile = None
+            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
-                request.form.get("first-name"),
-                request.form.get("last-name"),
-                request.form.get("gender", ""),  # gender,
+                firstName,
+                lastName,
+                gender,
                 age,
                 mobile,
-                request.form.getlist("treatment", []),
-                request.form.get("email-address"),
-                request.form.get("password"),
-                generate_password_hash(request.form.get("password")),
-                "patient",
-                "yes" if request.form.get("consent") == "on" else "no",
+                request.form.get('treatment'),
+                request.form.get('email-address'),
+                request.form.get('password'),
+                generate_password_hash(request.form.get('password')),
+                'patient',
+                'yes' if request.form.get('consent') == 'on' else 'no'
             )
             if add_patient_ret is None:
                 # TODO: return error message
-                return redirect(url_for("register"))
+                return redirect(url_for('register'))
             else:
-                session["logged_in"] = True
-                login_return_data = database.get_account(request.form["email-address"])
+                session['logged_in'] = True
+                login_return_data = database.get_account(request.form['email-address'])
                 global user_details
                 user_details = login_return_data[0]
-                return redirect(url_for("patient_dashboard"))
-        except Exception as e:
-            print(e)
-            print("Exception occurred. Please try again")
-            flash("Something went wrong. Please try again", "error")
-            return redirect(url_for("register"))
-    elif request.method == "GET":
-        if not session.get("logged_in", None):
+                session['logged_in'] = True
+                session['name'] = user_details['ac_firstname']
+                return redirect(url_for('patient_dashboard'))
+        except:
+            traceback.print_exc(file=sys.stdout)
+            print('Exception occurred. Please try again')
+            flash('Email address already in use. Please try again', 'error')
+            # return redirect(url_for('register'))
+            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
+    elif not token and request.method == 'GET':
+        if not session.get('logged_in', None):
             treatments = None
             # TODO: try except; should handle somehow if it fails
             treatments = database.get_all_treatments()
@@ -126,12 +132,59 @@ def register():
             if treatments is None:
                 treatments = {}
 
-            return render_template(
-                "register.html", session=session, treatments=treatments
-            )
+            return render_template('register.html', session=session, treatments=treatments)
         else:
             # TODO: How do we handle redirecting to the correct dashboard?
-            return redirect(url_for("patient_dashboard"))
+            return redirect(url_for('patient_dashboard'))
+    elif token:
+        token_valid = database.check_invitation_token_validity(token)
+        if request.method == 'POST':
+            try:
+                if request.form['email-address'] != token_valid[0].get("ac_email"):
+                    flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'error')
+                    return render_template('register-extra.html', token=token)
+                if request.form['password'] != request.form['confirm-password']:
+                    flash('Passwords do not match. Please try again', 'error')
+                    return render_template('register-extra.html', token=token)
+                age = None
+                # gender = request.form.get('gender', "NA")
+                # if (gender == "NA"):
+                #     gender = None
+                mobile = request.form.get('mobile-number', "")
+                mobile = None if mobile == "" else mobile
+                add_account_ret = database.add_patient(
+                    request.form.get('first-name'),
+                    request.form.get('last-name'),
+                    request.form.get('gender', ""), # gender,
+                    age,
+                    mobile,
+                    request.form.getlist('treatment', []),
+                    request.form.get('email-address'),
+                    request.form.get('password'),
+                    generate_password_hash(request.form.get('password')),
+                    token_valid[0].get('role'),
+                    'yes' if request.form.get('consent') == 'on' else 'no'
+                )
+                if add_account_ret is None:
+                    # TODO: return error message
+                    return render_template('register-extra.html', token=token)
+                else:
+                    delete_token = database.delete_account_invitation(token, request.form['email-address'])
+                    session['logged_in'] = True
+                    login_return_data = database.get_account(request.form['email-address'])
+                    user_details = login_return_data[0]
+                    session['name'] = user_details['ac_firstname']
+                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
+            except Exception as e:
+                print(e)
+                print('Exception occurred. Please try again')
+                flash('Something went wrong. Please try again', 'error')
+            return render_template('register-extra.html', token=token)
+        elif request.method == 'GET':
+            if token_valid:
+                return render_template('register-extra.html', token=token)
+            else:
+                return redirect(url_for('login'))
 
 
 @app.route("/register-extra")
@@ -139,78 +192,65 @@ def register_extra():
     return render_template("register-extra.html")
 
 
-@app.route("/forgot-password", methods=["GET", "POST"])
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    if request.method == "POST":
-        result = database.check_key_exists(request.form["email"])
-        if not result:
-            unique_key = "".join(
-                random.choice(string.ascii_uppercase + string.digits) for _ in range(24)
-            )
+    if request.method == 'POST':
+        result = database.check_key_exists(request.form['email'])
+        if (not result):
+            unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
-                database.add_password_key(unique_key, request.form["email"])
-            except pg8000.core.IntegrityError:  # if key already exists
-                unique_key = "".join(
-                    random.choice(string.ascii_uppercase + string.digits)
-                    for _ in range(24)
-                )
-                database.add_password_key(unique_key, request.form["email"])
-            except pg8000.core.ProgrammingError:  # email not in database
-                flash(
-                    "There is no account associated with that email. Please try again.",
-                    "error",
-                )
-                return render_template("forgot-password.html")
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.IntegrityError: # if key already exists
+                unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
+                database.add_password_key(unique_key, request.form['email'])
+            except pg8000.core.ProgrammingError: # email not in database
+                flash('There is no account associated with that email. Please try again.', "error")
+                return render_template('forgot-password.html')
         else:
-            print(result)
+            # print(result)
             unique_key = result[0]
-        message = email_handler.setup_email(request.form["email"], unique_key)
+        message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)
-        flash(
-            "Email sent. If you cannot see the email in your inbox, check your spam folder.",
-            "success",
-        )
-        return render_template("forgot-password.html")
-    elif request.method == "GET":
-        return render_template("forgot-password.html")
+        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")
+        return render_template('forgot-password.html')
+    elif request.method == 'GET':
+        return render_template('forgot-password.html')
 
 
-@app.route("/researcher/")
+@app.route('/researcher/')
 def researcher_dashboard():
-    if not session.get("logged_in", None):
-        return redirect(url_for("login"))
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
 
-    if user_details["ac_type"] == "clinician":
-        print("Error: Attempted accessing researcher dashboard as Clinician")
-        return redirect(url_for("clinician_dashboard"))
-    elif user_details["ac_type"] == "patient":
-        print("Error: Attempted accessing researcher dashboard as Patient")
-        return redirect(url_for("patient_dashboard"))
-    elif user_details["ac_type"] != "researcher":
-        print("Error: Attempted accessing researcher dashboard as Unknown")
-        raise
+    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
-    return render_template("researcher/dashboard.html", session=session)
+    return render_template('researcher/dashboard.html', session=session)
 
 
-@app.route("/clinician/")
+@app.route('/clinician/')
 def clinician_dashboard():
-    if not session.get("logged_in", None):
-        return redirect(url_for("login"))
+    print(session)
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
 
-    if user_details["ac_type"] == "researcher":
-        print("Error: Attempted accessing clinician dashboard as Researcher")
-        return redirect(url_for("researcher_dashboard"))
-    elif user_details["ac_type"] == "patient":
-        print("Error: Attempted accessing clinician dashboard as Patient")
-        return redirect(url_for("patient_dashboard"))
-    elif user_details["ac_type"] != "clinician":
-        print("Error: Attempted accessing clinician dashboard as Unknown")
-        raise
+    if user_details['ac_type'] in ['researcher', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
-    return render_template("clinician/dashboard.html", session=session)
+    return render_template('clinician/dashboard.html', session=session)
+
+
+@app.route('/clinician/create_survey/')
+def create_survey():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'clinician':
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
+    return render_template('clinician/dashboard.html', session=session)
 
 
 @app.route("/reset-password/<url_key>", methods=["GET", "POST"])
@@ -240,85 +280,72 @@ def reset_password(url_key):
 
 
 # Patient-related routes
-@app.route("/patient/")
+@app.route('/patient/')
 def patient_dashboard():
-    if not session.get("logged_in", None):
-        return redirect(url_for("login"))
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
 
-    if user_details["ac_type"] == "clinician":
-        print("Error: Attempted accessing patient dashboard as Clinician")
-        return redirect(url_for("clinician_dashboard"))
-    elif user_details["ac_type"] == "researcher":
-        print("Error: Attempted accessing patient dashboard as Researcher")
-        return redirect(url_for("researcher_dashboard"))
-    elif user_details["ac_type"] != "patient":
-        print("Error: Attempted accessing patient dashboard as Unknown")
-        raise
+    if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
     print(session)
-    return render_template("patient/dashboard.html", session=session)
+    return render_template('patient/dashboard.html', session=session)
 
 
-@app.route("/patient/record-symptom/", methods=["GET", "POST"])
-@app.route("/patient/record-symptom/<id>", methods=["DELETE"])
+@app.route('/patient/record-symptom/', methods=['GET', 'POST'])
+@app.route('/patient/record-symptom/<id>', methods=['DELETE'])
 def record_symptom(id=None):
-    if not session.get("logged_in", None):
-        return redirect(url_for("login"))
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
 
-    if user_details["ac_type"] == "clinician":
-        print("Error: Attempted accessing recording symptom as Clinician")
-        return redirect(url_for("clinician_dashboard"))
-    elif user_details["ac_type"] == "researcher":
-        print("Error: Attempted accessing recording symptom as Researcher")
-        return redirect(url_for("researcher_dashboard"))
-    elif user_details["ac_type"] != "patient":
-        print("Error: Attempted accessing recording symptom as Unknown")
-        raise
+    if user_details['ac_type'] == 'clinician':
+        print('Error: Attempted accessing recording symptom as Clinician')
+        return redirect(url_for('clinician_dashboard'))
+    elif user_details['ac_type'] == 'researcher':
+        print('Error: Attempted accessing recording symptom as Researcher')
+        return redirect(url_for('researcher_dashboard'))
+    elif user_details['ac_type'] != 'patient':
+        raise Exception('Error: Attempted accessing recording symptom as Unknown')
 
-    if request.method == "POST":
-        severity_scale = [
-            "Not at all",
-            "A little bit",
-            "Somewhat",
-            "Quite a bit",
-            "Very much",
-        ]
+    if request.method == 'POST':
+        severity_scale = ["Not at all", "A little bit", "Somewhat", "Quite a bit", "Very much"]
         form_data = dict(request.form.lists())
-        id = form_data.get("id")[0]
+        id = form_data.get('id')[0]
 
-        symptom = form_data.get("symptom")[0]
-        if symptom == "Other":
-            symptom = form_data.get("symptom")[1]
+        symptom = form_data.get('symptom')[0]
+        if symptom == 'Other':
+            symptom = form_data.get('symptom')[1]
 
-        location = form_data.get("location")[0]
-        if location == "Other":
-            location = form_data.get("location")[1]
+        location = form_data.get('location')[0]
+        if location == 'Other':
+            location = form_data.get('location')[1]
 
-        severity = severity_scale[int(form_data.get("severity")[0])]
-        occurence = form_data.get("occurence")[0]
-        date = form_data.get("date")[0]
-        notes = form_data.get("notes")[0]
+        severity = severity_scale[int(form_data.get('severity')[0])]
+        occurence = form_data.get('occurence')[0]
+        date = form_data.get('date')[0]
+        notes = form_data.get('notes')[0]
 
         recordSymptom = database.record_symptom(
             id,
-            user_details["ac_email"],
+            user_details['ac_email'],
             symptom,
             location,
             severity,
             occurence,
             date,
-            notes,
+            notes
         )
 
         if recordSymptom is None:
-            flash("Unable to record symptom, please try again.", "error")
-            return redirect(url_for("record_symptom"))
+            flash('Unable to record symptom, please try again.', 'error')
+            return redirect(url_for('record_symptom'))
         else:
-            return redirect(url_for("symptom_history"))
+            return redirect(url_for('symptom_history'))
 
-    if request.method == "DELETE":
-        result = database.delete_symptom_record(user_details["ac_email"], id)
-    return render_template("patient/record-symptom.html")
+    if request.method == 'DELETE':
+        result = database.delete_symptom_record(user_details['ac_email'], id)
+    return render_template('patient/record-symptom.html')
 
 
 @app.route("/patient/symptom-history")

@@ -295,7 +295,7 @@ def view_patients_history(id = None):
         return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
     return(redirect(url_for('clinician_dashboard')))
 
-@app.route("/reset-password/<url_key>", methods=["GET", "POST"])
+@app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
     if request.method == "POST":
         password = request.form["pw"]

@@ -920,6 +920,45 @@ def download_file():
 
     return output
 
+@app.route("/patient/reports/download-image", methods=["POST"])
+def download_image():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    # TODO: REPLACE WITH REAL DATA ONCE VISUALISATION FORMAT IS CHOSEN
+    graph = pygal.DateLine(x_label_rotation=35,
+                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
+    
+    graph.y_labels = [
+        'Not at all',
+        'A little bit',
+        'Somewhat',
+        'Quite a bit',
+        'Very much'
+    ]
+
+    graph.add("Series1", [
+        (datetime(2013, 1, 2), 3),
+        (datetime(2013, 1, 2), 0),
+        (datetime(2013, 8, 2), 1),
+        (datetime(2014, 12, 7), 1),
+        (datetime(2015, 3, 21), 2)
+    ])
+
+    graph.add("Series2", [
+        {'value': (datetime(2013, 1, 2), 3), 'label': 'test'},
+        (datetime(2014, 8, 2), 1),
+        (datetime(2014, 12, 7), 1),
+        (datetime(2015, 3, 1), 0)
+    ])
+
+    output = graph.render_response()
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=test.svg")
+    output.headers["Content-type"] = "image/svg+xml"
+
+    return output
+
 
 @app.route('/patient/account/', methods=['GET', 'POST'])
 @app.route('/patient/account/<clinician_email>', methods=['DELETE'])

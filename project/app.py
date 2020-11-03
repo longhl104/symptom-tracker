@@ -1,5 +1,5 @@
 from flask import *
-from project import database, email_handler
+import database, email_handler
 import configparser
 import urllib.parse
 import random
@@ -417,9 +417,14 @@ def symptom_history():
     return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
 
 
+
+
 @app.route("/patient/reports", methods=["GET", "POST"])
 def patient_reports():
-    graph_data = symptom = location = startDate = endDate = None
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    graph = graph_data = symptom = location = startDate = endDate = None
 
     if request.method == "POST":
         form_data = dict(request.form.lists())
@@ -868,8 +873,11 @@ def patient_reports():
         endDate=endDate,
     )
 
-@app.route("/patient/reports/download", methods=["POST"])
+@app.route("/patient/reports/download-file", methods=["POST"])
 def download_file():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
     form_data = dict(request.form.lists())

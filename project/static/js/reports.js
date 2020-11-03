@@ -1,3 +1,22 @@
+function getConfirmation(type) {
+
+  let message = ""
+  if (type === "image") {
+    message = "Export a graph of this symptom data? This will download a .svg file to your device."
+  } else {
+    message = "Export this symptom data? This will download a .csv file to your device."
+  }
+
+  console.log(message)
+
+  let confirmation = confirm(message);
+  if (confirmation) {
+    return true
+  } else {
+    return false;
+  }
+}
+
 function setDate() {
     var date = new Date();
   

@@ -4,6 +4,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
   {% endblock %}
 {% block title %}Create an account{% endblock %}
 {% block sidebar %}
@@ -39,17 +41,17 @@
             </select>
           </div>
         </div>
-        <!-- <div id="multi-checklist" class="dropdown-check-list">
+        <div id="multi-checklist" class="dropdown-check-list">
           <label>Have you received, or are you currently receiving, any of the following types of chemotherapy?<sup>*</sup></label>
           <div class="blue anchor btn">Select one or more treatment types</div>
           <ul class="items" id="treatments">
             {% for instance in treatments %}
-              <li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}">{{instance.treatment_name}}</li>
+              <li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}"> {{instance.treatment_name}}</li>
             {% endfor %}
             <li><input id="notype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I have not received any of these types of chemotherapy</li>
             <li><input id="unknowntype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I don't know the name of the chemotherapy that I have received</li>
           </ul>
-        </div> -->
+        </div>
         <label for="mobile-number">Mobile number</label>
         <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}" {% if (mobile != "") %}value={{mobile}}{% endif %}>
         <label for="email-address">Email<sup>*</sup></label>

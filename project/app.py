@@ -68,7 +68,7 @@ def register(token=None):
         firstName = request.form.get('first-name')
         lastName = request.form.get('last-name')
         gender = request.form.get('gender', "")
-        age = request.form.get('age', "")
+        age = request.form.get('age', "NA")
         mobile = request.form.get('mobile',"")
         treatment = request.form.getlist('treatment', [])
         emailAddress = request.form.get('email-address')
@@ -79,26 +79,22 @@ def register(token=None):
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
-            age = request.form.get('age', "")
             if (age == ""):
                 age = None
-            gender = request.form.get('gender', "NA")
             if (gender == "NA"):
                 gender = None
-            mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
-            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
                 gender,
                 age,
                 mobile,
-                request.form.get('treatment'),
-                request.form.get('email-address'),
-                request.form.get('password'),
-                generate_password_hash(request.form.get('password')),
+                treatment,
+                emailAddress,
+                password,
+                generate_password_hash(password),
                 'patient',
                 'yes' if request.form.get('consent') == 'on' else 'no'
             )

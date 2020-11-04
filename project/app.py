@@ -1091,11 +1091,11 @@ def patient_reports():
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
 
-            # For different graphs change the single line below, if the function name has 'dotted' in it be sure
+            # For different graphs change line 1098 below, if the function name has 'dotted' in it be sure
             # to have the 'sporadic' variable in between 'severity' and 'freq' otherwise omit it
             # For all functions use the old graph except those with 'new' in the function name
-            # For those 'new' functions comment out lines 1104-1107 and uncomment lines 1110-1112 
-            date, severity, sporadic, freq = clean_data_new_dotted(start_date, end_date, data)
+            # For those 'new' functions comment out lines 1109-1112 and uncomment lines 1115-1117 and vice versa
+            date, severity, freq = clean_data_new(start_date, end_date, data)
 
             custom_style = Style(
                 background="#FFFFFF",
@@ -1106,15 +1106,15 @@ def patient_reports():
             )
 
             # Old Graph
-            graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-                y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
-                show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
-            graph.x_labels = date
+            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            #     y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
+            #     show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
+            # graph.x_labels = date
 
             # New Graph
-            # graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, show_legend=False, stroke_style={'width': 3}, range=(0,4),
-            #     x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'))
+            graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+                y_title='Severity', fill=False, show_legend=False, stroke_style={'width': 3}, range=(0,4),
+                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'))
 
             # Might need to rework these so leave out for the moment
                 # show_minor_x_labels=False, x_labels_major_every=freq)

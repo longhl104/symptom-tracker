@@ -65,31 +65,36 @@ def logout():
 @app.route('/register/<token>', methods=['GET', 'POST'])
 def register(token=None):
     if not token and request.method == 'POST':
+        firstName = request.form.get('first-name')
+        lastName = request.form.get('last-name')
+        gender = request.form.get('gender', "")
+        age = request.form.get('age', "NA")
+        mobile = request.form.get('mobile',"")
+        treatment = request.form.getlist('treatment', [])
+        emailAddress = request.form.get('email-address')
+        password = request.form.get('password')
+
         try:
             print(request.form)
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
-            age = request.form.get('age', "")
             if (age == ""):
                 age = None
-            # gender = request.form.get('gender', "NA")
-            # if (gender == "NA"):
-            #     gender = None
-            mobile = request.form.get('mobile-number', "")
+            if (gender == "NA"):
+                gender = None
             if (mobile == ""):
                 mobile = None
-            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
-                request.form.get('first-name'),
-                request.form.get('last-name'),
-                request.form.get('gender', ""), # gender,
+                firstName,
+                lastName,
+                gender,
                 age,
-                mobile, 
-                request.form.get('treatment'),
-                request.form.get('email-address'),
-                request.form.get('password'),
-                generate_password_hash(request.form.get('password')),
+                mobile,
+                treatment,
+                emailAddress,
+                password,
+                generate_password_hash(password),
                 'patient',
                 'yes' if request.form.get('consent') == 'on' else 'no'
             )
@@ -107,8 +112,9 @@ def register(token=None):
         except:
             traceback.print_exc(file=sys.stdout)
             print('Exception occurred. Please try again')
-            flash('Something went wrong. Please try again', 'error')
-            return redirect(url_for('register'))
+            flash('Email address already in use. Please try again', 'error')
+            # return redirect(url_for('register'))
+            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
     elif not token and request.method == 'GET':
         if not session.get('logged_in', None):
             treatments = None
@@ -187,7 +193,7 @@ def forgot_password():
             except pg8000.core.ProgrammingError: # email not in database
                 flash('There is no account associated with that email. Please try again.', "error")
                 return render_template('forgot-password.html')
-        else: 
+        else:
             # print(result)
             unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
@@ -257,7 +263,7 @@ def view_patients_history(id = None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'clinician':
         raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-        
+
     check_link = None
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
@@ -422,7 +428,7 @@ def patient_account(clinician_email=None):
             return redirect(url_for('patient_account'))
 
         clinician_id = acc[0]['ac_id']
-        
+
         try:
             link = database.add_patient_clinician_link(
                 user_details['ac_id'],

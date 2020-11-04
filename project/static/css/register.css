@@ -1,3 +1,7 @@
+.card {
+  overflow: scroll;
+}
+
 .dropdown-check-list .anchor {
   position: relative;
   display: block;
@@ -40,6 +44,10 @@
 
 input, label {
   display: block;
+}
+
+.checkbox-input {
+  display: inline-block;
 }
 
 .container {

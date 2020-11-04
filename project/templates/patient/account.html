@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
 
-<script type="text/javascript" src="{{ url_for('static', filename='js/patient-account.js') }}" clinicians={{clinicians}}></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/patient-account.js') }}"></script>
 {% endblock %}
 {% block title %}Account{% endblock %}
 
@@ -18,6 +18,13 @@
     <p class="subtitle">Preferences</p>
     <p>Linked clinicians</p>
     <ul id="cl-list-container" >
+      {% if clinicians is none or clinicians|length == 0 %}
+        <div>You have not linked any clinicians.</div>
+      {% else %}
+        {% for clinician in clinicians %}
+          <li> {{ clinician }}<span class="close" id='{{ clinician }}' onclick="deleteClinician('{{ clinician }}')">x</span></li>
+        {% endfor %}
+      {% endif %}
     </ul>
     <form name="add-clinician" class="form col" method="POST">
       <label for="clinician_email">Grant access to a clinician</label>

@@ -68,7 +68,7 @@ def register(token=None):
         firstName = request.form.get('first-name')
         lastName = request.form.get('last-name')
         gender = request.form.get('gender', "")
-        age = request.form.get('age', "")
+        age = request.form.get('age', "NA")
         mobile = request.form.get('mobile',"")
         treatment = request.form.getlist('treatment', [])
         emailAddress = request.form.get('email-address')
@@ -79,26 +79,22 @@ def register(token=None):
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'error')
                 return redirect(url_for('register'))
-            age = request.form.get('age', "")
             if (age == ""):
                 age = None
-            gender = request.form.get('gender', "NA")
             if (gender == "NA"):
                 gender = None
-            mobile = request.form.get('mobile-number', "")
             if (mobile == ""):
                 mobile = None
-            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
                 gender,
                 age,
                 mobile,
-                request.form.get('treatment'),
-                request.form.get('email-address'),
-                request.form.get('password'),
-                generate_password_hash(request.form.get('password')),
+                treatment,
+                emailAddress,
+                password,
+                generate_password_hash(password),
                 'patient',
                 'yes' if request.form.get('consent') == 'on' else 'no'
             )
@@ -522,7 +518,7 @@ def patient_account(clinician_email=None):
         if clinician_email == '':
             flash('Please enter a clinician email address.', 'error')
 
-        acc = database.get_account(clinician_email)
+        acc = database.get_account(clinician_email.lower())
         if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
             flash('This email address is not associated with a clinician account.', 'error')
             return redirect(url_for('patient_account'))
@@ -562,13 +558,12 @@ def patient_account(clinician_email=None):
     clinicians = []
     if clinicians_raw is None:
         flash('Error retrieving clinicians list.', 'error')
-        clinicians = ''
+        clinicians = []
     else:
         for clinician in clinicians_raw:
             acc = database.get_account_by_id(clinician['clinician_id'])
             if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
                 clinicians.append(acc[0]['ac_email'])
-        clinicians = ",".join(clinicians)
     return render_template('patient/account.html', clinicians=clinicians)
 
 @app.route('/admin/')

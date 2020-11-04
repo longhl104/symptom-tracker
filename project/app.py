@@ -422,7 +422,7 @@ def patient_account(clinician_email=None):
         if clinician_email == '':
             flash('Please enter a clinician email address.', 'error')
 
-        acc = database.get_account(clinician_email)
+        acc = database.get_account(clinician_email.lower())
         if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
             flash('This email address is not associated with a clinician account.', 'error')
             return redirect(url_for('patient_account'))
@@ -462,13 +462,12 @@ def patient_account(clinician_email=None):
     clinicians = []
     if clinicians_raw is None:
         flash('Error retrieving clinicians list.', 'error')
-        clinicians = ''
+        clinicians = []
     else:
         for clinician in clinicians_raw:
             acc = database.get_account_by_id(clinician['clinician_id'])
             if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
                 clinicians.append(acc[0]['ac_email'])
-        clinicians = ",".join(clinicians)
     return render_template('patient/account.html', clinicians=clinicians)
 
 @app.route('/admin/')

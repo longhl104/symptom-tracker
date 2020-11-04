@@ -581,7 +581,13 @@ def patient_reports():
                     else:
                         severity += [None] * 3
 
-                return date, severity
+                    no_days = (end_date - start_date).days + 1
+                    i = 0
+                    while no_days / (7 * pow(3, i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, freq
 
             def clean_data_scaled_dotted(start_date, end_date, data):
                 date = []
@@ -705,7 +711,13 @@ def patient_reports():
                         severity += [None] * 3
                         sporadic += [None] * 3
 
-                return date, severity, sporadic
+                    no_days = (end_date - start_date).days + 1
+                    i = 0
+                    while no_days / (7 * pow(3, i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, sporadic, freq
 
             def clean_data_unscaled(start_date, end_date, data):
                 date = []
@@ -780,7 +792,13 @@ def patient_reports():
                         severity += [None] * 3
                         day_included = False
 
-                return date, severity
+                    no_days = len(date) / 3
+                    i = 0
+                    while no_days / (7 * pow(3,i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, freq
 
             def clean_data_unscaled_dotted(start_date, end_date, data):
                 date = []
@@ -869,7 +887,13 @@ def patient_reports():
                         sporadic += [None] * 3
                         day_included = False
 
-                return date, severity, sporadic
+                    no_days = len(date) / 3
+                    i = 0
+                    while no_days / (7 * pow(3,i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, sporadic, freq
 
             def clean_data_new(start_date, end_date, data):
                 date = []
@@ -900,48 +924,48 @@ def patient_reports():
                         date += [d+""]
                         date += [d+"\n"]
                         if len(r[d]) == 3:
-                            severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]), 
+                            severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 
                                 'label': 'Morning'}]
-                            severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][1][0]]),
+                            severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]),
                                 'label': 'Daytime'}]
-                            severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][2][0]]),
+                            severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][2][0]]),
                                 'label': 'Night-time'}]
 
                         elif len(r[d]) == 2:
                             if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
-                                severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]),
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]),
                                     'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][1][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]), 'label': 'Daytime'}]
                                 severity += [None]
                             elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
-                                severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
                                 severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
                             else:
                                 severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
                         else:
                             if r[d][0][1] == 'All the time':
-                                severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
                             elif r[d][0][1] == 'Sporadic':
-                                severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
                             elif r[d][0][1] == 'Morning':
-                                severity += [{'value': (single_date + timedelta(hours = 7), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
                                 severity += [None]
                                 severity += [None]
                             elif r[d][0][1] == 'Daytime':
                                 severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 12), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
                                 severity += [None]
                             else:
                                 severity += [None]
                                 severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 17), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
 
                     elif day_included:
                         date += [" "]
@@ -950,14 +974,123 @@ def patient_reports():
                         severity += [None] * 3
                         day_included = False
 
-                return date, severity
+                    no_days = (end_date - start_date).days + 1
+                    i = 0
+                    while no_days / (7 * pow(3, i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, freq
+
+            def clean_data_new_dotted(start_date, end_date, data):
+                date = []
+                severity = []
+                sporadic = []
+                severity_dict = {
+                    "Not at all": 0,
+                    "A little bit": 1,
+                    "Somewhat": 2,
+                    "Quite a bit": 3,
+                    "Very much": 4,
+                }
+                r = {}
+                for row in data:
+                    row = row["row"][1:-1].split(",")
+                    if row[0] in r:
+                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
+                    else:
+                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
+
+                day_included = True
+
+                for single_date in daterange(start_date, end_date + timedelta(1)):
+                    d = single_date.strftime("%Y-%m-%d")
+                    
+                    if d in r:
+                        day_included = True
+                        date += [d+" "]
+                        date += [d+""]
+                        date += [d+"\n"]
+                        if len(r[d]) == 3:
+                            severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 
+                                'label': 'Morning'}]
+                            severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]),
+                                'label': 'Daytime'}]
+                            severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][2][0]]),
+                                'label': 'Night-time'}]
+                            sporadic += [None] * 3
+                        elif len(r[d]) == 2:
+                            if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]),
+                                    'label': 'Morning'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]), 'label': 'Daytime'}]
+                                severity += [None]
+                                sporadic += [None] * 3
+                            elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [None]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
+                                sporadic += [None] * 3
+                            else:
+                                severity += [None]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
+                                sporadic += [None] * 3
+                        else:
+                            if r[d][0][1] == 'All the time':
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
+                                sporadic += [None] * 3
+                            elif r[d][0][1] == 'Sporadic':
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                severity += [None]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                                sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
+                            elif r[d][0][1] == 'Morning':
+                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
+                                severity += [None]
+                                severity += [None]
+                                sporadic += [None] * 3
+                            elif r[d][0][1] == 'Daytime':
+                                severity += [None]
+                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
+                                severity += [None]
+                                sporadic += [None] * 3
+                            else:
+                                severity += [None]
+                                severity += [None]
+                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
+                                sporadic += [None] * 3
+
+                    elif day_included:
+                        date += [" "]
+                        date += [""]
+                        date += ["\n"]
+                        severity += [None] * 3
+                        sporadic += [None] * 3
+                        day_included = False
+
+                    no_days = (end_date - start_date).days + 1
+                    i = 0
+                    while no_days / (7 * pow(3, i)) > 1:
+                        i += 1
+                    freq = pow(3, i)
+
+                return date, severity, sporadic, freq
 
             first_row = data[0]["row"][1:-1].split(",")
             last_row = data[-1]["row"][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
 
-            date, severity = clean_data_new(start_date, end_date, data)
+            # For different graphs change the single line below, if the function name has 'dotted' in it be sure
+            # to have the 'sporadic' variable in between 'severity' and 'freq' otherwise omit it
+            # For all functions use the old graph except those with 'new' in the function name
+            # For those 'new' functions comment out lines 1104-1107 and uncomment lines 1110-1112 
+            date, severity, sporadic, freq = clean_data_new_dotted(start_date, end_date, data)
 
             custom_style = Style(
                 background="#FFFFFF",
@@ -967,201 +1100,27 @@ def patient_reports():
                 colors=("#E853A0", "#E853A0")
             )
 
-            # labels space
-            # no_days = (end_date - start_date).days + 1
-            # i = 0
-            # while no_days / (7 * pow(3, i)) > 1:
-            #     i += 1
-            # freq = pow(3, i)
+            # Old Graph
+            graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+                y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
+                show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
+            graph.x_labels = date
 
-            # labels no space
-            no_days = len(date) / 3
-            i = 0
-            while no_days / (7 * pow(3,i)) > 1:
-                i += 1
-            freq = pow(3, i)
+            # New Graph
+            # graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            #     y_title='Severity', fill=False, show_legend=False, stroke_style={'width': 3}, range=(0,4),
+            #     x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'))
 
-            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
-            #     show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
-            graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-                y_title='Severity', fill=False, show_legend=False, stroke_style={'width': 3}, range=(0,4),
-                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'))
+            # Might need to rework these so leave out for the moment
+                # show_minor_x_labels=False, x_labels_major_every=freq)
 
+            # For both graphs
             graph.title = symptom + ' in my ' + location
-
-            # graph.x_labels = date
             graph.y_labels = list(severity_dict.keys())
             graph.add('Severity', severity, allow_interruptions=True)
-            # graph.add('Sporadic', sporadic, allow_interruptions=True, stroke_style={"width": 5,
-            #         "dasharray": "3, 6"})
-            # graph.add("Severity", [(datetime(2013, 1, 2), {'value': 0, 'label': 'Morning'}),
-            #     (datetime(2013, 1, 2), {'value': 3, 'label': 'Daytime'}),
-            #     (datetime(2013, 1, 2), {'value': 1, 'label': 'Night-time'})])
-            # graph.add("Serie1", [{'value': (datetime(2013, 1, 2), 3), 'label': 'Morning'},
-            #     None,
-            #     (datetime(2013, 1, 2), 0),
-            # ])
-
-            # Additional Sporadic Label https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
-            # Change size, colour, opacity etc of specific shapes
-            # Change shapes seems to be possible but a lot more work
-            # Change stroke between sporadic points, each set of sporadic points would be disconnected from graph
-            # custom_style = Style(
-            #     background="transparent",
-            #     plot_background="transparent",
-            #     foreground="#53E89B",
-            #     foreground_strong="#53A0E8",
-            #     foreground_subtle="#630C0D",
-            #     opacity=".6",
-            #     opacity_hover=".9",
-            #     transition="400ms ease-in",
-            #     colors=("#E853A0", "#E853A0"),
-            # )
-
-            # stroke_style={
-            #         "width": 5,
-            #         "dasharray": "3, 6",
-            #         "linecap": "round",
-            #         "linejoin": "round",
-            #     },
-
-            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3})
-            # graph.title = 'Symptoms in my Hands (C)'
-            # graph.y_labels = list(severity_dict.keys())
-            # graph.x_labels = ['2020-10-27 Morning', '2020-10-27  Daytime', '2020-10-27 Night-time', '2020-10-28 Morning',
-            #  '2020-10-28 Daytime', '2020-10-28 Night-time', '2020-10-29 Morning', '2020-10-29 Daytime', 
-            #  '2020-10-29 Night-time']            
-            # graph.add("Cramping", [2, 4, 3, 0, 0, 3, 4, 0, 0])
-            # graph.add("Discomfort", [2, 3, 2, 4, 3, 3, 0, 1, 2])
-            # graph.add("Numbness",[0, 2, 3, 1, 2, 4, 2, 3, 0])
-            # graph.add("Pain", [1, 3, 4, 1, 2, 0, 3, 2, 1])
-            # graph.add("Tingling", [3, 2, 2, 4, 1, 3, 0, 3, 2])
-            # graph.add("Weakness", [1, 2, 4, 0, 0, 3, 4,2 , 3])
-            # graph.x_labels = ['Morning','2020-10-27','','Daytime','2020-10-27','','Night-time','2020-10-27','','Morning',
-            #  '2020-10-28','', 'Daytime', '2020-10-28','', 'Night-time', '2020-10-28','','Morning', '2020-10-29','', 'Daytime', 
-            #  '2020-10-29','', 'Night-time','2020-10-29']
-            # graph.add("Cramping", [2, None, None, 4, None, None,3, None, None, 0, None, None,0, None, None,
-            #     3, None, None, 4, None, None, 0, None, None, 0])
-            # graph.add("Discomfort", [2, None, None, 3, None, None, 2, None, None, 4, None, None, 3, None, None, 
-            #     3, None, None, 0, None, None, 1, None, None, 2])
-            # graph.add("Numbness",[0, None, None, 2, None, None, 3, None, None, 1, None, None, 2, None, None, 
-            #     4, None, None, 2, None, None, 3, None, None, 0])
-            # graph.add("Pain", [1, None, None, 3, None, None, 4, None, None, 1, None, None, 2, None, None, 0, 
-            #     3, None, None, 2, None, None, 1])
-            # graph.add("Tingling", [3, None, None, 2, None, None, 2, None, None, 4, None, None, 1, None, None, 
-            #     3, None, None, 0, None, None, 3, None, None, 2])
-            # graph.add("Weakness", [1, None, None, 2, None, None, 4, None, None, 0, None, None, 0, None, None, 3, 
-            #     4, None, None, 2, None, None, 3])
-            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
-            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29', 
-            #  '2020-10-29']
-            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 0, 'label': 'Night-time'}])
-            # graph.add("Discomfort", [{'value': 2, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'}, 
-            #     {'value': 2, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 1, 'label': 'Daytime'},
-            #     {'value': 2, 'label': 'Night-time'}])
-            # graph.add("Numbness", [{'value': 0, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'}, 
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 1, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
-            #     {'value': 4, 'label': 'Night-time'}, {'value': 2, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
-            #     {'value': 0, 'label': 'Night-time'}])
-            # graph.add("Pain", [{'value': 1, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'}, 
-            #     {'value': 4, 'label': 'Night-time'}, {'value': 1, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
-            #     {'value': 0, 'label': 'Night-time'}, {'value': 3, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'},
-            #     {'value': 1, 'label': 'Night-time'}])
-            # graph.add("Weakness", [{'value': 3, 'label': 'Morning'}, {'value': 2, 'label': 'Daytime'}, 
-            #     {'value': 2, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, {'value': 1, 'label': 'Daytime'},
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Morning'}, {'value': 3, 'label': 'Daytime'},
-            #     {'value': 2, 'label': 'Night-time'}])
-            # custom_style = Style(
-            #     background="#FFFFFF",
-            #     plot_background="#FFFFFF",
-            #     transition="400ms ease-in",
-            #     font_family="googlefont:Oxygen",
-            #     colors=("#E853A0", "#E853A0", "#E853A0")
-            # )
-            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, range=(0, 4), stroke_style={'width': 3}, show_legend=False)
-            # graph.y_labels = list(severity_dict.keys())
-            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27', '2020-10-28',
-            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
-            # graph.title = 'Cramping in my Hands (A)'
-            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-            #     {'value': 3, 'label': 'Night-time'}, None, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'}, None,
-            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
-            # graph.title = 'Cramping in my Hands (C)'
-            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
-            #  '2020-10-28', '2020-10-28', '2020-10-29', '2020-10-29']  
-            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-            #     {'value': 3, 'label': 'Night-time'}, None, None, None,
-            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
-            # graph.add("Cramping", [None, None, None, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 4, 'label': 'Morning'},
-            #     None], allow_interruptions=True)
-            # graph.add("Cramping", [None, None, 
-            #     {'value': 3, 'label': 'Night-time'}, {'value': 0, 'label': 'Daytime'},
-            #     None, {'value': 4, 'label': 'Morning'},
-            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True, stroke_style={"width": 5,
-            #         "dasharray": "3, 6"})
-            # graph.title = 'Sporadic Cramping in my Hands (A)'
-            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
-            #  '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
-            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-            #     {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, {'value': 3, 'label': 'Sporadic'},
-            #     {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 0, 'label': 'Night-time'}])
-            # graph.title = 'Sporadic Cramping in my Hands (B)'
-            # graph.x_labels = ['2020-10-27', '2020-10-27', '2020-10-27',
-            #  '2020-10-28', '2020-10-28','2020-10-28', '2020-10-29', '2020-10-29', '2020-10-29']
-            # graph.add("Cramping", [{'value': 2, 'label': 'Morning'}, {'value': 4, 'label': 'Daytime'}, 
-            #     {'value': 2, 'label': 'Night-time'}, {'value': 3, 'label': 'Sporadic'}, None,
-            #     {'value': 3, 'label': 'Sporadic'}, {'value': 4, 'label': 'Morning'}, {'value': 0, 'label': 'Daytime'},
-            #     {'value': 0, 'label': 'Night-time'}], allow_interruptions=True)
-            # graph.add("Cramping", [None, None, 
-            #     None, {'value': 3, 'label': 'Sporadic', "node": {
-            #                                         "r": 4,
-            #                                         "fill": "black",
-            #                                         "fill-opacity": "100%",
-            #                                         "stroke": "black",
-            #                                         "stroke-opacity": "100%",
-            #                                     },}, {'value': 3, 'label': 'Sporadic', "node": {
-            #                                         "r": 4,
-            #                                         "fill": "black",
-            #                                         "fill-opacity": "100%",
-            #                                         "stroke": "black",
-            #                                         "stroke-opacity": "100%",
-            #                                     }},
-            #     {'value': 3, 'label': 'Sporadic', "node": {
-            #                                         "r": 4,
-            #                                         "fill": "black",
-            #                                         "fill-opacity": "100%",
-            #                                         "stroke": "black",
-            #                                         "stroke-opacity": "100%",
-            #                                     }}, None, None,
-            #     None], allow_interruptions=True, stroke_style={"width": 5,"dasharray": "3, 6"})
-            # graph = pygal.DateLine(x_label_rotation=35,
-            #     x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
-            # graph.y_labels = [
-            #     'Not at all',
-            #     'A little bit',
-            #     'Somewhat',
-            #     'Quite a bit',
-            #     'Very much'
-            # ]
-            # graph.add("Serie1", [
-            #     (datetime(2013, 1, 2, 7, 0), 3),
-            #     None,
-            #     (datetime(2013, 1, 2, 12, 0), 0),
-            # ], allow_interruptions=True)
-            # graph.add("Serie2", [
-            #     (datetime(2013, 1, 2, 7, 0), 3),
-            #     (datetime(2013, 1, 2, 12, 0), 0),
-            # ], allow_interruptions=True, stroke_style={"width": 5,"dasharray": "3, 6"}, show_dots=False)
+            if not len(sporadic) == []:
+                graph.add('Sporadic', sporadic, allow_interruptions=True, stroke_style={"width": 3,
+                    "dasharray": "3, 6"})
 
         graph_data = graph.render_data_uri()
 

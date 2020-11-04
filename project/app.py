@@ -417,9 +417,14 @@ def symptom_history():
     return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
 
 
+
+
 @app.route("/patient/reports", methods=["GET", "POST"])
 def patient_reports():
-    graph_data = symptom = location = startDate = endDate = None
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    graph = graph_data = symptom = location = startDate = endDate = None
 
     if request.method == "POST":
         form_data = dict(request.form.lists())
@@ -1133,8 +1138,11 @@ def patient_reports():
         endDate=endDate,
     )
 
-@app.route("/patient/reports/download", methods=["POST"])
+@app.route("/patient/reports/download-file", methods=["POST"])
 def download_file():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
     form_data = dict(request.form.lists())
@@ -1174,6 +1182,45 @@ def download_file():
         "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv"
     )
     output.headers["Content-type"] = "text/csv"
+
+    return output
+
+@app.route("/patient/reports/download-image", methods=["POST"])
+def download_image():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    # TODO: REPLACE WITH REAL DATA ONCE VISUALISATION FORMAT IS CHOSEN
+    graph = pygal.DateLine(x_label_rotation=35,
+                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
+    
+    graph.y_labels = [
+        'Not at all',
+        'A little bit',
+        'Somewhat',
+        'Quite a bit',
+        'Very much'
+    ]
+
+    graph.add("Series1", [
+        (datetime(2013, 1, 2), 3),
+        (datetime(2013, 1, 2), 0),
+        (datetime(2013, 8, 2), 1),
+        (datetime(2014, 12, 7), 1),
+        (datetime(2015, 3, 21), 2)
+    ])
+
+    graph.add("Series2", [
+        {'value': (datetime(2013, 1, 2), 3), 'label': 'test'},
+        (datetime(2014, 8, 2), 1),
+        (datetime(2014, 12, 7), 1),
+        (datetime(2015, 3, 1), 0)
+    ])
+
+    output = graph.render_response()
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=test.svg")
+    output.headers["Content-type"] = "image/svg+xml"
 
     return output
 

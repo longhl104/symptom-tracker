@@ -4,6 +4,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+
+  <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
   {% endblock %}
 {% block title %}Create an account{% endblock %}
 {% block sidebar %}
@@ -17,43 +19,43 @@
         <div class="grid two-equal-columns">
           <div class="col">
             <label for="first-name">First name<sup>*</sup></label>
-            <input type="text" class="input" name="first-name" required>
+            <input type="text" class="input" name="first-name" required value={{firstName}}>
           </div>
           <div class="col">
             <label for="last-name">Last name<sup>*</sup></label>
-            <input type="text" class="input" name="last-name" required>
+            <input type="text" class="input" name="last-name" required value={{lastName}}>
           </div>
         </div>
         <div class="grid two-equal-columns">
           <div class="col">
             <label for="age">Age</label>
-            <input type="number" class="input" name="age">
+            <input type="number" class="input" name="age" value={{age}}>
           </div>
           <div class="col">
             <label for="gender">Gender</label>
             <select name="gender">
-              <option value="NA"></option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+              <option value="NA"{% if (gender == "NA") %} selected="selected" {% endif %}>NA</option>
+              <option value="Male"{% if (gender == "Male") %} selected="selected" {% endif %}>Male</option>
+              <option value="Female"{% if (gender == "Female") %} selected="selected" {% endif %}>Female</option>
+              <option value="Other"{% if (gender == "Other") %} selected="selected" {% endif %}>Other</option>
             </select>
           </div>
         </div>
-        <!-- <div id="multi-checklist" class="dropdown-check-list">
+        <div id="multi-checklist" class="dropdown-check-list">
           <label>Have you received, or are you currently receiving, any of the following types of chemotherapy?<sup>*</sup></label>
           <div class="blue anchor btn">Select one or more treatment types</div>
           <ul class="items" id="treatments">
             {% for instance in treatments %}
-              <li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}">{{instance.treatment_name}}</li>
+              <li><input type="checkbox" class="checkbox-input" name="treatment" value="{{instance.treatment_name}}"> {{instance.treatment_name}}</li>
             {% endfor %}
             <li><input id="notype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I have not received any of these types of chemotherapy</li>
             <li><input id="unknowntype" type="checkbox" class="checkbox-input" onChange="selectChanged()"> I don't know the name of the chemotherapy that I have received</li>
           </ul>
-        </div> -->
+        </div>
         <label for="mobile-number">Mobile number</label>
-        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}">
+        <input type="tel" class="input" name="mobile-number" pattern="[0-9]{10}" {% if (mobile != "") %}value={{mobile}}{% endif %}>
         <label for="email-address">Email<sup>*</sup></label>
-        <input type="email" class="input" name="email-address" required>
+        <input type="email" class="input" name="email-address" required value={{emailAddress}}>
         <label for="password">Password<sup>*</sup></label>
         <input type="password" class="input" name="password" minlength="8" required>
         <label for="confirm-password">Confirm Password<sup>*</sup></label>

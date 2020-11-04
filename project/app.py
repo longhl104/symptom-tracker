@@ -1095,7 +1095,7 @@ def patient_reports():
             # to have the 'sporadic' variable in between 'severity' and 'freq' otherwise omit it
             # For all functions use the old graph except those with 'new' in the function name
             # For those 'new' functions comment out lines 1109-1112 and uncomment lines 1115-1117 and vice versa
-            date, severity, freq = clean_data_new(start_date, end_date, data)
+            date, severity, sporadic, freq = clean_data_new_dotted(start_date, end_date, data)
 
             custom_style = Style(
                 background="#FFFFFF",
@@ -1124,7 +1124,7 @@ def patient_reports():
             graph.y_labels = list(severity_dict.keys())
             graph.add('Severity', severity, allow_interruptions=True)
             if not len(sporadic) == []:
-                graph.add('Sporadic', sporadic, allow_interruptions=True, stroke_style={"width": 3,
+                graph.add('Severity', sporadic, allow_interruptions=True, stroke_style={"width": 3,
                     "dasharray": "3, 6"})
 
         graph_data = graph.render_data_uri()

@@ -1190,8 +1190,16 @@ def download_image():
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
+    custom_style = Style(
+        background="#FFFFFF",
+        plot_background="#FFFFFF",
+        transition="400ms ease-in",
+        font_family="googlefont:Oxygen",
+        colors=("#E853A0", "#E853A0")
+    )
+
     # TODO: REPLACE WITH REAL DATA ONCE VISUALISATION FORMAT IS CHOSEN
-    graph = pygal.DateLine(x_label_rotation=35,
+    graph = pygal.DateLine(style = custom_style, x_label_rotation=35,
                 x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
     
     graph.y_labels = [

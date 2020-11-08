@@ -50,20 +50,9 @@
           <label for="chemotherapy">Chemotherapy<sup>*</sup></label>
             <select name="chemotherapy" >
                 <option label=" "></option>
-                <option value="Oxailplatin">Oxailplatin</option>
-                <option value="Cisplatin">Cisplatin</option>
-                <option value="Carboplatin">Carboplatin</option>
-                <option value="Paclitaxel">Paclitaxel</option>
-                <option value="Docetaxel">Docetaxel</option>
-                <option value="Cabazitaxel">Cabazitaxel</option>
-                <option value="Vincristine">Vincristine</option>
-                <option value="Vinblastine">Vinblastine</option>
-                <option value="Vinorelbine ">Vinorelbine </option>
-                <option value="Thalidomide">Thalidomide</option>
-                <option value="Bortezomib">Bortezomib</option>
-                <option value="Lenalidomide">Lenalidomide</option>
-                <option value="Pomalidomide">Pomalidomide</option>
-                <option value="Eribulin">Eribulin</option>
+                {% for treatment in treatments %}
+                    <option value={{treatment}}>{{treatment}}</option>
+                {% endfor %}
             </select>
             <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
             <span class="error-message" id="location-error-message"></span>

@@ -232,8 +232,13 @@ def researcher_data():
         for i, col in enumerate(consent.split(",")):
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
+    treatments = database.get_all_treatments()
+    list_of_treatments = []
+    for treatment in treatments:
+        list_of_treatments.append(treatment["treatment_name"])
+    print(list_of_treatments)
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', consents=list_of_consents)
+        return render_template('researcher/patient-research.html', consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):

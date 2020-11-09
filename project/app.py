@@ -669,10 +669,6 @@ def download_file():
             if row[3] == '""':
                 row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), 'N/A')]
             else:   
-        else:   
-            else:   
-        else:   
-            else:   
                 row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3].strip('"'))]
 
     if location == "All" or symptom == "All":
@@ -695,44 +691,14 @@ def download_image():
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
-    custom_style = Style(
-        background="#FFFFFF",
-        plot_background="#FFFFFF",
-        transition="400ms ease-in",
-        font_family="googlefont:Oxygen",
-        colors=("#E853A0", "#E853A0")
-    )
-
-    # TODO: REPLACE WITH REAL DATA ONCE VISUALISATION FORMAT IS CHOSEN
-    graph = pygal.DateLine(style = custom_style, x_label_rotation=35,
-                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'), range=(0,4))
-    
-    graph.y_labels = [
-        'Not at all',
-        'A little bit',
-        'Somewhat',
-        'Quite a bit',
-        'Very much'
-    ]
-
-    graph.add("Series1", [
-        (datetime(2013, 1, 2), 3),
-        (datetime(2013, 1, 2), 0),
-        (datetime(2013, 8, 2), 1),
-        (datetime(2014, 12, 7), 1),
-        (datetime(2015, 3, 21), 2)
-    ])
-
-    graph.add("Series2", [
-        {'value': (datetime(2013, 1, 2), 3), 'label': 'test'},
-        (datetime(2014, 8, 2), 1),
-        (datetime(2014, 12, 7), 1),
-        (datetime(2015, 3, 1), 0)
-    ])
+    graph = symptom = location = startDate = endDate = None
+    symptom, location, startDate, endDate = extract_page_data(dict(request.form.lists()))
+    raw_data = database.get_export_data(user_details["ac_email"], symptom, location, startDate, endDate, False)
+    graph = set_up_graph(raw_data, symptom, location, startDate, endDate)
 
     output = graph.render_response()
     output.headers["Content-Disposition"] = (
-        "attachment; filename=test.svg")
+        "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".svg")
     output.headers["Content-type"] = "image/svg+xml"
 
     return output

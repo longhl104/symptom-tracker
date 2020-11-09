@@ -1,6 +1,11 @@
 {% extends "sidebar.html" %}
 {% block head %}
   {{ super() }}
+  <style>
+    .symptom-card {
+      border-radius: 10px !important;
+    }
+  </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
@@ -56,16 +61,6 @@
                   {{symptom.notes}}
                 </div>
               </div>
-            </div>
-            <div class="flex row">
-              <button class="btn blue" onclick="editRecord('{{ symptom.symptom_id }}', '{{ symptom.symptom_name }}', '{{ symptom.location }}', '{{ symptom.severity }}', '{{ symptom.occurence }}', '{{ symptom.recorded_date }}', '{{ symptom.notes }}')">
-                <i class="fa fa-pen fa-sm" style="color: #ffffff"></i>
-                Edit
-              </button>
-              <button class="btn red" onclick="deleteRecord('{{ symptom.symptom_id }}')">
-                <i class="fa fa-trash fa-sm" style="color: #ffffff"></i>
-                Delete
-              </button>
             </div>
           </div>
         {% endfor %}

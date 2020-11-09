@@ -1,0 +1,132 @@
+ul {
+    list-style-type: none;
+}
+#cl-list-container {
+    background-color: #F5F6FA;
+    padding: 20px 20px 20px 20px;
+    margin: 5px 0px 5px 0px;
+    border: 1px solid #BCBCC4;
+    border-radius: 5px;
+}
+
+#cl-list-container li {
+    background-color: #1485FF;
+    padding: 7px;
+    border: transparent;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #FFFFFF;
+    margin: 5px 0px 5px 0px;
+    display: block;
+    position: relative;
+}
+
+.close {
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    right: 0%;
+    padding: 5px 16px;
+    transform: translate(0%, -70%);
+    color: #FFFFFF;
+    font-size: 24px;
+}
+
+.container {
+  width: 75%;
+  justify-content: normal;
+  align-items: normal;
+  margin-top: 9em;
+}
+
+.card {
+  width: 100%;
+  padding: 30px 30px;
+}
+
+.subtitle {
+  font-size: 1.3em;
+}
+
+/*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+/* @media (min-width: 1281px) {
+    .container {
+      width: 50%;
+    }
+  } */
+  
+  /*
+    Device = Most Smartphones (Portrait)
+    Screen = 320px to 479px
+  */
+  
+  /* @media (min-width: 320px) and (max-width: 480px) {
+    .card {
+      width: 90%;
+    }
+  } */
+
+  /*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1025px) {
+    .container {
+      width: 50%;
+    }
+  }
+  
+  /*
+    Device = Tablets, iPads (Portrait)
+    Screen = 768px to 1024px
+  */
+  
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .card {
+      width: 100%;
+    }
+  }
+  
+  /*
+    Device = Tablets, iPads (Landscape)
+    Screen = 768px to 1024px
+  */
+  
+  @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .container {
+      margin-top: 1em;
+      width: 75%;
+    }
+  }
+  
+  /*
+    Device = Low Resolution Tablets, Smartphones (Landscape)
+    Screen = 481px to 767px
+  */
+  
+  @media (min-width: 481px) and (max-width: 767px) {
+    .container {
+      width: 75%;
+    }
+  }
+  
+  /*
+    Device = Most Smartphones (Portrait)
+    Screen = 320px to 479px
+  */
+  
+  @media (min-width: 320px) and (max-width: 480px) {
+    .container {
+        width: 90%;
+    }
+    #cl-list-container li {
+      font-size: 16px;
+    }
+  }
+  
+  

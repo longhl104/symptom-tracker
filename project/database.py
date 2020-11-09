@@ -74,8 +74,8 @@ def dictfetchall(cursor, sqltext, params=()):
 
     cursor.execute(sqltext, params)
     cols = [a[0].decode("utf-8") for a in cursor.description]
-    print(cols)
     returnres = cursor.fetchall()
+
     for row in returnres:
         result.append({a: b for a, b in zip(cols, row)})
     # cursor.close()
@@ -141,7 +141,7 @@ def get_account(email):
             return r
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Error: can't get hashed password")
+            print("Error: can't get account by email")
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
@@ -181,8 +181,8 @@ def get_all_treatments():
             """
 
             r = dictfetchall(cur, sql)
-            print("return val is:")
-            print(r)
+            # print("return val is:")
+            # print(r)
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r

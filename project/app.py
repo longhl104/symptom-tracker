@@ -229,7 +229,9 @@ def researcher_data():
     for consent in consents:
         consent = consent['row'][1:-1]
         consent_dict = {}
-        for i, col in enumerate(consent.split(",")):
+        for i, col in enumerate(consent.split(",",4)):
+            print(i)
+            print(col)
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
     treatments = database.get_all_treatments()

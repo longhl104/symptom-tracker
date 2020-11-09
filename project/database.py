@@ -373,8 +373,6 @@ def get_all_consent():
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
-
-
 def get_all_patients(email):
     conn = database_connect()
     if conn:

@@ -4,7 +4,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/reseacher.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/researcher.css') }}">
   <script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
 {% endblock %}
 {% block title %}Patient List{% endblock %}
@@ -86,7 +86,7 @@
                       <td>{{consent.ac_age}}</td>
                       <td>{{consent.ac_gender}}</td>
                       <td>{{consent.treatment_name}}</td>
-                      <td><button class="btn blue"onclick="viewConsent('{{ consent.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff"></i></button>
+                      <td><button class="btn blue"onclick="viewConsent('{{ consent.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff">View Details</i></button>
                     </tr>
                 {% endfor %}
             </tbody>

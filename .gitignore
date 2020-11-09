@@ -153,5 +153,5 @@ cython_debug/
 
 # Personal config files
 project/config.ini
-
+config.ini
 .vscode/settings.json

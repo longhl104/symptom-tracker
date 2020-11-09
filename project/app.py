@@ -13,6 +13,7 @@ import csv
 from pygal.style import Style
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+from collections import defaultdict
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -416,717 +417,226 @@ def symptom_history():
         list_of_symptoms.append(symptom_dict)
     return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
 
+def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
+                for n in range(int((end_date - start_date).days)):
+                    yield start_date + timedelta(n)
+
+def clean_data(start_date, end_date, data):
+    date = []
+    severity = []
+    sporadic = []
+    severity_dict = {
+        "Not at all": 0,
+        "A little bit": 1,
+        "Somewhat": 2,
+        "Quite a bit": 3,
+        "Very much": 4,
+    }
+    day_included = True
+
+    for single_date in daterange(start_date, end_date + timedelta(1)):
+        d = single_date.strftime("%Y-%m-%d")
+        
+        if d in data:
+            day_included = True
+            date += [d+" "]
+            date += [d+""]
+            date += [d+"\n"]
+            if len(data[d]) == 3:
+                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 
+                    'label': 'Morning'}]
+                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][1][0]]),
+                    'label': 'Daytime'}]
+                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][2][0]]),
+                    'label': 'Night-time'}]
+                sporadic += [None] * 3
+            elif len(data[d]) == 2:
+                if data[d][0][1] == 'Morning' and data[d][1][1] == 'Daytime':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]),
+                        'label': 'Morning'}]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][1][0]]), 'label': 'Daytime'}]
+                    severity += [None]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Morning' and data[d][1][1] == 'Night-time':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][1][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+                else:
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][1][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+            else:
+                if data[d][0][1] == 'All the time':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Sporadic':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                elif data[d][0][1] == 'Morning':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [None]
+                    severity += [None]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Daytime':
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [None]
+                    sporadic += [None] * 3
+                else:
+                    severity += [None]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+
+        elif day_included:
+            date += [" "]
+            date += [""]
+            date += ["\n"]
+            severity += [None] * 3
+            sporadic += [None] * 3
+            day_included = False
+
+        no_days = (end_date - start_date).days + 1
+        i = 0
+        while no_days / (7 * pow(3, i)) > 1:
+            i += 1
+        freq = pow(3, i)
+
+    return date, severity, sporadic, freq
+
+def extract_page_data(form_data):
+    symptom = form_data.get("symptom")[0]
+
+    if symptom == "Other":
+        symptom = form_data.get("symptom")[1]
+
+    location = form_data.get("location")[0]
+
+    if location == "Other":
+        location = form_data.get("location")[1]
+
+    startDate = form_data.get("startDate")[0]
+    endDate = form_data.get("endDate")[0]
+    
+    return symptom, location, startDate, endDate
+
+def set_up_graph(raw_data, symptom, location, startDate, endDate):
+    multiple = False
+    colors=("#E853A0", "#E853A0")
+    if location == "All" or symptom == "All":
+        multiple = True
+        colors=("#E853A0", "#3783FF", "#4DE94C", "#FF8C00", "#9400D3", "#F60000", "#FFEE00")
 
 
+    graph = None
+
+    if len(raw_data) == 0:
+        graph = pygal.Line()
+
+    else:
+
+        date = []
+        severity = []
+        sporadic = []
+        severity_dict = {
+            "Not at all": 0,
+            "A little bit": 1,
+            "Somewhat": 2,
+            "Quite a bit": 3,
+            "Very much": 4,
+        }
+
+        data = defaultdict(list)
+        raw_multiples = defaultdict(list)
+        multiples = defaultdict(list)
+        if (multiple):
+            for row in raw_data:
+                row = row["row"][1:-1].split(",")
+                if symptom == "All":
+                    raw_multiples[row[0]].append([row[2], row[3].strip('"'), row[4].strip('"')])
+                else:
+                    raw_multiples[row[1]].append([row[2], row[3].strip('"'), row[4].strip('"')])
+            for single_all in raw_multiples:
+                dates = defaultdict(list)
+                for single_row in raw_multiples[single_all]:
+                    dates[single_row[0]].append([single_row[1], single_row[2]])
+                multiples[single_all] = dates
+        else:
+            for row in raw_data:
+                row = row["row"][1:-1].split(",")
+                data[row[0]].append([row[1].strip('"'), row[2].strip('"')])
+
+        results = {}
+        if (multiple):
+            for multiple_key in raw_multiples:
+                start_date = datetime.strptime(raw_multiples[multiple_key][0][0], "%Y-%m-%d")
+                end_date = datetime.strptime(raw_multiples[multiple_key][-1][0], "%Y-%m-%d")
+                results[multiple_key] = clean_data(start_date, end_date, multiples[multiple_key])
+
+            graph_data = {}
+            for multiple_key in results:
+                graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
+        else: 
+            first_row = raw_data[0]["row"][1:-1].split(",")
+            last_row = raw_data[-1]["row"][1:-1].split(",")
+            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
+            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
+            date, severity, sporadic, freq = clean_data(start_date, end_date, data)
+
+        custom_style = Style(
+            background="#FFFFFF",
+            plot_background="#FFFFFF",
+            transition="400ms ease-in",
+            font_family="googlefont:Oxygen",
+            colors=colors
+        )
+
+        graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
+            x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
+
+        # Might need to rework these so leave out for the moment
+            # show_minor_x_labels=False, x_labels_major_every=freq)
+
+        graph.title = symptom + ' in my ' + location
+        if symptom == "All":
+            graph.title = 'All Symptoms in my ' + location
+        elif location == "All":
+            graph.title = symptom + ' in all Locations'
+        
+        graph.y_labels = list(severity_dict.keys())
+        
+        if (multiple):
+            for multiple_key in graph_data:
+                graph.add(multiple_key, graph_data[multiple_key][0], allow_interruptions=True)
+                # graph.add(multiple_key, graph_data[multiple_key][1], allow_interruptions=True, stroke_style={"width": 3, "dasharray": "3, 6"}) 
+        else:
+            graph.add('Severity', severity, allow_interruptions=True)
+            if not len(sporadic) == []:
+                graph.add('Severity', sporadic, allow_interruptions=True, stroke_style={"width": 3,
+                    "dasharray": "3, 6"}) 
+
+    return graph
 
 @app.route("/patient/reports", methods=["GET", "POST"])
 def patient_reports():
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
-    graph = graph_data = symptom = location = startDate = endDate = None
+    graph = graph_data = symptom = location = start_date = end_date = None
 
     if request.method == "POST":
-        form_data = dict(request.form.lists())
-
-        symptom = form_data.get("symptom")[0]
-
-        if symptom == "Other":
-            symptom = form_data.get("symptom")[1]
-
-        location = form_data.get("location")[0]
-
-        if location == "Other":
-            location = form_data.get("location")[1]
-
-        startDate = form_data.get("startDate")[0]
-        endDate = form_data.get("endDate")[0]
-
-        data = database.get_graph_data(
-            user_details["ac_email"], symptom, location, startDate, endDate
-        )
-        graph = None
-
-        if len(data) == 0:
-            graph = pygal.Line()
-
-        else:
-            date = []
-            severity = []
-            sporadic = []
-            severity_dict = {
-                "Not at all": 0,
-                "A little bit": 1,
-                "Somewhat": 2,
-                "Quite a bit": 3,
-                "Very much": 4,
-            }
-
-            for row in data:
-                row = row["row"][1:-1].split(",")
-                date += [row[0]]
-                severity += [severity_dict[row[1].strip('"')]]
-
-            def daterange(
-                start_date, end_date
-            ):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
-                for n in range(int((end_date - start_date).days)):
-                    yield start_date + timedelta(n)
-
-            def clean_data_scaled(start_date, end_date, data):
-                date = []
-                severity = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-
-                    d = single_date.strftime("%Y-%m-%d")
-                    date += [d + " "]
-                    date += [d + ""]
-                    date += [d + "\n"]
-                    if d in r:
-                        if len(r[d]) == 3:
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                            ]
-                            severity += [
-                                {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
-                            ]
-                            severity += [
-                                {"value": severity_dict[r[d][2][0]], "label": "Night-time"}
-                            ]
-
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == "Morning" and r[d][1][1] == "Daytime":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [
-                                    {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
-                                ]
-                                severity += [None]
-                            elif r[d][0][1] == "Morning" and r[d][1][1] == "Night-time":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [None]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][1][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                            else:
-                                severity += [None]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][1][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                        else:
-                            if r[d][0][1] == "All the time":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][0][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                            elif r[d][0][1] == "Sporadic":
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][0][0]],
-                                        "label": "Sporadic",
-                                    }
-                                ] * 3
-                            elif r[d][0][1] == "Morning":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [None]
-                                severity += [None]
-                            elif r[d][0][1] == "Daytime":
-                                severity += [None]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [None]
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][0][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-
-                    else:
-                        severity += [None] * 3
-
-                    no_days = (end_date - start_date).days + 1
-                    i = 0
-                    while no_days / (7 * pow(3, i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, freq
-
-            def clean_data_scaled_dotted(start_date, end_date, data):
-                date = []
-                severity = []
-                sporadic = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-
-                    d = single_date.strftime("%Y-%m-%d")
-                    date += [d + " "]
-                    date += [d + ""]
-                    date += [d + "\n"]
-                    if d in r:
-                        if len(r[d]) == 3:
-                            severity += [
-                                {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                            ]
-                            severity += [
-                                {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
-                            ]
-                            severity += [
-                                {"value": severity_dict[r[d][2][0]], "label": "Night-time"}
-                            ]
-                            sporadic += [None] * 3
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == "Morning" and r[d][1][1] == "Daytime":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [
-                                    {"value": severity_dict[r[d][1][0]], "label": "Daytime"}
-                                ]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == "Morning" and r[d][1][1] == "Night-time":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [None]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][1][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][1][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                                sporadic += [None] * 3
-                        else:
-                            if r[d][0][1] == "All the time":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][0][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == "Sporadic":
-                                severity += [{"value": severity_dict[r[d][0][0]],"label": "Sporadic",}]
-                                severity += [None]
-                                severity += [{"value": severity_dict[r[d][0][0]],"label": "Sporadic",}]
-                                sporadic += [{"value": severity_dict[r[d][0][0]],"label": "Sporadic",}]
-                                sporadic += [{"value": severity_dict[r[d][0][0]],"label": "Sporadic",}]
-                                sporadic += [{"value": severity_dict[r[d][0][0]],"label": "Sporadic",}]
-                            elif r[d][0][1] == "Morning":
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Morning"}
-                                ]
-                                severity += [None]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == "Daytime":
-                                severity += [None]
-                                severity += [
-                                    {"value": severity_dict[r[d][0][0]], "label": "Daytime"}
-                                ]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [
-                                    {
-                                        "value": severity_dict[r[d][0][0]],
-                                        "label": "Night-time",
-                                    }
-                                ]
-                                sporadic += [None] * 3
-
-                    else:
-                        severity += [None] * 3
-                        sporadic += [None] * 3
-
-                    no_days = (end_date - start_date).days + 1
-                    i = 0
-                    while no_days / (7 * pow(3, i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, sporadic, freq
-
-            def clean_data_unscaled(start_date, end_date, data):
-                date = []
-                severity = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                day_included = True
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-                    d = single_date.strftime("%Y-%m-%d")
-                    
-                    if d in r:
-                        day_included = True
-                        date += [d+" "]
-                        date += [d+""]
-                        date += [d+"\n"]
-                        if len(r[d]) == 3:
-                            severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                            severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Daytime'}]
-                            severity += [{'value': severity_dict[r[d][2][0]], 'label': 'Night-time'}]
-
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Daytime'}]
-                                severity += [None]
-                            elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Night-time'}]
-                            else:
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Night-time'}]
-                        else:
-                            if r[d][0][1] == 'All the time':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Night-time'}]
-                            elif r[d][0][1] == 'Sporadic':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}] * 3
-                            elif r[d][0][1] == 'Morning':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [None]
-                            elif r[d][0][1] == 'Daytime':
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [None]
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Night-time'}]
-
-                    elif day_included:
-                        date += [" "]
-                        date += [""]
-                        date += ["\n"]
-                        severity += [None] * 3
-                        day_included = False
-
-                    no_days = len(date) / 3
-                    i = 0
-                    while no_days / (7 * pow(3,i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, freq
-
-            def clean_data_unscaled_dotted(start_date, end_date, data):
-                date = []
-                severity = []
-                sporadic = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                day_included = True
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-                    d = single_date.strftime("%Y-%m-%d")
-                    
-                    if d in r:
-                        day_included = True
-                        date += [d+" "]
-                        date += [d+""]
-                        date += [d+"\n"]
-                        if len(r[d]) == 3:
-                            severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                            severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Daytime'}]
-                            severity += [{'value': severity_dict[r[d][2][0]], 'label': 'Night-time'}]
-                            sporadic += [None] * 3
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Daytime'}]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [{'value': severity_dict[r[d][1][0]], 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                        else:
-                            if r[d][0][1] == 'All the time':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Sporadic':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}]
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}]
-                                sporadic += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}]
-                                sporadic += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}]
-                                sporadic += [{'value': severity_dict[r[d][0][0]], 'label': 'Sporadic'}]
-                            elif r[d][0][1] == 'Morning':
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Daytime':
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Daytime'}]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [{'value': severity_dict[r[d][0][0]], 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-
-                    elif day_included:
-                        date += [" "]
-                        date += [""]
-                        date += ["\n"]
-                        severity += [None] * 3
-                        sporadic += [None] * 3
-                        day_included = False
-
-                    no_days = len(date) / 3
-                    i = 0
-                    while no_days / (7 * pow(3,i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, sporadic, freq
-
-            def clean_data_new(start_date, end_date, data):
-                date = []
-                severity = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                day_included = True
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-                    d = single_date.strftime("%Y-%m-%d")
-                    
-                    if d in r:
-                        day_included = True
-                        date += [d+" "]
-                        date += [d+""]
-                        date += [d+"\n"]
-                        if len(r[d]) == 3:
-                            severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 
-                                'label': 'Morning'}]
-                            severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]),
-                                'label': 'Daytime'}]
-                            severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][2][0]]),
-                                'label': 'Night-time'}]
-
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]),
-                                    'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]), 'label': 'Daytime'}]
-                                severity += [None]
-                            elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
-                            else:
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
-                        else:
-                            if r[d][0][1] == 'All the time':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
-                            elif r[d][0][1] == 'Sporadic':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                            elif r[d][0][1] == 'Morning':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [None]
-                            elif r[d][0][1] == 'Daytime':
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [None]
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
-
-                    elif day_included:
-                        date += [" "]
-                        date += [""]
-                        date += ["\n"]
-                        severity += [None] * 3
-                        day_included = False
-
-                    no_days = (end_date - start_date).days + 1
-                    i = 0
-                    while no_days / (7 * pow(3, i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, freq
-
-            def clean_data_new_dotted(start_date, end_date, data):
-                date = []
-                severity = []
-                sporadic = []
-                severity_dict = {
-                    "Not at all": 0,
-                    "A little bit": 1,
-                    "Somewhat": 2,
-                    "Quite a bit": 3,
-                    "Very much": 4,
-                }
-                r = {}
-                for row in data:
-                    row = row["row"][1:-1].split(",")
-                    if row[0] in r:
-                        r[row[0]] += [[row[1].strip('"'), row[2].strip('"')]]
-                    else:
-                        r[row[0]] = [[row[1].strip('"'), row[2].strip('"')]]
-
-                day_included = True
-
-                for single_date in daterange(start_date, end_date + timedelta(1)):
-                    d = single_date.strftime("%Y-%m-%d")
-                    
-                    if d in r:
-                        day_included = True
-                        date += [d+" "]
-                        date += [d+""]
-                        date += [d+"\n"]
-                        if len(r[d]) == 3:
-                            severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 
-                                'label': 'Morning'}]
-                            severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]),
-                                'label': 'Daytime'}]
-                            severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][2][0]]),
-                                'label': 'Night-time'}]
-                            sporadic += [None] * 3
-                        elif len(r[d]) == 2:
-                            if r[d][0][1] == 'Morning' and r[d][1][1] == 'Daytime':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]),
-                                    'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][1][0]]), 'label': 'Daytime'}]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Morning' and r[d][1][1] == 'Night-time':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][1][0]]), 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                        else:
-                            if r[d][0][1] == 'All the time':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Sporadic':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                                sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Sporadic'}]
-                            elif r[d][0][1] == 'Morning':
-                                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[r[d][0][0]]), 'label': 'Morning'}]
-                                severity += [None]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            elif r[d][0][1] == 'Daytime':
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[r[d][0][0]]), 'label': 'Daytime'}]
-                                severity += [None]
-                                sporadic += [None] * 3
-                            else:
-                                severity += [None]
-                                severity += [None]
-                                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[r[d][0][0]]), 'label': 'Night-time'}]
-                                sporadic += [None] * 3
-
-                    elif day_included:
-                        date += [" "]
-                        date += [""]
-                        date += ["\n"]
-                        severity += [None] * 3
-                        sporadic += [None] * 3
-                        day_included = False
-
-                    no_days = (end_date - start_date).days + 1
-                    i = 0
-                    while no_days / (7 * pow(3, i)) > 1:
-                        i += 1
-                    freq = pow(3, i)
-
-                return date, severity, sporadic, freq
-
-            first_row = data[0]["row"][1:-1].split(",")
-            last_row = data[-1]["row"][1:-1].split(",")
-            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
-            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
-
-            # For different graphs change line 1098 below, if the function name has 'dotted' in it be sure
-            # to have the 'sporadic' variable in between 'severity' and 'freq' otherwise omit it
-            # For all functions use the old graph except those with 'new' in the function name
-            # For those 'new' functions comment out lines 1109-1112 and uncomment lines 1115-1117 and vice versa
-            date, severity, sporadic, freq = clean_data_new_dotted(start_date, end_date, data)
-
-            custom_style = Style(
-                background="#FFFFFF",
-                plot_background="#FFFFFF",
-                transition="400ms ease-in",
-                font_family="googlefont:Oxygen",
-                colors=("#E853A0", "#E853A0")
-            )
-
-            # Old Graph
-            # graph = pygal.Line(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-            #     y_title='Severity', fill=False, range=(0, 4), show_legend=False, stroke_style={'width': 3},
-            #     show_minor_x_labels=False, x_labels_major_every=freq, truncate_label=11)
-            # graph.x_labels = date
-
-            # New Graph
-            graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
-                y_title='Severity', fill=False, show_legend=False, stroke_style={'width': 3}, range=(0,4),
-                x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'))
-
-            # Might need to rework these so leave out for the moment
-                # show_minor_x_labels=False, x_labels_major_every=freq)
-
-            # For both graphs
-            graph.title = symptom + ' in my ' + location
-            graph.y_labels = list(severity_dict.keys())
-            graph.add('Severity', severity, allow_interruptions=True)
-            if not len(sporadic) == []:
-                graph.add('Severity', sporadic, allow_interruptions=True, stroke_style={"width": 3,
-                    "dasharray": "3, 6"})
-
+        symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
+        raw_data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, False)
+        graph = set_up_graph(raw_data, symptom, location, start_date, end_date)
         graph_data = graph.render_data_uri()
 
     return render_template(
@@ -1134,8 +644,8 @@ def patient_reports():
         graph_data=graph_data,
         symptom=symptom,
         location=location,
-        startDate=startDate,
-        endDate=endDate,
+        startDate=start_date,
+        endDate=end_date,
     )
 
 @app.route("/patient/reports/download-file", methods=["POST"])

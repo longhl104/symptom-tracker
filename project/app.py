@@ -27,8 +27,6 @@ config.read("config.ini")
 app.secret_key = config["DATABASE"]["secret_key"]
 
 # General routes
-
-
 @app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
@@ -617,7 +615,6 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate):
         if (multiple):
             for multiple_key in graph_data:
                 graph.add(multiple_key, graph_data[multiple_key][0], allow_interruptions=True)
-                # graph.add(multiple_key, graph_data[multiple_key][1], allow_interruptions=True, stroke_style={"width": 3, "dasharray": "3, 6"}) 
         else:
             graph.add('Severity', severity, allow_interruptions=True)
             if not len(sporadic) == []:
@@ -655,36 +652,34 @@ def download_file():
 
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
-    form_data = dict(request.form.lists())
 
-    symptom = form_data.get("symptom")[0]
-
-    if symptom == "Other":
-        symptom = form_data.get("symptom")[1]
-
-    location = form_data.get("location")[0]
-
-    if location == "Other":
-        location = form_data.get("location")[1]
-
-    start_date = form_data.get("startDate")[0]
-    end_date = form_data.get("endDate")[0]
-
-    data = database.get_export_data(
-        user_details["ac_email"], symptom, location, start_date, end_date
-    )
+    symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
+    data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, True)
+    
     row_data = []
 
     for row in data:
         row = row["row"][1:-1].split(",")
-        print(row[3], flush=True)
-        if row[3] == '""':
-            row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), 'N/A')]
+        if location == "All" or symptom == "All":
+            if row[5] == '""':
+                row_data += [(row[0], row[1], row[2], row[3].strip('"'), row[4].strip('"'), 'N/A')]
+            else:   
+                row_data += [(row[0], row[1], row[2], row[3].strip('"'), row[4].strip('"'), row[5].strip('"'))]
+        else:
+            if row[3] == '""':
+                row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), 'N/A')]
+            else:   
         else:   
-            row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3].strip('"'))]
+            else:   
+        else:   
+            else:   
+                row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3].strip('"'))]
 
-    head = ("Date", "Severity", "Time of Day", "Notes")
-    csv_writer.writerow(("Date", "Severity", "Time of Day", "Notes"))
+    if location == "All" or symptom == "All":
+        head = ("Symptom", "Location", "Date", "Severity", "Time of Day", "Notes")
+    else:
+        head = ("Date", "Severity", "Time of Day", "Notes")
+    csv_writer.writerow(head)
     csv_writer.writerows(row_data)
 
     output = make_response(string_input.getvalue())

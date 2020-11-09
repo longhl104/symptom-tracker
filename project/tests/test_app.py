@@ -1,9 +1,7 @@
 import unittest
-from unittest.mock import Mock
 from ..app import app as tingle
 from unittest import mock
 from flask import url_for, request
-from werkzeug.security import generate_password_hash, check_password_hash
 
 class AppTest(unittest.TestCase):
     def setUp(self):

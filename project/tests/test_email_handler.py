@@ -1,8 +1,6 @@
 import unittest
-from unittest.mock import Mock
-import email_handler
+from project import email_handler
 from unittest import mock
-from flask import url_for, request
 from email.mime.text import MIMEText
 
 
@@ -13,7 +11,7 @@ class AppTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    @mock.patch('email_handler.MIMEText')
+    @mock.patch('project.email_handler.MIMEText')
     def test_setup_email(self, mime):
         mime.return_value = {}
         self.assertEqual({
@@ -23,7 +21,7 @@ class AppTest(unittest.TestCase):
         }, email_handler.setup_email('toemail', 'key'))
         pass
 
-    @mock.patch('email_handler.MIMEText')
+    @mock.patch('project.email_handler.MIMEText')
     def test_setup_invitation(self, mime):
         mime.return_value = {}
         self.assertEqual({

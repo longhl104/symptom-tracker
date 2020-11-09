@@ -70,7 +70,7 @@ def register(token=None):
         gender = request.form.get('gender', "")
         age = request.form.get('age', "NA")
         mobile = request.form.get('mobile',"")
-        treatment = request.form.getlist('treatment', [])
+        treatment = request.form.getlist('treatment')
         emailAddress = request.form.get('email-address')
         password = request.form.get('password')
 

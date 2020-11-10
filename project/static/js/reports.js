@@ -33,53 +33,21 @@ function setDate() {
     document.getElementById('endDate').value = today;
   }
   
-  function getParameterByName(name) {
-    url = window.location.href;
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
-  }
-  
   function checkQueryParams() {
-    let symptom = getParameterByName('symptom');
-    let location = getParameterByName('location');
-    const startDate = getParameterByName('startDate');
-    const endDate = getParameterByName('endDate');
-  
-    const form = document.forms["make-graph"];
-    // if (id) form["id"].value = id;
-  
-    const validSymptoms = ["All", "Cramping", "Discomfort", "Numbness", "Pain", "Tingling", "Weakness"];
-    if (symptom) {
-      if (validSymptoms.indexOf(symptom) < 0) {
-        form["symptom"][0].value = "Other";
-        form["symptom"][1].value = symptom;
-        checkvalue(form["symptom"][0]);
-      } else {
-        form["symptom"][0].value = symptom;
-      }
-    }
-  
-    const validLocations = ["All", "Hands", "Arms", "Feet", "Legs"];
-    if (location) {
-      if (validLocations.indexOf(location) < 0) {
-        form["location"][0].value = "Other";
-        form["location"][1].value = location;
-        checkvalue(form["location"][0]);
-      } else {
-        form["location"][0].value = location;
-      }
-    }
+    let symptomList = document.getElementById('symptom-list');
+    let locationList = document.getElementById('location-list');
     
-    if (startDate) form["startDate"].value = startDate;
-    if (endDate) form["endDate"].value = endDate;
+    if (symptomList.selectedIndex == 1) {
+      locationList.getElementsByTagName("option")[1].disabled = true;
+    }
+
+    if (locationList.selectedIndex == 1) {
+      symptomList.getElementsByTagName("option")[1].disabled = true;
+    }
+
   }
   
   window.onload = function() {
-    //setDate();
     checkQueryParams();
   };
   
@@ -131,7 +99,7 @@ function setDate() {
       valid = false;
     }
     if (form["symptom"][0].value === "All" && form["location"][0].value === "All") {
-      document.getElementById("both-error-message").innerText = "Cannot select both 'All Aymptoms' and 'All Locations'";
+      document.getElementById("both-error-message").innerText = "Cannot select both 'All Symptoms' and 'All Locations'";
       valid = false;
     }
   

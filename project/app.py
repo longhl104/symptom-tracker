@@ -318,9 +318,8 @@ def patient_dashboard():
     if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
-
-    print(session)
-    return render_template('patient/dashboard.html', session=session)
+    all_questionnaires = database.get_patient_questionnaires(user_details['ac_id'])
+    return render_template('patient/dashboard.html', session=session, questionnaires=all_questionnaires)
 
 @app.route('/patient/record-symptom/', methods=['GET', 'POST'])
 @app.route('/patient/record-symptom/<id>', methods=['DELETE'])
@@ -470,6 +469,23 @@ def patient_account(clinician_email=None):
                 clinicians.append(acc[0]['ac_email'])
     return render_template('patient/account.html', clinicians=clinicians)
 
+@app.route('/patient/questionnaire/<id>', methods=['GET'])
+def patient_questionnaire(id=None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+
+    if id and request.method == 'GET':
+        questionnaire = database.get_questionnaire(None, id)
+        if questionnaire:
+            questionnaire = questionnaire[0]
+            questionnaire['link'] = questionnaire['link'].replace('EMAILADDRESS', user_details['ac_email'])
+            return render_template('patient/questionnaire.html', questionnaire=questionnaire)
+        return redirect(url_for('patient_dashboard'))
+
 @app.route('/admin/')
 def admin_dashboard():
     if not session.get('logged_in', None):
@@ -479,7 +495,8 @@ def admin_dashboard():
         print('Error: Attempted accessing admin dashboard as a', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    return render_template('admin/dashboard.html', session=session)
+    all_questionnaires = database.get_all_questionnaires()
+    return render_template('admin/dashboard.html', session=session, questionnaires=all_questionnaires)
 
 @app.route('/admin/invite/', methods=['POST'])
 def invite_user():
@@ -509,6 +526,88 @@ def invite_user():
         message = email_handler.setup_invitation(role, email, token)
         email_handler.send_email(message)
         flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  'success')
+        return redirect(url_for('admin_dashboard'))
+
+def validate_recipients(recipients):
+    if len(recipients) == 0:
+        return None, None
+    recipients = recipients.split(',')
+    valid_recipients = []
+    invalid_recipients = []
+    for email in recipients:
+        email = email.strip()
+        result = database.get_patient_by_email(email)
+        if result:
+            valid_recipients.append((result[0].get('ac_id'), email))
+        else:
+            invalid_recipients.append((None, email))
+    return valid_recipients, invalid_recipients
+
+def validate_form_link(link):
+    return 'docs.google.com/forms/' in link
+
+@app.route('/admin/create-questionnaire/', methods=['POST'])
+def create_questionnaire():
+    if request.method == 'POST':
+        form_data = dict(request.form.lists())
+        name = form_data.get('questionnaire-name')[0].strip()
+        link = form_data.get('survey-link')[0].strip()
+        if not validate_form_link(link):
+            flash('Invalid Survey link. Please enter a Google forms link.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        end_date = form_data.get('end-date')[0]
+        recipients = form_data.get('recipients')[0]
+        valid_recipients, invalid_recipients = validate_recipients(recipients)
+        if (valid_recipients == None and invalid_recipients == None) or len(valid_recipients) == 0:
+            flash('Invalid recipient(s) format. Please enter a comma separated list with no spaces.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        existing_questionnaire = database.get_questionnaire(link)
+        if existing_questionnaire:
+            flash('A questionnaire with that link already exists.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        result = database.add_questionnaire(name, link, end_date)
+        if result:
+            questionnaire_id = result[0].get('id')
+            successful_records = database.link_questionnaire_to_patient(questionnaire_id, valid_recipients)
+            if len(successful_records) == 0:
+                flash('Something went wrong linking questionnaire to patients. Please try again.', 'error')
+                return redirect(url_for('admin_dashboard'))
+            # TODO: add email handler here
+            flash('Created questionnaire successfully and sent notification to {}/{} patients'.format(len(valid_recipients), len(valid_recipients) + len(invalid_recipients)),  'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Failed to create questionnaire',  'error')
+            return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/questionnaire/<id>', methods=['GET', 'DELETE'])
+def modify_questionnaire(id=None):
+    if id and request.method == 'GET':
+        questionnaire = database.get_questionnaire(None, id)
+        if questionnaire:
+            return jsonify(questionnaire=questionnaire), 200
+        else:
+            return jsonify(questionnaire=[]), 404
+    if id and request.method == 'DELETE':
+        result = database.delete_questionnaire(id)
+        if result:
+            return '', 200
+        else:
+            return '', 404
+    if id and request.method == 'POST':
+        form_data = dict(request.form.lists())
+        name = form_data.get('questionnaire-name')[0].strip()
+        link = form_data.get('survey-link')[0].strip()
+        if not validate_form_link(link):
+            flash('Invalid Survey link. Please enter a Google forms link.', 'error')
+            return redirect(url_for('admin_dashboard'))
+        end_date = form_data.get('end-date')[0]
+        existing_questionnaire = database.get_questionnaire(None, id)
+        if existing_questionnaire:
+            result = database.update_questionnaire(id, name, link, end_date)
+            if result:
+                flash('Modified questionnaire successfully',  'success')
+                return redirect(url_for('admin_dashboard'))
+        flash('Failed to modify questionnaire',  'error')
         return redirect(url_for('admin_dashboard'))
 
 # PWA-related routes

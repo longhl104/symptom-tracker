@@ -1,0 +1,21 @@
+{% extends "sidebar.html" %}
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/questionnaire.css') }}">
+{% endblock %}
+{% block title %}Record a Symptom{% endblock %}
+{% block sidebar %}
+  {{ super() }}
+  {% block content %}
+    {% if questionnaire %}
+      <iframe id="questionnaire-iframe" src="{{questionnaire.link}}" frameBorder="0"></iframe>
+    {% else %}
+      <h3 class="title">No questionnaire found!</h3>
+    {% endif %}
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+  {% endblock %}
+{% endblock %}

@@ -24,18 +24,21 @@
         <div class="grid-button-right">
           <a href="{{url_for('symptom_history')}}" class="btn blue aligned">View Symptoms</a>
         </div>
-        <div class="grid-main">
-          <br>
-          <h5 class="subtitle">Your surveys</h5>
-          <div class="survey-item">
-            <div class="survey-text">Weekly survey</div>
-            <a href="" class="btn blue survey-status">Start</a>
+        {% if questionnaires %}
+          <div class="grid-main">
+            <br>
+            <h5 class="subtitle">Your surveys</h5>
+            {% for questionnaire in questionnaires %}
+              <div class="survey-item">
+                <div class="survey-text">{{ questionnaire.name }}</div>
+                <div class="flex">
+                  <span class="due-date">Due: {{ questionnaire.end_date }}</span>
+                  <a href="/patient/questionnaire/{{ questionnaire.id }}" class="btn blue survey-status">Start</a>
+                </div>
+              </div>
+            {% endfor %}
           </div>
-          <div class="survey-item">
-            <div class="survey-text">General survey</div>
-            <a href="" class="btn blue survey-status">Start</a>
-          </div>
-        </div>
+        {% endif %}
         <div class = "break">
         </div>
       </div>

@@ -7,9 +7,13 @@ import string
 import pg8000
 import traceback
 import sys
-from datetime import datetime
+import pygal
+import io
+import csv
+from pygal.style import Style
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from collections import defaultdict
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -20,11 +24,9 @@ app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-app.secret_key = config['DATABASE']['secret_key']
+app.secret_key = config["DATABASE"]["secret_key"]
 
 # General routes
-
-
 @app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
@@ -53,12 +55,13 @@ def login():
         else:
             return redirect(url_for('patient_dashboard'))
 
-@app.route('/logout', methods=['GET'])
+
+@app.route("/logout", methods=["GET"])
 def logout():
-    session['logged_in'] = False
+    session["logged_in"] = False
     user_details = {}
     page = {}
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -85,6 +88,7 @@ def register(token=None):
                 gender = None
             if (mobile == ""):
                 mobile = None
+            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
@@ -392,25 +396,29 @@ def view_patients_history(id = None):
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
-    if request.method == 'POST':
-        password = request.form['pw']
-        password_confirm = request.form['pw_confirm']
+    if request.method == "POST":
+        password = request.form["pw"]
+        password_confirm = request.form["pw_confirm"]
         if password != password_confirm:
-            flash('The passwords do not match.', "error")
+            flash("The passwords do not match.", "error")
         elif (len(password) < 8) or (len(password) > 20):
-            flash('Password length must be between 8 and 20 characters.', "error")
+            flash("Password length must be between 8 and 20 characters.", "error")
         else:
 
             result = database.update_password(generate_password_hash(password), url_key)
             if not result:
-                flash('The reset password key is invalid. Please request a new token.', "error")
+                flash(
+                    "The reset password key is invalid. Please request a new token.",
+                    "error",
+                )
             else:
                 database.delete_token(url_key)
-                flash('Password successfully reset. You may now login.',  "success")
-        return redirect(url_for('reset_password', url_key=url_key))
+                flash("Password successfully reset. You may now login.", "success")
+        return redirect(url_for("reset_password", url_key=url_key))
 
     else:
-        return render_template('/reset-password.html', url_key=url_key)
+        return render_template("/reset-password.html", url_key=url_key)
+
 
 # Patient-related routes
 @app.route('/patient/')
@@ -424,6 +432,7 @@ def patient_dashboard():
 
     print(session)
     return render_template('patient/dashboard.html', session=session)
+
 
 @app.route('/patient/record-symptom/', methods=['GET', 'POST'])
 @app.route('/patient/record-symptom/<id>', methods=['DELETE'])
@@ -480,14 +489,22 @@ def record_symptom(id=None):
     return render_template('patient/record-symptom.html')
 
 
-@app.route('/patient/symptom-history')
+@app.route("/patient/symptom-history")
 def symptom_history():
-    if user_details.get('ac_email') is None:
-        return redirect(url_for('login'))
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
     symptoms = None
-    symptoms = database.get_all_symptoms(user_details['ac_email'])
+    symptoms = database.get_all_symptoms(user_details["ac_email"])
     list_of_symptoms = []
-    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+    symptom_col_order = [
+        "symptom_id",
+        "recorded_date",
+        "symptom_name",
+        "location",
+        "severity",
+        "occurence",
+        "notes",
+    ]
     for symptom in symptoms:
         symptom = symptom["row"][1:-1]
         symptom_dict = {}
@@ -498,11 +515,296 @@ def symptom_history():
                 col = "None"
             symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
-    return render_template('patient/symptom-history.html', symptoms=list_of_symptoms)
+    return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
 
-@app.route('/patient/reports')
+# Helper functions for graph visualisation -> might move to utility file
+def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
+                for n in range(int((end_date - start_date).days)):
+                    yield start_date + timedelta(n)
+
+def clean_data(start_date, end_date, data):
+    date = []
+    severity = []
+    sporadic = []
+    severity_dict = {
+        "Not at all": 0,
+        "A little bit": 1,
+        "Somewhat": 2,
+        "Quite a bit": 3,
+        "Very much": 4,
+    }
+    day_included = True
+
+    for single_date in daterange(start_date, end_date + timedelta(1)):
+        d = single_date.strftime("%Y-%m-%d")
+        
+        if d in data:
+            day_included = True
+            date += [d+" "]
+            date += [d+""]
+            date += [d+"\n"]
+            if len(data[d]) == 3:
+                severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 
+                    'label': 'Morning'}]
+                severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][1][0]]),
+                    'label': 'Daytime'}]
+                severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][2][0]]),
+                    'label': 'Night-time'}]
+                sporadic += [None] * 3
+            elif len(data[d]) == 2:
+                if data[d][0][1] == 'Morning' and data[d][1][1] == 'Daytime':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]),
+                        'label': 'Morning'}]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][1][0]]), 'label': 'Daytime'}]
+                    severity += [None]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Morning' and data[d][1][1] == 'Night-time':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][1][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+                else:
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][1][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+            else:
+                if data[d][0][1] == 'All the time':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Sporadic':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                elif data[d][0][1] == 'Morning':
+                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
+                    severity += [None]
+                    severity += [None]
+                    sporadic += [None] * 3
+                elif data[d][0][1] == 'Daytime':
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Daytime'}]
+                    severity += [None]
+                    sporadic += [None] * 3
+                else:
+                    severity += [None]
+                    severity += [None]
+                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Night-time'}]
+                    sporadic += [None] * 3
+
+        elif day_included:
+            date += [" "]
+            date += [""]
+            date += ["\n"]
+            severity += [None] * 3
+            sporadic += [None] * 3
+            day_included = False
+
+        no_days = (end_date - start_date).days + 1
+        i = 0
+        while no_days / (7 * pow(3, i)) > 1:
+            i += 1
+        freq = pow(3, i)
+
+    return date, severity, sporadic, freq
+
+def extract_page_data(form_data):
+    symptom = form_data.get("symptom")[0]
+
+    if symptom == "Other":
+        symptom = form_data.get("symptom")[1]
+
+    location = form_data.get("location")[0]
+
+    if location == "Other":
+        location = form_data.get("location")[1]
+
+    startDate = form_data.get("startDate")[0]
+    endDate = form_data.get("endDate")[0]
+    
+    return symptom, location, startDate, endDate
+
+def set_up_graph(raw_data, symptom, location, startDate, endDate):
+    multiple = False
+    colors=("#E853A0", "#E853A0")
+    if location == "All" or symptom == "All":
+        multiple = True
+        colors=("#E853A0", "#3783FF", "#4DE94C", "#FF8C00", "#9400D3", "#F60000", "#FFEE00")
+
+
+    graph = None
+
+    if len(raw_data) == 0:
+        graph = pygal.Line()
+
+    else:
+
+        date = []
+        severity = []
+        sporadic = []
+        severity_dict = {
+            "Not at all": 0,
+            "A little bit": 1,
+            "Somewhat": 2,
+            "Quite a bit": 3,
+            "Very much": 4,
+        }
+
+        data = defaultdict(list)
+        raw_multiples = defaultdict(list)
+        multiples = defaultdict(list)
+        if (multiple):
+            for row in raw_data:
+                row = row["row"][1:-1].split(",")
+                if symptom == "All":
+                    raw_multiples[row[0]].append([row[2], row[3].strip('"'), row[4].strip('"')])
+                else:
+                    raw_multiples[row[1]].append([row[2], row[3].strip('"'), row[4].strip('"')])
+            for single_all in raw_multiples:
+                dates = defaultdict(list)
+                for single_row in raw_multiples[single_all]:
+                    dates[single_row[0]].append([single_row[1], single_row[2]])
+                multiples[single_all] = dates
+        else:
+            for row in raw_data:
+                row = row["row"][1:-1].split(",")
+                data[row[0]].append([row[1].strip('"'), row[2].strip('"')])
+
+        results = {}
+        if (multiple):
+            for multiple_key in raw_multiples:
+                start_date = datetime.strptime(raw_multiples[multiple_key][0][0], "%Y-%m-%d")
+                end_date = datetime.strptime(raw_multiples[multiple_key][-1][0], "%Y-%m-%d")
+                results[multiple_key] = clean_data(start_date, end_date, multiples[multiple_key])
+
+            graph_data = {}
+            for multiple_key in results:
+                graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
+        else: 
+            first_row = raw_data[0]["row"][1:-1].split(",")
+            last_row = raw_data[-1]["row"][1:-1].split(",")
+            start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
+            end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
+            date, severity, sporadic, freq = clean_data(start_date, end_date, data)
+
+        custom_style = Style(
+            background="#FFFFFF",
+            plot_background="#FFFFFF",
+            transition="400ms ease-in",
+            font_family="googlefont:Oxygen",
+            colors=colors
+        )
+
+        graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
+            y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
+            x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
+
+        # Might need to rework these so leave out for the moment
+            # show_minor_x_labels=False, x_labels_major_every=freq)
+
+        graph.title = symptom + ' in my ' + location
+        if symptom == "All":
+            graph.title = 'All Symptoms in my ' + location
+        elif location == "All":
+            graph.title = symptom + ' in all Locations'
+        
+        graph.y_labels = list(severity_dict.keys())
+        
+        if (multiple):
+            for multiple_key in graph_data:
+                graph.add(multiple_key, graph_data[multiple_key][0], allow_interruptions=True)
+        else:
+            graph.add('Severity', severity, allow_interruptions=True)
+            if not len(sporadic) == []:
+                graph.add('Severity', sporadic, allow_interruptions=True, stroke_style={"width": 3,
+                    "dasharray": "3, 6"}) 
+
+    return graph
+
+@app.route("/patient/reports", methods=["GET", "POST"])
 def patient_reports():
-    return render_template('patient/reports.html')
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    graph = graph_data = symptom = location = start_date = end_date = None
+
+    if request.method == "POST":
+        symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
+        raw_data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, False)
+        graph = set_up_graph(raw_data, symptom, location, start_date, end_date)
+        graph_data = graph.render_data_uri()
+
+    return render_template(
+        "patient/reports.html",
+        graph_data=graph_data,
+        symptom=symptom,
+        location=location,
+        startDate=start_date,
+        endDate=end_date,
+    )
+
+@app.route("/patient/reports/download-file", methods=["POST"])
+def download_file():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
+
+    symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
+    data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, True)
+    
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        if location == "All" or symptom == "All":
+            if row[5] == '""':
+                row_data += [(row[0], row[1], row[2], row[3].strip('"'), row[4].strip('"'), 'N/A')]
+            else:   
+                row_data += [(row[0], row[1], row[2], row[3].strip('"'), row[4].strip('"'), row[5].strip('"'))]
+        else:
+            if row[3] == '""':
+                row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), 'N/A')]
+            else:   
+                row_data += [(row[0], row[1].strip('"'), row[2].strip('"'), row[3].strip('"'))]
+
+    if location == "All" or symptom == "All":
+        head = ("Symptom", "Location", "Date", "Severity", "Time of Day", "Notes")
+    else:
+        head = ("Date", "Severity", "Time of Day", "Notes")
+    csv_writer.writerow(head)
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv"
+    )
+    output.headers["Content-type"] = "text/csv"
+
+    return output
+
+@app.route("/patient/reports/download-image", methods=["POST"])
+def download_image():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    graph = symptom = location = startDate = endDate = None
+    symptom, location, startDate, endDate = extract_page_data(dict(request.form.lists()))
+    raw_data = database.get_export_data(user_details["ac_email"], symptom, location, startDate, endDate, False)
+    graph = set_up_graph(raw_data, symptom, location, startDate, endDate)
+
+    output = graph.render_response()
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".svg")
+    output.headers["Content-type"] = "image/svg+xml"
+
+    return output
 
 @app.route('/patient/account/', methods=['GET', 'POST'])
 @app.route('/patient/account/<clinician_email>', methods=['DELETE'])
@@ -615,6 +917,6 @@ def invite_user():
         return redirect(url_for('admin_dashboard'))
 
 # PWA-related routes
-@app.route('/service-worker.js')
+@app.route("/service-worker.js")
 def service_worker():
-    return app.send_static_file('service-worker.js')
+    return app.send_static_file("service-worker.js")

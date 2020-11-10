@@ -1,5 +1,5 @@
-let deferredInstallPrompt = null;
-const installButton = document.getElementById('button-install');
+ var deferredInstallPrompt = null;
+ installButton = document.getElementById('button-install');
 
 if (installButton !== null) {
   if (window.matchMedia('(display-mode: standalone)').matches) {

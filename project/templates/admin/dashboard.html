@@ -59,7 +59,7 @@
                     <input type="radio" id="tab-1" name="tab-group-1" checked>
                     <label for="tab-1" class="tabname">Create</label>
                     <div id="content-1" class="content">
-                      <form class="form" action="{{url_for('create_questionnaire')}}" method="POST">
+                      <form id="create-form" class="form" action="{{url_for('create_questionnaire')}}" method="POST">
                         <div class="col">
                           <label for="questionnaire-name">Questionnaire name</label>
                           <input type="text" maxlength="255" class="input" name="questionnaire-name" required>

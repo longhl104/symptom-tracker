@@ -972,3 +972,24 @@ def link_questionnaire_to_patient(questionnaire_id, valid_recipients):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return successful_records
+
+def get_all_patients_in_db():
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT ac_email FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient";
+            """
+
+            r = dictfetchall(cur, sql)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all patients:", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None

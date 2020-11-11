@@ -7,7 +7,9 @@ window.onload = function () {
 
   document.getElementById("heading").innerHTML = greeting + document.getElementById("heading").innerHTML;
   document.getElementById("heading").style.display = "block";
-
+  document.getElementById("create-form").onsubmit = () => {
+    return validate_end_date(document.getElementById("end-date"));
+  }
   todays_date();
   setup_tab_onchange();
   on_questionnaire_change();
@@ -22,6 +24,18 @@ function show_form_content(id) {
   for (let i = 1; i < 4; i++) {
     document.getElementById(`content-${i}`).style.display = i === id ? 'block' : 'none';
   }
+}
+
+function validate_end_date(elem) {
+  let today = new Date();
+  today = today.setHours(0, 0, 0, 0);
+  let end_date = new Date(elem.value);
+  end_date = end_date.setHours(0, 0, 0, 0);
+  if (end_date < today) {
+    alert('End date cannot be in the past!');
+    return false;
+  }
+  return true;
 }
 
 function setup_tab_onchange() {
@@ -75,7 +89,10 @@ function on_questionnaire_change() {
             let form = document.forms['modify-form'];
             form['questionnaire-name'].value = questionnaire.name;
             form['survey-link'].value = questionnaire.link;
-            form['end-date'].valueAsDate = new Date(questionnaire.start_date);
+            form['end-date'].valueAsDate = new Date(questionnaire.end_date);
+            document.getElementById('modify-form').onsubmit = () => {
+              return validate_end_date(form['end-date']);
+            }
             document.getElementById('modify-form').action = '/admin/questionnaire/' + questionnaire.id;
             document.getElementById('modify-form-div').style.display = 'grid';
             document.getElementById('modify-form-div').style.marginTop = '10px';

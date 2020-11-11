@@ -21,15 +21,13 @@ function editRecord(id, name, location, severity, occurence, date, notes) {
 
 function showHideNotes(id) {
   var notes = document.getElementById(`notes-${id}`);
-  var notesIcon = document.getElementById(`notes-arrow-${id}`);
+  var notesIcon = document.getElementById(`expand-text-${id}`);
   if (notes.style.display === "none") {
     notes.style.display = "block";
-    notesIcon.classList.remove('fa-caret-down');
-    notesIcon.classList.add('fa-caret-up');
+    notesIcon.setAttribute("style", "-webkit-transform: rotate(180deg);-moz-transform: rotate(180deg);-o-transform: rotate(180deg);-ms-transform: rotate(180deg);transform: rotate(180deg);")
   } else {
     notes.style.display = "none";
-    notesIcon.classList.remove('fa-caret-up');
-    notesIcon.classList.add('fa-caret-down');
+    notesIcon.removeAttribute("style");
   }
 }
 

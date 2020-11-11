@@ -959,7 +959,7 @@ def create_questionnaire():
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link.', 'error')
+            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'error')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         recipients = form_data.get('recipients')[0]
@@ -1004,7 +1004,7 @@ def modify_questionnaire(id=None):
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link.', 'error')
+            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'error')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         existing_questionnaire = database.get_questionnaire(None, id)

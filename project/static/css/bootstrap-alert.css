@@ -1,0 +1,22 @@
+.alert {
+    border: 1px solid transparent;
+    border-radius: 4px;
+  }
+
+.alert-message {
+    font-size: 14px;
+    margin: 5px 0px;
+    font-weight: bold;
+}
+
+.alert-warning {
+    background-color: #fcf8e3;
+    border-color: #faebcc;
+    color: #8a6d3b;
+}
+
+.alert-success {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #3c763d;
+}

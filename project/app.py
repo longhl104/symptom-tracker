@@ -32,13 +32,13 @@ def login():
     if request.method == 'POST':
         login_return_data = database.get_account(request.form['email'])
         if login_return_data is None:
-            flash('Email does not exist, please register a new account', 'error')
+            flash('Email does not exist, please register a new account', 'alert-warning')
             return redirect(url_for('login'))
 
         global user_details
         user_details = login_return_data[0]
         if not check_password_hash(user_details['ac_password'], request.form['password']):
-            flash('Incorrect email/password, please try again', 'error')
+            flash('Incorrect email/password, please try again', 'alert-warning')
             return redirect(url_for('login'))
 
         session['logged_in'] = True
@@ -80,7 +80,7 @@ def register(token=None):
         try:
             print(request.form)
             if request.form['password'] != request.form['confirm-password']:
-                flash('Passwords do not match. Please try again', 'error')
+                flash('Passwords do not match. Please try again', 'alert-warning')
                 return redirect(url_for('register'))
             if (age == ""):
                 age = None
@@ -116,7 +116,7 @@ def register(token=None):
         except:
             traceback.print_exc(file=sys.stdout)
             print('Exception occurred. Please try again')
-            flash('Email address already in use. Please try again', 'error')
+            flash('Email address already in use. Please try again', 'alert-warning')
             # return redirect(url_for('register'))
             return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
     elif not token and request.method == 'GET':
@@ -140,7 +140,7 @@ def register(token=None):
                     flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'error')
                     return render_template('register-extra.html', token=token)
                 if request.form['password'] != request.form['confirm-password']:
-                    flash('Passwords do not match. Please try again', 'error')
+                    flash('Passwords do not match. Please try again', 'alert-warning')
                     return render_template('register-extra.html', token=token)
                 age = None
                 # gender = request.form.get('gender', "NA")
@@ -174,7 +174,7 @@ def register(token=None):
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')
-                flash('Something went wrong. Please try again', 'error')
+                flash('Something went wrong. Please try again', 'alert-warning')
             return render_template('register-extra.html', token=token)
         elif request.method == 'GET':
             if token_valid:
@@ -195,14 +195,14 @@ def forgot_password():
                 unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_password_key(unique_key, request.form['email'])
             except pg8000.core.ProgrammingError: # email not in database
-                flash('There is no account associated with that email. Please try again.', "error")
+                flash('There is no account associated with that email. Please try again.', "alert-warning")
                 return render_template('forgot-password.html')
         else:
             # print(result)
             unique_key = result[0]
         message = email_handler.setup_email(request.form['email'], unique_key)
         email_handler.send_email(message)
-        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")
+        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "alert-success")
         return render_template('forgot-password.html')
     elif request.method == 'GET':
         return render_template('forgot-password.html')
@@ -400,20 +400,20 @@ def reset_password(url_key):
         password = request.form["pw"]
         password_confirm = request.form["pw_confirm"]
         if password != password_confirm:
-            flash("The passwords do not match.", "error")
+            flash("The passwords do not match.", "alert-warning")
         elif (len(password) < 8) or (len(password) > 20):
-            flash("Password length must be between 8 and 20 characters.", "error")
+            flash("Password length must be between 8 and 20 characters.", "alert-warning")
         else:
 
             result = database.update_password(generate_password_hash(password), url_key)
             if not result:
                 flash(
                     "The reset password key is invalid. Please request a new token.",
-                    "error",
+                    "alert-warning",
                 )
             else:
                 database.delete_token(url_key)
-                flash("Password successfully reset. You may now login.", "success")
+                flash("Password successfully reset. You may now login.", "alert-warning")
         return redirect(url_for("reset_password", url_key=url_key))
 
     else:
@@ -479,7 +479,7 @@ def record_symptom(id=None):
         )
 
         if recordSymptom is None:
-            flash('Unable to record symptom, please try again.', 'error')
+            flash('Unable to record symptom, please try again.', 'alert-warning')
             return redirect(url_for('record_symptom'))
         else:
             return redirect(url_for('symptom_history'))
@@ -825,11 +825,11 @@ def patient_account(clinician_email=None):
         form_data = dict(request.form.lists())
         clinician_email = form_data.get('clinician_email', [''])[0]
         if clinician_email == '':
-            flash('Please enter a clinician email address.', 'error')
+            flash('Please enter a clinician email address.', 'alert-warning')
 
         acc = database.get_account(clinician_email.lower())
         if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
-            flash('This email address is not associated with a clinician account.', 'error')
+            flash('This email address is not associated with a clinician account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
         clinician_id = acc[0]['ac_id']
@@ -840,14 +840,14 @@ def patient_account(clinician_email=None):
                 clinician_id
             )
         except pg8000.IntegrityError:
-            flash('This clinician account is already linked to your account.', 'error')
+            flash('This clinician account is already linked to your account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
         if link is None:
-            flash('Unable to link clinician account, please try again.', 'error')
+            flash('Unable to link clinician account, please try again.', 'alert-warning')
             return redirect(url_for('patient_account'))
         else:
-            flash('Clinician successfully linked to your account.', 'success')
+            flash('Clinician successfully linked to your account.', 'alert-success')
             return redirect(url_for('patient_account'))
 
     if request.method == 'DELETE':
@@ -860,13 +860,13 @@ def patient_account(clinician_email=None):
             acc[0]['ac_id']
         )
         if result is None:
-            flash('Clinician account link could not be deleted.', 'error')
+            flash('Clinician account link could not be deleted.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
     clinicians_raw = database.get_linked_clinicians(user_details['ac_id'])
     clinicians = []
     if clinicians_raw is None:
-        flash('Error retrieving clinicians list.', 'error')
+        flash('Error retrieving clinicians list.', 'alert-warning')
         clinicians = []
     else:
         for clinician in clinicians_raw:
@@ -894,7 +894,7 @@ def invite_user():
         role = form_data.get('role')[0]
         existing_account = database.get_account(email)
         if existing_account:
-            flash('An account with that email address already exists', 'error')
+            flash('An account with that email address already exists', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         already_invited = database.check_email_in_account_invitation(email)
         token = None
@@ -913,7 +913,7 @@ def invite_user():
                 database.add_account_invitation(token, email, role)
         message = email_handler.setup_invitation(role, email, token)
         email_handler.send_email(message)
-        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  'success')
+        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  'alert-success')
         return redirect(url_for('admin_dashboard'))
 
 # PWA-related routes

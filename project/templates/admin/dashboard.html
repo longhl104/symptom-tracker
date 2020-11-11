@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-alert.css') }}">
 
 <script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
@@ -19,6 +20,13 @@
           <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
           <div class="card">
             <h6>Invite a user</h6>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <alert-message class="alert {{ category }} fade in">{{ message }}</alert-message>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
             <form class="form" action="{{url_for('invite_user')}}" method="POST">
               <div class="col">
                 <div class="grid two-equal-columns">
@@ -36,13 +44,6 @@
                   </div>
                 </div>
                 <div class="grid">
-                  {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                      {% for category, message in messages %}
-                        <span class="{{ category }}-message">{{ message }}</span>
-                      {% endfor %}
-                    {% endif %}
-                  {% endwith %}
                   <input class="btn green" type="submit" value="Send Invitation"/>
                 </div>
               </div>

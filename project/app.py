@@ -419,7 +419,7 @@ def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060
                 for n in range(int((end_date - start_date).days)):
                     yield start_date + timedelta(n)
 
-def clean_data(start_date, end_date, data):
+def clean_data(start_date, end_date, data, multiple):
     date = []
     severity = []
     sporadic = []
@@ -472,12 +472,17 @@ def clean_data(start_date, end_date, data):
                     severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Night-time'}]
                     sporadic += [None] * 3
                 elif data[d][0][1] == 'Sporadic':
-                    severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
-                    severity += [None]
-                    severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
-                    sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
-                    sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
-                    sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    if multiple:
+                        severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        severity += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                    else:
+                        severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        severity += [None]
+                        severity += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        sporadic += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        sporadic += [{'value': (single_date + timedelta(hours = 8), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
+                        sporadic += [{'value': (single_date + timedelta(hours = 16), severity_dict[data[d][0][0]]), 'label': 'Sporadic'}]
                 elif data[d][0][1] == 'Morning':
                     severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 'label': 'Morning'}]
                     severity += [None]
@@ -577,7 +582,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate):
             for multiple_key in raw_multiples:
                 start_date = datetime.strptime(raw_multiples[multiple_key][0][0], "%Y-%m-%d")
                 end_date = datetime.strptime(raw_multiples[multiple_key][-1][0], "%Y-%m-%d")
-                results[multiple_key] = clean_data(start_date, end_date, multiples[multiple_key])
+                results[multiple_key] = clean_data(start_date, end_date, multiples[multiple_key], multiple)
 
             graph_data = {}
             for multiple_key in results:
@@ -587,7 +592,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate):
             last_row = raw_data[-1]["row"][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
-            date, severity, sporadic, freq = clean_data(start_date, end_date, data)
+            date, severity, sporadic, freq = clean_data(start_date, end_date, data, multiple)
 
         custom_style = Style(
             background="#FFFFFF",

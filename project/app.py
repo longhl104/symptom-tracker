@@ -942,7 +942,8 @@ def invite_user():
 
 def validate_recipients(recipients):
     if len(recipients) == 0:
-        return None, None
+        valid_recipients = database.get_all_patients_in_db()
+        return valid_recipients, []
     recipients = recipients.split(',')
     valid_recipients = []
     invalid_recipients = []
@@ -956,7 +957,7 @@ def validate_recipients(recipients):
     return valid_recipients, invalid_recipients
 
 def validate_form_link(link):
-    return 'docs.google.com/forms/' in link
+    return 'docs.google.com/forms/' in link and 'EMAILADDRESS' in link
 
 @app.route('/admin/create-questionnaire/', methods=['POST'])
 def create_questionnaire():
@@ -996,7 +997,7 @@ def create_questionnaire():
             flash('Failed to create questionnaire',  'error')
             return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/questionnaire/<id>', methods=['GET', 'DELETE'])
+@app.route('/admin/questionnaire/<id>', methods=['GET', 'POST', 'DELETE'])
 def modify_questionnaire(id=None):
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)

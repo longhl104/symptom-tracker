@@ -93,7 +93,7 @@ class EmailHandler():
         date_time_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
         text = """
 
-        You are receiving this email because you have been assigned a new questionnaire - {questionnaire_name}.
+        You are receiving this email because you are a registered patient on Symptom Tracker and have been assigned a new questionnaire - {questionnaire_name}.
 
         Click (or copy-paste) the link below into your browser to complete the questionnaire:
 

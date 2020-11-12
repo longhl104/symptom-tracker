@@ -336,23 +336,6 @@ def clinician_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/create_survey/')
-def create_survey():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/view_patients/')
-def view_patients():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     print(patients)
@@ -364,9 +347,8 @@ def view_patients():
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
         list_of_patients.append(patient_dict)
-    print(list_of_patients)
 
-    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
+    return render_template('clinician/dashboard.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):

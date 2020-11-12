@@ -234,15 +234,12 @@ def researcher_data():
         consent = consent['row'][1:-1]
         consent_dict = {}
         for i, col in enumerate(consent.split(",",4)):
-            print(i)
-            print(col)
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
-    print(list_of_treatments)
     if request.method =='GET':
         return render_template('researcher/patient-research.html', consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
@@ -264,7 +261,6 @@ def researcher_data():
         gen = request.form.get('gender', "")
         if (gen == ""):
             gen = None
-        print(lage,hage,sym,chemo,gen)
         if lage is not None:
             temp=[]
             for x in list_of_consents:
@@ -286,7 +282,7 @@ def researcher_data():
         if chemo is not None:
             temp = []
             for x in list_of_consents:
-                if(x["treatment_name"] == chemo):
+                if(chemo in x["treatment_name"]):
                     temp.append(x)
             list_of_consents = temp
         if sym is not None:
@@ -298,7 +294,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', consents=list_of_consents)
+        return render_template('researcher/patient-research.html', consents=list_of_consents,treatments=list_of_treatments)
 
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])

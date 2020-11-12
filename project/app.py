@@ -46,6 +46,7 @@ def login():
 
         session['logged_in'] = True
         session['name'] = user_details['ac_firstname']
+        session['role'] = user_details['ac_type']
 
         if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
             return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
@@ -115,6 +116,7 @@ def register(token=None):
                 user_details = login_return_data[0]
                 session['logged_in'] = True
                 session['name'] = user_details['ac_firstname']
+                session['role'] = user_details['ac_type']
                 return redirect(url_for('patient_dashboard'))
         except:
             traceback.print_exc(file=sys.stdout)
@@ -249,7 +251,7 @@ def researcher_data():
         list_of_treatments.append(treatment["treatment_name"])
     print(list_of_treatments)
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):
@@ -303,7 +305,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', consents=list_of_consents)
+        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents)
 
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
@@ -325,7 +327,7 @@ def view_consent_history(id = None):
                 col = col[:-3]
             symptom_dict[symptom_col_order[i]] = col.strip('"')
         list_of_symptoms.append(symptom_dict)
-    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
 
 @app.route('/clinician/')
 def clinician_dashboard():
@@ -367,7 +369,7 @@ def view_patients():
         list_of_patients.append(patient_dict)
     print(list_of_patients)
 
-    return render_template('clinician/view-patients.html', patients=list_of_patients)
+    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):
@@ -396,7 +398,7 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
     return(redirect(url_for('clinician_dashboard')))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
@@ -490,7 +492,7 @@ def record_symptom(id=None):
 
     if request.method == 'DELETE':
         result = database.delete_symptom_record(user_details['ac_email'], id)
-    return render_template('patient/record-symptom.html')
+    return render_template('patient/record-symptom.html', session=session,)
 
 
 @app.route("/patient/symptom-history")
@@ -519,7 +521,7 @@ def symptom_history():
                 col = "None"
             symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
-    return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
+    return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
 # Helper functions for graph visualisation -> might move to utility file
 def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
@@ -750,6 +752,7 @@ def patient_reports():
         location=location,
         startDate=start_date,
         endDate=end_date,
+        session=session,
     )
 
 @app.route("/patient/reports/download-file", methods=["POST"])
@@ -877,7 +880,7 @@ def patient_account(clinician_email=None):
             acc = database.get_account_by_id(clinician['clinician_id'])
             if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
                 clinicians.append(acc[0]['ac_email'])
-    return render_template('patient/account.html', clinicians=clinicians)
+    return render_template('patient/account.html', session=session, clinicians=clinicians)
 
 @app.route('/patient/questionnaire/<id>', methods=['GET'])
 def patient_questionnaire(id=None):

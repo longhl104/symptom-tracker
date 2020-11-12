@@ -34,6 +34,8 @@
               <img class="icon" src="{{ url_for('static', filename='images/icons/profile.png' ) }}"></img><em class="sidebar-text">Account</em>
             </a>
           </li>
+        {% endif %}
+        {% if session.role != 'admin' %}
           <li>
             <div class="subheading-holder">
               <i class="fa fa-caret-square-o-down fa-lg"></i><em class="sidebar-subheading">Cancer Council Resources</em>

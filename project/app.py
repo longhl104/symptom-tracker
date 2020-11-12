@@ -303,9 +303,10 @@ def view_consent_history(id = None):
         return redirect(url_for('login'))
     if user_details['ac_type'] != 'researcher':
         raise Exception('Error: Attempted accessing researcher dashboard as Unknown')
-        
+    acc = database.get_account_by_id(id)
+    email = acc[0]['ac_email']
     symptoms = None
-    symptoms = database.get_all_symptoms(id)
+    symptoms = database.get_all_symptoms(email)
     list_of_symptoms = []
     symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
     for symptom in symptoms:
@@ -316,7 +317,7 @@ def view_consent_history(id = None):
                 col = col[:-3]
             symptom_dict[symptom_col_order[i]] = col.strip('"')
         list_of_symptoms.append(symptom_dict)
-    return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+    return render_template('researcher/symptom-history.html', symptoms=list_of_symptoms,id = id)
 
 @app.route('/clinician/')
 def clinician_dashboard():

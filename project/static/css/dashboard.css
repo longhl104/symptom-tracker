@@ -67,7 +67,7 @@
 
 @media (min-width: 1025px) {
     .aligned {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         padding: 40px;
     }
 
@@ -80,7 +80,7 @@
 
 @media (min-width: 768px) and (max-width: 1024px) {
     .aligned {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         padding: 40px;
     }
     .container {
@@ -95,7 +95,7 @@
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
     .aligned {
-        font-size: 1.5rem;
+        font-size: 1.7rem;
         padding: 40px;
     }
 }
@@ -107,7 +107,7 @@
 
 @media (min-width: 481px) and (max-width: 767px) {
     .aligned {
-        font-size: 1rem;
+        font-size: 1.3rem;
         padding: 30px;
     }
     .survey-status {

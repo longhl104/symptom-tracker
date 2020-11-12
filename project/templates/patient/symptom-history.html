@@ -50,7 +50,7 @@
               </div>
               <div class="flex col padding">
                 <div class="label" onclick="showHideNotes('{{ symptom.symptom_id }}')">
-                  Notes <i id="notes-arrow-{{ symptom.symptom_id }}" class="fa fa-caret-down fa-md" style="color: #333333"></i>
+                  Notes <img id="expand-text-{{ symptom.symptom_id }}" src="{{ url_for('static', filename='images/icons/caret.png') }}"/>
                 </div>
                 <div id="notes-{{ symptom.symptom_id }}" class="symptom-value" style="display: none;">
                   {{symptom.notes}}

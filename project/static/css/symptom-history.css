@@ -80,6 +80,8 @@ td {
     font-size: 0.9em;
     font-weight: bold;
     color: #9a9a9a;
+    display: flex;
+    align-items: center;
 }
 
 .padding {

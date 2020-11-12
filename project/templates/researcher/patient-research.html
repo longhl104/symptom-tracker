@@ -13,20 +13,21 @@
   {% block content %}
     <div class="container">
       <div class="card">
-        <h6 class="subtitle">Search Patients...</h6>
+        <h6 class="subtitle"><b>Search Patients</b></h6>
+        <h6 class="subtitle" style="font-size: 1.4rem;">Filter by one or more attributes... Or select none to display all data</h6>
         <form name="reseacher-filter" class="form" method="POST" action="{{url_for('researcher_data')}}">
           <div class="grid three-equal-columns">
             <div class="col">
-              <label for="lower-age">Lowest Age</label>
-              <input type="number" class="input" name="lage" style="width: 150px;">
+              <label for="lower-age"><b>Lower Age</b> Limit</label>
+              <input type="number" class="input" name="lage" style="width: 90%;">
             </div>
             <div class="col">
-              <label for="higher-age">Highest Age</label>
-              <input type="number" class="input" name="hage" style="width: 150px;">
+              <label for="higher-age"><b>Higher Age</b> Limit</label>
+              <input type="number" class="input" name="hage" style="width: 90%;">
             </div>
             <div class="col">
-              <label for="gender">Gender</label>
-              <select name="gender"style="width: 150px;">
+              <label for="gender">Filter by <b>Gender</b></label>
+              <select name="gender"style="width: 90%;">
                 <option value=""></option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -34,7 +35,7 @@
               </select>
             </div>
           </div>
-          <label for="symptom">Symptom<sup>*</sup></label>
+          <label for="symptom">Filter by <b>Symptom</b><sup>*</sup></label>
             <select name="symptom">
               <option label=" "></option>
               <option value="Cramping">Cramping</option>
@@ -47,7 +48,7 @@
               </select>
               <input type="text" id="symptom" placeholder="Enter a symptom here" name="symptom" style="display: none;"/>
             <span class="error-message" id="symptom-error-message"></span>
-          <label for="chemotherapy">Chemotherapy<sup>*</sup></label>
+          <label for="chemotherapy">Filter by <b>Chemotherapy</b><sup>*</sup></label>
             <select name="chemotherapy" >
                 <option label=" "></option>
                 {% for treatment in treatments %}
@@ -56,19 +57,19 @@
             </select>
             <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
             <span class="error-message" id="location-error-message"></span>
-          <input class="btn green" type="submit" style="margin-top: 20px; width:150px;" value="Submit">
+          <input class="btn blue" type="submit" style="margin-top: 20px; width:120px;" value="Filter">
         </form>
       </div>
       <div class="card">
       <h6 class="title">Patient List</h6>
         <br>
-        <table class ="searchable sortable">
+        <table class ="searchable sortable" style="font-size: 16px;">
           <colgroup>
-              <col style="width: 70px;">
-              <col style="width: 70px;">
-              <col style="width: 75px;">
-              <col style="width: 150px;">
-              <col style="width: 150px;">
+              <col style="width: 14%;">
+              <col style="width: 14%;">
+              <col style="width: 16%;">
+              <col style="width: 28%;">
+              <col style="width: 28%;">
           </colgroup>
             <thead>
                 <tr style="background-color: #ebebeb;">
@@ -86,7 +87,7 @@
                       <td>{{consent.ac_age}}</td>
                       <td>{{consent.ac_gender}}</td>
                       <td>{{consent.treatment_name}}</td>
-                      <td><button class="btn blue"onclick="viewConsent('{{ consent.ac_email}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff">View Details</i></button>
+                      <td><button class="btn blue"onclick="viewConsent('{{consent.ac_id}}')" style="width: 80%;">View Details</button>
                     </tr>
                 {% endfor %}
             </tbody>

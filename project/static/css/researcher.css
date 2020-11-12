@@ -1,132 +1,153 @@
 .dropdown-check-list .anchor {
-    position: relative;
-    display: block;
-    padding: 10px 50px 10px 10px;
-    border: 1px solid #ccc;
-  }
+  position: relative;
+  display: block;
+  padding: 10px 50px 10px 10px;
+  border: 1px solid #ccc;
+}
 
-  .dropdown-check-list .anchor:after {
-    position: absolute;
-    content: "";
-    border-left: 4px solid white;
-    border-top: 4px solid white;
-    padding: 5px;
-    right: 10px;
-    top: 28%;
-    -moz-transform: rotate(-135deg);
-    -ms-transform: rotate(-135deg);
-    -o-transform: rotate(-135deg);
-    -webkit-transform: rotate(-135deg);
-    transform: rotate(-135deg);
-  }
+.dropdown-check-list .anchor:after {
+  position: absolute;
+  content: "";
+  border-left: 4px solid white;
+  border-top: 4px solid white;
+  padding: 5px;
+  right: 10px;
+  top: 28%;
+  -moz-transform: rotate(-135deg);
+  -ms-transform: rotate(-135deg);
+  -o-transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+  transform: rotate(-135deg);
+}
 
-  .dropdown-check-list ul.items {
-    display: none;
-    padding: 4px;
-    margin: 0;
-    border: 1px solid #CCC;
-    background-color: #F5F6FA;
-    border-top: none;
-  }
+.dropdown-check-list ul.items {
+  display: none;
+  padding: 4px;
+  margin: 0;
+  border: 1px solid #CCC;
+  background-color: #F5F6FA;
+  border-top: none;
+}
 
-  .dropdown-check-list ul.items li {
-    list-style: none;
-    padding: 4px;
-  }
+.dropdown-check-list ul.items li {
+  list-style: none;
+  padding: 4px;
+}
 
-  .dropdown-check-list.visible .items {
-    display: block;
-  }
+.dropdown-check-list.visible .items {
+  display: block;
+}
 
-  input, label {
-    display: block;
+input, label {
+  display: block;
+}
+
+.container {
+  width: 80%;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  font-size: 20px !important;
+}
+
+li:hover {
+  cursor: pointer;
+}
+
+.button-submit {
+  background-color: #4CAF50;
+  color:blue;
+}
+
+.button-submit:hover {
+  background-color: #4CAF50;
+  color: black;
+}
+
+.button-edit {
+  background-color: #008CBA;
+  color: white;
+}
+
+.button-edit:hover {
+  background-color: #008CBA;
+  color: black;
+}
+
+/*
+  Device = Desktops
+  Screen = 1281px to higher resolution desktops
+*/
+
+@media (min-width: 1281px) {
+  .container {
+    width: 70%;
+  }
+}
+
+/*
+  Device = Tablets, iPads (Portrait)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .card {
+    width: 100%;
   }
 
   .container {
-    width: 40%;
+    width: 90%;
+  }
+}
+
+/*
+  Device = Tablets, iPads (Landscape)
+  Screen = 768px to 1024px
+*/
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .card {
+    width: 100%;
   }
 
-  table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
+  .container {
+    width: 90%;
+    justify-content: flex-start;
+  }
+}
+
+/*
+  Device = Low Resolution Tablets, Smartphones (Landscape)
+  Screen = 481px to 767px
+*/
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .card {
+    width: 100%;
   }
 
-  li:hover {
-    cursor: pointer;
+  .container {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/*
+  Device = Most Smartphones (Portrait)
+  Screen = 320px to 479px
+*/
+
+@media (min-width: 320px) and (max-width: 480px) {
+  .card {
+    width: 100%;
+    padding: 25px;
   }
 
-  /*
-    Device = Desktops
-    Screen = 1281px to higher resolution desktops
-  */
-
-  @media (min-width: 1281px) {
-    .container {
-      width: 50%;
-    }
+  .container {
+    width: 100%;
+    align-items: normal;
+    justify-content: flex-start;
   }
-
-  /*
-    Device = Tablets, iPads (Portrait)
-    Screen = 768px to 1024px
-  */
-
-  @media (min-width: 768px) and (max-width: 1024px) {
-    .card {
-      width: 100%;
-    }
-
-    .container {
-      width: 60%;
-    }
-  }
-
-  /*
-    Device = Tablets, iPads (Landscape)
-    Screen = 768px to 1024px
-  */
-
-  @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
-    .card {
-      width: 80%;
-    }
-
-    .container {
-      width: 60%;
-      justify-content: flex-start;
-    }
-  }
-
-  /*
-    Device = Low Resolution Tablets, Smartphones (Landscape)
-    Screen = 481px to 767px
-  */
-
-  @media (min-width: 481px) and (max-width: 767px) {
-    .card {
-      width: 100%;
-    }
-
-    .container {
-      width: 100%;
-      justify-content: flex-start;
-    }
-  }
-
-  /*
-    Device = Most Smartphones (Portrait)
-    Screen = 320px to 479px
-  */
-
-  @media (min-width: 320px) and (max-width: 480px) {
-    .card {
-      width: 100%;
-      padding: 25px;
-    }
-
-    .container {
-      width: 100%;
-      align-items: normal;
-      justify-content: flex-start;
-    }
-  }
+}

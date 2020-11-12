@@ -13,20 +13,21 @@
   {% block content %}
     <div class="container">
       <div class="card">
-        <h6 class="subtitle">Search Patients...</h6>
+        <h6 class="subtitle">Search Patients</h6>
+        <h6 class="subtitle2">Filter by one or more attributes... Or select none to display all data</h6>
         <form name="reseacher-filter" class="form" method="POST" action="{{url_for('researcher_data')}}">
           <div class="grid three-equal-columns">
             <div class="col">
-              <label for="lower-age">Lowest Age</label>
-              <input type="number" class="input" name="lage" style="width: 150px;">
+              <label for="lower-age">Lower Age Limit</label>
+              <input type="number" class="input" name="lage" style="width: 90%;">
             </div>
             <div class="col">
-              <label for="higher-age">Highest Age</label>
-              <input type="number" class="input" name="hage" style="width: 150px;">
+              <label for="higher-age">Higher Age Limit</label>
+              <input type="number" class="input" name="hage" style="width: 90%;">
             </div>
             <div class="col">
               <label for="gender">Gender</label>
-              <select name="gender"style="width: 150px;">
+              <select name="gender"style="width: 90%;">
                 <option value=""></option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>

@@ -137,7 +137,7 @@ Screen = 768px to 1024px
 
 @media (min-width: 42em) {
     .container {
-        margin-left: 9em;
+        margin-left: 7em;
     }
 }
 

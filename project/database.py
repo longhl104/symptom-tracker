@@ -879,12 +879,13 @@ def get_patient_questionnaires(id):
         try:
             today = str(date.today())
             sql = """
-                SELECT id, name, end_date FROM tingleserver."Questionnaire" Q
+                SELECT id, name, end_date, opened FROM tingleserver."Questionnaire" Q
                 JOIN tingleserver."Patient_Receives_Questionnaire" PRQ ON (Q.id = PRQ.questionnaire_id)
                 WHERE ac_id=%s
-                AND end_date >= %s;
+                AND end_date >= %s
+                AND completed=%s;
             """
-            r = dictfetchall(cur, sql, (id, today))
+            r = dictfetchall(cur, sql, (id, today, False))
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r
@@ -990,6 +991,54 @@ def get_all_patients_in_db():
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all patients:", sys.exc_info()[0])
             raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def mark_questionnaire_as_opened(patient_id, questionnaire_id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Patient_Receives_Questionnaire"
+                SET opened=%s
+                WHERE ac_id=%s
+                AND questionnaire_id=%s
+                RETURNING opened;
+            """
+            r = dictfetchone(cur, sql, (True, patient_id, questionnaire_id))
+            conn.commit()
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't update questionnaire 'opened' column")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def mark_questionnaire_as_completed(patient_id, questionnaire_id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Patient_Receives_Questionnaire"
+                SET completed=%s
+                WHERE ac_id=%s
+                AND questionnaire_id=%s
+                RETURNING completed;
+            """
+            r = dictfetchone(cur, sql, (True, patient_id, questionnaire_id))
+            conn.commit()
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't update questionnaire 'completed' column")
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None

@@ -34,6 +34,9 @@
                 <div class="flex">
                   <span class="due-date">Due: {{ questionnaire.end_date }}</span>
                   <a href="/patient/questionnaire/{{ questionnaire.id }}" class="btn blue survey-status">Start</a>
+                  {% if questionnaire.opened %}
+                    <a href="/patient/complete-questionnaire/{{ questionnaire.id }}" class="btn green survey-status">Mark as completed</a>
+                  {% endif %}
                 </div>
               </div>
             {% endfor %}

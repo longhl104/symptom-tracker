@@ -897,8 +897,30 @@ def patient_questionnaire(id=None):
         questionnaire = database.get_questionnaire(None, id)
         if questionnaire:
             questionnaire = questionnaire[0]
+            result = database.mark_questionnaire_as_opened(user_details['ac_id'], id)
             questionnaire['link'] = questionnaire['link'].replace('EMAILADDRESS', user_details['ac_email'])
-            return render_template('patient/questionnaire.html', questionnaire=questionnaire)
+            return render_template('patient/questionnaire.html', session=session, questionnaire=questionnaire)
+        return redirect(url_for('patient_dashboard'))
+
+@app.route('/patient/complete-questionnaire/<id>', methods=['GET'])
+def complete_patient_questionnaire(id=None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+
+    if id and request.method == 'GET':
+        questionnaire = database.get_questionnaire(None, id)
+        if questionnaire:
+            questionnaire = questionnaire[0]
+        result = database.mark_questionnaire_as_completed(user_details['ac_id'], id)
+        print("result[0].get('completed') != None", result[0].get('completed') != None)
+        print("result[0].get('completed') == True", result[0].get('completed') == True)
+        print("questionnaire.get('name') != None", questionnaire.get('name') != None)
+        if result[0].get('completed') != None and result[0].get('completed') == True and questionnaire.get('name') != None:
+            flash("Marked '{questionnaire_name}' as completed.".format(questionnaire_name=questionnaire.get('name')), "alert-success")
         return redirect(url_for('patient_dashboard'))
 
 @app.route('/admin/')

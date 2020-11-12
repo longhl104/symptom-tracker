@@ -38,13 +38,6 @@
                       </div>
                     </div>
                     <div class="grid">
-                      {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                          {% for category, message in messages %}
-                            <span class="{{ category }}-message">{{ message }}</span>
-                          {% endfor %}
-                        {% endif %}
-                      {% endwith %}
                       <input class="btn green" type="submit" value="Send Invitation"/>
                     </div>
                   </div>
@@ -70,13 +63,6 @@
                           <label for="recepients">Recipient(s) (comma separated)</label>
                           <textarea class="input" style="resize: none; padding: 3px; height: 100px;" name="recipients" required></textarea>
                           <div class="grid">
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                              {% if messages %}
-                                {% for category, message in messages %}
-                                  <span class="{{ category }}-message">{{ message }}</span>
-                                {% endfor %}
-                              {% endif %}
-                            {% endwith %}
                             <input class="btn green" type="submit" value="Create Questionnaire"/>
                           </div>
                         </div>

@@ -39,6 +39,11 @@ a {
   justify-content: center;
   align-items: center;
   flex: 1;
+  flex-direction: column;
+}
+
+.full-page {
+  justify-content: unset !important;
 }
 
 /* Sidebar */

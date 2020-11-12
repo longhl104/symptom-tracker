@@ -14,6 +14,7 @@ from pygal.style import Style
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
+from threading import Thread
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -25,6 +26,8 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 app.secret_key = config["DATABASE"]["secret_key"]
+
+email_class = email_handler.EmailHandler()
 
 # General routes
 @app.route('/', methods=['POST', 'GET'])
@@ -137,7 +140,7 @@ def register(token=None):
         if request.method == 'POST':
             try:
                 if request.form['email-address'] != token_valid[0].get("ac_email"):
-                    flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'error')
+                    flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'alert-warning')
                     return render_template('register-extra.html', token=token)
                 if request.form['password'] != request.form['confirm-password']:
                     flash('Passwords do not match. Please try again', 'alert-warning')
@@ -200,8 +203,10 @@ def forgot_password():
         else:
             # print(result)
             unique_key = result[0]
-        message = email_handler.setup_email(request.form['email'], unique_key)
-        email_handler.send_email(message)
+        emails = [{'recipient': request.form['email'], 'subject': 'Reset your password', 'message': email_class.forgot_password_email_text(unique_key)}]
+        email_class.set_emails(emails)
+        email_thread = Thread(target=email_class.send_emails)
+        email_thread.start()
         flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "alert-success")
         return render_template('forgot-password.html')
     elif request.method == 'GET':
@@ -429,9 +434,8 @@ def patient_dashboard():
     if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
-
-    print(session)
-    return render_template('patient/dashboard.html', session=session)
+    all_questionnaires = database.get_patient_questionnaires(user_details['ac_id'])
+    return render_template('patient/dashboard.html', session=session, questionnaires=all_questionnaires)
 
 
 @app.route('/patient/record-symptom/', methods=['GET', 'POST'])
@@ -875,6 +879,23 @@ def patient_account(clinician_email=None):
                 clinicians.append(acc[0]['ac_email'])
     return render_template('patient/account.html', clinicians=clinicians)
 
+@app.route('/patient/questionnaire/<id>', methods=['GET'])
+def patient_questionnaire(id=None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'researcher', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+
+    if id and request.method == 'GET':
+        questionnaire = database.get_questionnaire(None, id)
+        if questionnaire:
+            questionnaire = questionnaire[0]
+            questionnaire['link'] = questionnaire['link'].replace('EMAILADDRESS', user_details['ac_email'])
+            return render_template('patient/questionnaire.html', questionnaire=questionnaire)
+        return redirect(url_for('patient_dashboard'))
+
 @app.route('/admin/')
 def admin_dashboard():
     if not session.get('logged_in', None):
@@ -884,7 +905,8 @@ def admin_dashboard():
         print('Error: Attempted accessing admin dashboard as a', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    return render_template('admin/dashboard.html', session=session)
+    all_questionnaires = database.get_all_questionnaires()
+    return render_template('admin/dashboard.html', session=session, questionnaires=all_questionnaires)
 
 @app.route('/admin/invite/', methods=['POST'])
 def invite_user():
@@ -911,9 +933,99 @@ def invite_user():
             except pg8000.core.IntegrityError: # if token already exists
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_account_invitation(token, email, role)
-        message = email_handler.setup_invitation(role, email, token)
-        email_handler.send_email(message)
-        flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  'alert-success')
+        emails = [{'recipient': email, 'subject': 'Symptom Tracker Invitation', 'message': email_class.invitation_email_text(role, token)}]
+        email_class.set_emails(emails)
+        email_thread = Thread(target=email_class.send_emails)
+        email_thread.start()
+        flash('Email sent. If the user cannot see the email in their inbox, ask them to check their spam folder.',  'alert-success')
+        return redirect(url_for('admin_dashboard'))
+
+def validate_recipients(recipients):
+    if len(recipients) == 0:
+        valid_recipients = database.get_all_patients_in_db()
+        return valid_recipients, []
+    recipients = recipients.split(',')
+    valid_recipients = []
+    invalid_recipients = []
+    for email in recipients:
+        email = email.strip()
+        result = database.get_patient_by_email(email)
+        if result:
+            valid_recipients.append((result[0].get('ac_id'), email))
+        else:
+            invalid_recipients.append((None, email))
+    return valid_recipients, invalid_recipients
+
+def validate_form_link(link):
+    return 'docs.google.com/forms/' in link and 'EMAILADDRESS' in link
+
+@app.route('/admin/create-questionnaire/', methods=['POST'])
+def create_questionnaire():
+    if request.method == 'POST':
+        form_data = dict(request.form.lists())
+        name = form_data.get('questionnaire-name')[0].strip()
+        link = form_data.get('survey-link')[0].strip()
+        if not validate_form_link(link):
+            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        end_date = form_data.get('end-date')[0]
+        recipients = form_data.get('recipients')[0]
+        valid_recipients, invalid_recipients = validate_recipients(recipients)
+        if (valid_recipients == None and invalid_recipients == None) or len(valid_recipients) == 0:
+            flash('Invalid recipient(s) format. Please enter a comma separated list with no spaces.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        existing_questionnaire = database.get_questionnaire(link)
+        if existing_questionnaire:
+            flash('A questionnaire with that link already exists.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        result = database.add_questionnaire(name, link, end_date)
+        if result:
+            questionnaire_id = result[0].get('id')
+            successful_records = database.link_questionnaire_to_patient(questionnaire_id, valid_recipients)
+            if len(successful_records) == 0:
+                flash('Something went wrong linking questionnaire to patients. Please try again.', 'alert-warning')
+                return redirect(url_for('admin_dashboard'))
+            subject = 'Symptom Tracker - New Questionnaire Assigned'
+            message = email_class.weekly_survey_email_text(questionnaire_id, name, end_date)
+            emails = [{'recipient': email, 'subject': subject, 'message': message} for email in successful_records]
+            email_class.set_emails(emails)
+            email_thread = Thread(target=email_class.send_emails)
+            email_thread.start()
+            flash('Created questionnaire successfully and will send notification to {}/{} patients'.format(len(valid_recipients), len(valid_recipients) + len(invalid_recipients)),  'alert-success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Failed to create questionnaire',  'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/questionnaire/<id>', methods=['GET', 'POST', 'DELETE'])
+def modify_questionnaire(id=None):
+    if id and request.method == 'GET':
+        questionnaire = database.get_questionnaire(None, id)
+        if questionnaire:
+            return jsonify(questionnaire=questionnaire), 200
+        else:
+            return jsonify(questionnaire=[]), 404
+    if id and request.method == 'DELETE':
+        result = database.delete_questionnaire(id)
+        if result:
+            return '', 200
+        else:
+            return '', 404
+    if id and request.method == 'POST':
+        form_data = dict(request.form.lists())
+        name = form_data.get('questionnaire-name')[0].strip()
+        link = form_data.get('survey-link')[0].strip()
+        if not validate_form_link(link):
+            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        end_date = form_data.get('end-date')[0]
+        existing_questionnaire = database.get_questionnaire(None, id)
+        if existing_questionnaire:
+            result = database.update_questionnaire(id, name, link, end_date)
+            if result:
+                flash('Modified questionnaire successfully',  'alert-success')
+                return redirect(url_for('admin_dashboard'))
+        flash('Failed to modify questionnaire',  'alert-warning')
         return redirect(url_for('admin_dashboard'))
 
 # PWA-related routes

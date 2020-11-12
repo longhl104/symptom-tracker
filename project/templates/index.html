@@ -14,13 +14,6 @@
       <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
       <h5 class="title" style="text-align: center">Welcome</h5>
       <h6 class="subtitle" style="text-align: center;">Sign in to continue</h6>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <alert-message class="alert {{ category }} fade in">{{ message }}</alert-message>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
       <form class="form" method="POST" action="{{url_for('login')}}">
         <label for="email">Email</label>
         <input type="text" class="input" name="email" required>

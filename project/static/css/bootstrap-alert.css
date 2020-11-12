@@ -1,12 +1,12 @@
 .alert {
     border: 1px solid transparent;
     border-radius: 4px;
-  }
-
-.alert-message {
-    font-size: 14px;
-    margin: 5px 0px;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
     font-weight: bold;
+    padding: 10px;
+    z-index: 9999;
 }
 
 .alert-warning {
@@ -19,4 +19,36 @@
     background-color: #dff0d8;
     border-color: #d6e9c6;
     color: #3c763d;
+}
+
+.alert {
+    -moz-animation: hideAlert 0s ease-in 8s forwards;
+    /* Firefox */
+    -webkit-animation: hideAlert 0s ease-in 8s forwards;
+    /* Safari and Chrome */
+    -o-animation: hideAlert 0s ease-in 8s forwards;
+    /* Opera */
+    animation: hideAlert 0s ease-in 8s forwards;
+    -webkit-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
+}
+@keyframes hideAlert {
+    to {
+        width: 0;
+        height: 0;
+        overflow: hidden;
+        padding: 0px;
+        font-size: 0px;
+        z-index: 0;
+    }
+}
+@-webkit-keyframes hideAlert {
+    to {
+        width: 0;
+        height: 0;
+        padding: 0px;
+        font-size: 0px;
+        visibility: hidden;
+        z-index: 0;
+    }
 }

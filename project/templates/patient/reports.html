@@ -13,13 +13,6 @@
   {% block content %}
     <div class="container">
       <h5 class="title">Track Symptom</h5>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <alert-message class="alert {{ category }} fade in">{{ message }}</alert-message>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
       <div class="card">
           <form name="make-graph" class="form col" action="{{url_for('patient_reports')}}" onsubmit="return validateForm()" method="POST">
             <label style="margin-top: -10px" for="symptom">Select a symptom<sup>*</sup></label>

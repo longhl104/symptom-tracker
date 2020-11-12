@@ -10,7 +10,7 @@ h6 {
   width: 90%;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: 9em;
+  margin-top: 5em;
 }
 
 .card {
@@ -27,8 +27,10 @@ h6 {
   Screen = 1281px to higher resolution desktops
 */
 
-@media (min-width: 1281px) {
-
+@media (min-width: 1025px) {
+  .grid-container {
+    width: 65%;
+  }
 }
 
 /*
@@ -39,6 +41,9 @@ h6 {
 @media (min-width: 768px) and (max-width: 1024px) {
   .title {
     font-size: 1.7rem;
+  }
+  .grid-container {
+    width: 70%;
   }
 }
 
@@ -51,6 +56,9 @@ h6 {
   .title {
     font-size: 1.7rem;
   }
+  .grid-container {
+    width: 70%;
+  }
 }
 
 /*
@@ -62,6 +70,9 @@ h6 {
   .title {
     font-size: 1.7rem;
   }
+  .grid-container {
+    width: 100%;
+  }
 }
 
 /*
@@ -72,5 +83,8 @@ h6 {
 @media (min-width: 320px) and (max-width: 480px) {
   .card {
     padding: 20px 15px;
+  }
+  .grid-container {
+    width: 100%;
   }
 }

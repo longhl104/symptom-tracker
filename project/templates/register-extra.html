@@ -17,13 +17,6 @@
       <img class="logo" style="margin-bottom: 20px;" src="{{ url_for('static', filename='images/icons/icon-192.png' ) }}" />
       <h5 class="title" style="text-align: center">Create an account</h5>
       <h6 class="subtitle" style="text-align: center;">Please fill out the form below</h6>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <alert-message class="alert {{ category }} fade in">{{ message }}</alert-message>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
       <form class="form" action="{{url_for('register', token=token)}}" method="POST">
         <div class="grid two-equal-columns">
           <div class="col">

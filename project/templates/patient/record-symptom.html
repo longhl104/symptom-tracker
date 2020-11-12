@@ -13,13 +13,6 @@
   {% block content %}
     <div class="container">
       <h5 class="title">Record a Symptom</h5>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <alert-message class="alert {{ category }} fade in">{{ message }}</alert-message>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
       <div class="card">
         <form name="record-symptom" class="form col" action="{{url_for('record_symptom')}}" onsubmit="return validateForm()" method="POST">
           <input type="hidden" name="id"/>

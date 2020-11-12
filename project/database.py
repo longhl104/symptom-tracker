@@ -2,6 +2,7 @@ import configparser
 import json
 import sys
 import pg8000
+from datetime import date
 
 def database_connect():
     """
@@ -718,6 +719,28 @@ def delete_account_invitation(token, email):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_all_questionnaires():
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT id, name, end_date FROM tingleserver."Questionnaire"
+                ORDER BY name
+            """
+            r = dictfetchall(cur, sql)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def get_export_data(email, symptom, location, start_date, end_date, with_notes):
     notes_var = ""
     extra_vars = ""
@@ -777,6 +800,195 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def get_patient_by_email(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT ac_id FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient"
+                WHERE ac_email = %s;
+            """
+            r = dictfetchone(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get patient by email")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def get_questionnaire(link, id=None):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT *
+                FROM tingleserver."Questionnaire"
+                WHERE link=%s
+                OR id=%s
+            """
+            r = dictfetchone(cur, sql, (link, id))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get questionnaire by link")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def delete_questionnaire(id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                DELETE FROM tingleserver."Patient_Receives_Questionnaire"
+                WHERE questionnaire_id=%s;
+            """
+            cur.execute(sql, (id,))
+            sql = """
+                DELETE FROM tingleserver."Questionnaire"
+                WHERE id=%s;
+            """
+            cur.execute(sql, (id,))
+            conn.commit()
+            cur.close()
+            return id
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't delete questionnaire by id")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def get_patient_questionnaires(id):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            today = str(date.today())
+            sql = """
+                SELECT id, name, end_date FROM tingleserver."Questionnaire" Q
+                JOIN tingleserver."Patient_Receives_Questionnaire" PRQ ON (Q.id = PRQ.questionnaire_id)
+                WHERE ac_id=%s
+                AND end_date >= %s;
+            """
+            r = dictfetchall(cur, sql, (id, today))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def add_questionnaire(name, link, end_date):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                INSERT INTO tingleserver."Questionnaire" (name, link, end_date)
+                VALUES(%s, %s, %s)
+                RETURNING id;
+            """
+            r = dictfetchone(cur, sql, (name, link, end_date))
+            conn.commit()
+            cur.close()
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def update_questionnaire(id, name, link, end_date):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                UPDATE tingleserver."Questionnaire"
+                    SET name=%s,
+                        link=%s,
+                        end_date=%s
+                    WHERE id=%s;
+            """
+            cur.execute(sql, (name, link, end_date, id))
+            conn.commit()
+            result = dictfetchone(cur, """SELECT *
+                                            FROM tingleserver."Questionnaire"
+                                            WHERE id=%s""", (id,))
+            cur.close()
+            conn.close()
+            return result
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
+            conn.rollback()
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def link_questionnaire_to_patient(questionnaire_id, valid_recipients):
+    successful_records = []
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        for id, email in valid_recipients:
+            try:
+                sql = """
+                    INSERT INTO tingleserver."Patient_Receives_Questionnaire"
+                    (ac_id, questionnaire_id)
+                    VALUES (%s, %s)
+                    RETURNING ac_id;
+                """
+                r = dictfetchone(cur, sql, (id, questionnaire_id))
+                conn.commit()
+                successful_records.append(email)
+            except:
+                # If there were any errors, return a NULL row printing an error to the debug
+                print("Error: can't link questionnaire and patient")
+                continue
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return successful_records
+
+def get_all_patients_in_db():
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT ac_email FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient";
+            """
+
+            r = dictfetchall(cur, sql)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all patients:", sys.exc_info()[0])
             raise
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db

@@ -14,6 +14,7 @@ from pygal.style import Style
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
+from threading import Thread
 
 user_details = {}  # User details kept for us
 session = {}  # Session information (logged in state)
@@ -25,6 +26,8 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 app.secret_key = config["DATABASE"]["secret_key"]
+
+email_class = email_handler.EmailHandler()
 
 # General routes
 @app.route('/', methods=['POST', 'GET'])
@@ -200,8 +203,10 @@ def forgot_password():
         else:
             # print(result)
             unique_key = result[0]
-        message = email_handler.setup_email(request.form['email'], unique_key)
-        email_handler.send_email(message)
+        emails = [{'recipient': request.form['email'], 'subject': 'Reset your password', 'message': email_class.forgot_password_email_text(unique_key)}]
+        email_class.set_emails(emails)
+        email_thread = Thread(target=email_class.send_emails)
+        email_thread.start()
         flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  "success")
         return render_template('forgot-password.html')
     elif request.method == 'GET':
@@ -928,8 +933,10 @@ def invite_user():
             except pg8000.core.IntegrityError: # if token already exists
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_account_invitation(token, email, role)
-        message = email_handler.setup_invitation(role, email, token)
-        email_handler.send_email(message)
+        emails = [{'recipient': email, 'subject': 'Symptom Tracker Invitation', 'message': email_class.invitation_email_text(role, token)}]
+        email_class.set_emails(emails)
+        email_thread = Thread(target=email_class.send_emails)
+        email_thread.start()
         flash('Email sent. If you cannot see the email in your inbox, check your spam folder.',  'success')
         return redirect(url_for('admin_dashboard'))
 
@@ -978,8 +985,13 @@ def create_questionnaire():
             if len(successful_records) == 0:
                 flash('Something went wrong linking questionnaire to patients. Please try again.', 'error')
                 return redirect(url_for('admin_dashboard'))
-            # TODO: add email handler here
-            flash('Created questionnaire successfully and sent notification to {}/{} patients'.format(len(valid_recipients), len(valid_recipients) + len(invalid_recipients)),  'success')
+            subject = 'Symptom Tracker - New Questionnaire Assigned'
+            message = email_class.weekly_survey_email_text(questionnaire_id, name, end_date)
+            emails = [{'recipient': email, 'subject': subject, 'message': message} for email in successful_records]
+            email_class.set_emails(emails)
+            email_thread = Thread(target=email_class.send_emails)
+            email_thread.start()
+            flash('Created questionnaire successfully and will send notification to {}/{} patients'.format(len(valid_recipients), len(valid_recipients) + len(invalid_recipients)),  'success')
             return redirect(url_for('admin_dashboard'))
         else:
             flash('Failed to create questionnaire',  'error')

@@ -54,7 +54,6 @@
 }
 
 .survey-status {
-    margin-left: auto;
     margin-top: 0px;
     min-width: 120px;
     text-align: center;
@@ -75,6 +74,10 @@
 .flex {
     display: flex;
     align-items: center;
+}
+
+.mark-as-completed {
+    margin-left: 5px;
 }
 /*
   Device = Desktops
@@ -100,6 +103,9 @@
     }
     .container {
         width: 80%;
+    }
+    .btn {
+        font-size: 14px;
     }
 }
 
@@ -136,6 +142,14 @@
     }
     .flex {
         flex-direction: column;
+        justify-content: center;
+    }
+    .btn {
+        font-size: 14px;
+    }
+    .mark-as-completed {
+        margin-left: 0px;
+        margin-top: 5px;
     }
 }
 
@@ -166,5 +180,12 @@
     }
     .flex {
         flex-direction: column;
+    }
+    .btn {
+        font-size: 14px;
+    }
+    .mark-as-completed {
+        margin-left: 0px;
+        margin-top: 5px;
     }
 }

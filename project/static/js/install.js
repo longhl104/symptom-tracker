@@ -1,6 +1,5 @@
- var deferredInstallPrompt = null;
- installButton = document.getElementById('button-install');
-
+var deferredInstallPrompt;
+var installButton = document.getElementById('button-install');
 if (installButton !== null) {
   if (window.matchMedia('(display-mode: standalone)').matches) {
     installButton.style.display = 'none';
@@ -12,6 +11,7 @@ if (installButton !== null) {
 window.addEventListener('beforeinstallprompt', saveBeforeInstallPromptEvent);
 
 function saveBeforeInstallPromptEvent(evt) {
+  evt.preventDefault();
   deferredInstallPrompt = evt;
   if (installButton !== null) {
     installButton.removeAttribute('hidden');

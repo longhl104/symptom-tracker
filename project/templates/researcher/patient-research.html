@@ -13,7 +13,7 @@
   {% block content %}
     <div class="container">
       <div class="card">
-        <h6 class="subtitle"><b>Search Patients</b></h6>
+        <h6 class="subtitle"><b>Search Patients...</b></h6>
         <h6 class="subtitle2">Filter by one or more attributes... Or select none to display all data</h6>
         <form name="reseacher-filter" class="form" method="POST" action="{{url_for('researcher_data')}}">
           <div class="grid three-equal-columns">
@@ -58,6 +58,7 @@
             <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
             <span class="error-message" id="location-error-message"></span>
           <input class="button button-submit" type="submit" style="margin-top: 20px; width:120px;" value="Filter">
+          <input class="button button-submit" type="submit" style="margin-top: 20px; width:120px;" value="Export" formaction="{{url_for('download_export_filters')}}">
         </form>
       </div>
       <div class="card">

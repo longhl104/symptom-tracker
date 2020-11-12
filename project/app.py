@@ -296,7 +296,6 @@ def researcher_data():
             list_of_consents = temp  
         return render_template('researcher/patient-research.html', consents=list_of_consents,treatments=list_of_treatments)
 
-
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
 def view_consent_history(id = None):
     if not session.get('logged_in', None):
@@ -318,6 +317,66 @@ def view_consent_history(id = None):
             symptom_dict[symptom_col_order[i]] = col.strip('"')
         list_of_symptoms.append(symptom_dict)
     return render_template('researcher/symptom-history.html', symptoms=list_of_symptoms,id = id)
+
+@app.route("/patient/reports/export-all")
+def download_export_all():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
+
+    data = database.get_all_consent_export()
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
+
+    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    csv_writer.writerow(head)
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + "all_patient_data.csv"
+    )
+    output.headers["Content-type"] = "text/csv"
+
+    return output
+
+@app.route("/patient/reports/export-filters", methods=['POST'])
+def download_export_filters():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    lage = request.form.get('lage', "")
+    hage = request.form.get('hage', "")
+    sym = request.form.get('symptom', "")
+    chemo = request.form.get('chemotherapy', "")
+    gen = request.form.get('gender', "")
+
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
+
+    data = get_consent_export_filters(lage, hage, gen, sym, chemo)
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
+
+    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    csv_writer.writerow(head)
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + "filtered_patient_data.csv"
+    )
+    output.headers["Content-type"] = "text/csv"
+
+    return output
 
 @app.route('/clinician/')
 def clinician_dashboard():

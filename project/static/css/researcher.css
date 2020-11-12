@@ -56,6 +56,26 @@
     cursor: pointer;
   }
 
+  .button-submit {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  .button-submit:hover {
+    background-color: #4CAF50;
+    color: black;
+  }
+
+  .button-edit {
+    background-color: #008CBA;
+    color: white;
+  }
+
+  .button-edit:hover {
+    background-color: #008CBA;
+    color: black;
+  }
+
   /*
     Device = Desktops
     Screen = 1281px to higher resolution desktops

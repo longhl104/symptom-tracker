@@ -57,7 +57,7 @@
             </select>
             <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
             <span class="error-message" id="location-error-message"></span>
-          <input class="btn green" type="submit" style="margin-top: 20px; width:120px;" value="Submit">
+          <input class="button button-submit" type="submit" style="margin-top: 20px; width:120px;" value="Submit">
         </form>
       </div>
       <div class="card">
@@ -87,7 +87,7 @@
                       <td>{{consent.ac_age}}</td>
                       <td>{{consent.ac_gender}}</td>
                       <td>{{consent.treatment_name}}</td>
-                      <td><button class="btn blue"onclick="viewConsent('{{consent.ac_id}}')"><i class="fa fa-pen fa-lg" style="color: #ffffff">View Details</i></button>
+                      <td><button class="button button-edit"onclick="viewConsent('{{consent.ac_id}}')" style="width: 80%">View Details</button>
                     </tr>
                 {% endfor %}
             </tbody>

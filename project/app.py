@@ -214,7 +214,7 @@ def forgot_password():
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
-@app.route('/researcher/')
+@app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
@@ -223,16 +223,6 @@ def researcher_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('researcher/dashboard.html', session=session)
-@app.route('/researcher/patient-data',methods=['GET', 'POST'])
-def researcher_data():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-
-    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
-        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
-        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
@@ -248,7 +238,7 @@ def researcher_data():
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):
@@ -301,7 +291,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])

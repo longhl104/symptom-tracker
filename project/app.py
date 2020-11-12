@@ -22,7 +22,7 @@ page = {}  # Determines the page information
 app = Flask(__name__)
 
 config = configparser.ConfigParser()
-config.read('sample-config.ini')
+config.read('config.ini')
 
 app.secret_key = config["DATABASE"]["secret_key"]
 
@@ -43,6 +43,7 @@ def login():
 
         session['logged_in'] = True
         session['name'] = user_details['ac_firstname']
+        session['role'] = user_details['ac_type']
 
         if user_details['ac_type'] in ['clinician', 'researcher', 'patient', 'admin']:
             return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
@@ -73,7 +74,7 @@ def register(token=None):
         gender = request.form.get('gender', "")
         age = request.form.get('age', "NA")
         mobile = request.form.get('mobile',"")
-        treatment = request.form.getlist('treatment', [])
+        treatment = request.form.getlist('treatment')
         emailAddress = request.form.get('email-address')
         password = request.form.get('password')
 
@@ -112,6 +113,7 @@ def register(token=None):
                 user_details = login_return_data[0]
                 session['logged_in'] = True
                 session['name'] = user_details['ac_firstname']
+                session['role'] = user_details['ac_type']
                 return redirect(url_for('patient_dashboard'))
         except:
             traceback.print_exc(file=sys.stdout)
@@ -218,6 +220,109 @@ def researcher_dashboard():
 
     print(session)
     return render_template('researcher/dashboard.html', session=session)
+@app.route('/researcher/patient-data',methods=['GET', 'POST'])
+def researcher_data():
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+
+    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
+        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
+        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
+    consents = None
+    consents = database.get_all_consent()
+    list_of_consents = []
+    consent_col_order = ["ac_email","ac_id", "ac_age", "ac_gender","treatment_name"]
+    for consent in consents:
+        consent = consent['row'][1:-1]
+        consent_dict = {}
+        for i, col in enumerate(consent.split(",",4)):
+            print(i)
+            print(col)
+            consent_dict[consent_col_order[i]] = col.strip('"')
+        list_of_consents.append(consent_dict)
+    treatments = database.get_all_treatments()
+    list_of_treatments = []
+    for treatment in treatments:
+        list_of_treatments.append(treatment["treatment_name"])
+    print(list_of_treatments)
+    if request.method =='GET':
+        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+    if request.method =='POST':
+        lage = request.form.get('lage', "")
+        if (lage == ""):
+            lage = None
+        hage = request.form.get('hage', "")
+        if (hage == ""):
+            hage = None
+        sym = request.form.get('symptom', "")
+        if (sym == ""):
+            sym = None
+        chemo = request.form.get('chemotherapy', "")
+        if (chemo == ""):
+            chemo = None
+        chemo = request.form.get('chemotherapy', "")
+        if (chemo == ""):
+            chemo = None
+        gen = request.form.get('gender', "")
+        if (gen == ""):
+            gen = None
+        print(lage,hage,sym,chemo,gen)
+        if lage is not None:
+            temp=[]
+            for x in list_of_consents:
+                if(x["ac_age"] >= lage):
+                    temp.append(x)
+            list_of_consents = temp
+        if hage is not None:
+            temp=[]
+            for x in list_of_consents:
+                if(x["ac_age"] <= hage):
+                    temp.append(x)
+            list_of_consents = temp
+        if gen is not None:
+            temp = []
+            for x in list_of_consents:
+                if(x["ac_gender"] == gen):
+                    temp.append(x)
+            list_of_consents = temp
+        if chemo is not None:
+            temp = []
+            for x in list_of_consents:
+                if(x["treatment_name"] == chemo):
+                    temp.append(x)
+            list_of_consents = temp
+        if sym is not None:
+            temp = []
+            for x in list_of_consents:
+                email = x["ac_email"]
+                symptom_list = database.get_name_symptoms(email)
+                for name in symptom_list:
+                    if (sym == name["symptom_name"]):
+                        temp.append(x)
+            list_of_consents = temp  
+        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents)
+
+
+@app.route('/researcher/patient-data/<id>', methods=['GET'])
+def view_consent_history(id = None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'researcher':
+        raise Exception('Error: Attempted accessing researcher dashboard as Unknown')
+        
+    symptoms = None
+    symptoms = database.get_all_symptoms(id)
+    list_of_symptoms = []
+    symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
+    for symptom in symptoms:
+        symptom = symptom["row"][1:-1]
+        symptom_dict = {}
+        for i, col in enumerate(symptom.split(",")):
+            if i == 1 and col[-3:] == ":00":
+                col = col[:-3]
+            symptom_dict[symptom_col_order[i]] = col.strip('"')
+        list_of_symptoms.append(symptom_dict)
+    return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
 
 @app.route('/clinician/')
 def clinician_dashboard():
@@ -259,7 +364,7 @@ def view_patients():
         list_of_patients.append(patient_dict)
     print(list_of_patients)
 
-    return render_template('clinician/view-patients.html', patients=list_of_patients)
+    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):
@@ -288,7 +393,7 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', symptoms=list_of_symptoms)
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
     return(redirect(url_for('clinician_dashboard')))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
@@ -383,7 +488,7 @@ def record_symptom(id=None):
 
     if request.method == 'DELETE':
         result = database.delete_symptom_record(user_details['ac_email'], id)
-    return render_template('patient/record-symptom.html')
+    return render_template('patient/record-symptom.html', session=session,)
 
 
 @app.route("/patient/symptom-history")
@@ -412,7 +517,7 @@ def symptom_history():
                 col = "None"
             symptom_dict[symptom_col_order[i]] = col.strip('"').replace("'", "").replace('"', '')
         list_of_symptoms.append(symptom_dict)
-    return render_template("patient/symptom-history.html", symptoms=list_of_symptoms)
+    return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
 # Helper functions for graph visualisation -> might move to utility file
 def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
@@ -648,6 +753,7 @@ def patient_reports():
         location=location,
         startDate=start_date,
         endDate=end_date,
+        session=session,
     )
 
 @app.route("/patient/reports/download-file", methods=["POST"])
@@ -775,7 +881,7 @@ def patient_account(clinician_email=None):
             acc = database.get_account_by_id(clinician['clinician_id'])
             if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
                 clinicians.append(acc[0]['ac_email'])
-    return render_template('patient/account.html', clinicians=clinicians)
+    return render_template('patient/account.html', session=session, clinicians=clinicians)
 
 @app.route('/admin/')
 def admin_dashboard():

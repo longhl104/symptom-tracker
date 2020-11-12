@@ -1,0 +1,74 @@
+{% extends "sidebar.html" %}
+{% block head %}
+  {{ super() }}
+  <style>
+    .symptom-card {
+      border-radius: 10px !important;
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
+{% endblock %}
+{% block title %}Symptom History{% endblock %}
+{% block sidebar %}
+{{ super() }}
+  {% block content %}
+    <div class="container">
+      <h5 class="title">Symptom History of Patient {{id}}</h5>
+      <div class="cards-holder">
+        {% for symptom in symptoms %}
+          <div>
+            <div class="symptom-card">
+              <div class="flex row symptom-value right">{{symptom.recorded_date}}</div>
+              <div class="flex col">
+                <div class="label">
+                  Symptom
+                </div>
+                <div class="symptom-value">
+                  {{symptom.symptom_name}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Location
+                </div>
+                <div class="symptom-value">
+                  {{symptom.location}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Severity
+                </div>
+                <div class="symptom-value">
+                  {{symptom.severity}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label">
+                  Time of Day
+                </div>
+                <div class="symptom-value">
+                  {{symptom.occurence}}
+                </div>
+              </div>
+              <div class="flex col padding">
+                <div class="label" onclick="showHideNotes('{{ symptom.symptom_id }}')">
+                  Notes <img id="expand-text-{{ symptom.symptom_id }}" src="{{ url_for('static', filename='images/icons/caret.png') }}"/>
+                </div>
+                <div id="notes-{{ symptom.symptom_id }}" class="symptom-value" style="display: none;">
+                  {{symptom.notes}}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/symptom-history.js') }}"></script>
+  {% endblock %}
+{% endblock %}

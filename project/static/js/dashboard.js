@@ -1,4 +1,3 @@
-// TODO: Replace name with patient name from database
 window.onload = function () {
   const today = new Date();
   const currentHour = today.getHours();

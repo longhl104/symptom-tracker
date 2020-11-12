@@ -1,0 +1,25 @@
+.card {
+  margin-top: 10px;
+  width: 90%;
+  height: 90%;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  margin-top: 9.5em;
+}
+
+@media (min-width: 42em) {
+  iframe {
+    margin-top: 0em;
+    margin-left: 5em;
+  }
+}
+
+@media (min-width: 68em) {
+  iframe {
+    margin-top: 0em;
+    margin-left: 0em;
+  }
+}

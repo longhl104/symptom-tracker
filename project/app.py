@@ -326,7 +326,7 @@ def download_export_all():
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
 
-    data = database.get_all_consent_export()
+    data = database.get_all_consent_export_all()
     row_data = []
 
     for row in data:
@@ -359,7 +359,7 @@ def download_export_filters():
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
 
-    data = get_consent_export_filters(lage, hage, gen, sym, chemo)
+    data = database.get_consent_export_filters(lage, hage, gen, sym, chemo)
     row_data = []
 
     for row in data:

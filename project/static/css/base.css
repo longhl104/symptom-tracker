@@ -21,6 +21,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .col {
@@ -78,13 +79,6 @@ body {
 .subtitle {
   color: #4b4b4b;
   font-size: 1.6rem;
-  font-weight: 400;
-  margin-bottom: 10px;
-}
-
-.subtitle2 {
-  color: #4b4b4b;
-  font-size: 1.3rem;
   font-weight: 400;
   margin-bottom: 10px;
 }

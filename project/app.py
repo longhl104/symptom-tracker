@@ -245,10 +245,12 @@ def researcher_data():
         else:
             current_id = list_of_consents[i]["ac_id"]
             for j in range(i+1,len(list_of_consents)):
-                checking_id  = list_of_consents[j]["ac_id"]
-                if current_id == checking_id:
-                    list_of_consents[i]["treatment_name"] = list_of_consents[i]["treatment_name"]  + list_of_consents[j]["treatment_name"]
-                    if j not in poplist:
+                if j in poplist:
+                    continue
+                else:
+                    checking_id  = list_of_consents[j]["ac_id"]
+                    if current_id == checking_id:
+                        list_of_consents[i]["treatment_name"] = list_of_consents[i]["treatment_name"]  + list_of_consents[j]["treatment_name"]
                         poplist.append(j)
     poplist.sort(reverse=True)
     for i in poplist:

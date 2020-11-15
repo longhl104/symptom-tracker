@@ -238,6 +238,20 @@ def researcher_data():
         for i, col in enumerate(consent.split(",",4)):
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
+    poplist= []
+    for i in range(len(list_of_consents)):
+        current_id = list_of_consents[i]["ac_id"]
+        for j in range(i+1,len(list_of_consents)):
+            checking_id  = list_of_consents[j]["ac_id"]
+            if current_id == checking_id:
+                list_of_consents[i]["treatment_name"] = list_of_consents[i]["treatment_name"]  + list_of_consents[j]["treatment_name"]
+                if j not in poplist:
+                    poplist.append(j)
+    poplist.sort(reverse=True)
+    for i in poplist:
+        list_of_consents.pop(i)
+
+
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:

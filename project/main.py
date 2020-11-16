@@ -477,7 +477,7 @@ def view_patient_reports(email = None):
         patient = database.get_account(email)
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
-            return redirect(url_for(clinician_dashboard))
+            return redirect(url_for('clinician_dashboard'))
         patient_email = patient[0].get('ac_email')
         patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
 

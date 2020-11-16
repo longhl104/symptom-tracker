@@ -268,9 +268,7 @@ def get_all_consent():
     return None
 
 def get_all_consent_export_all():
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT (A.ac_id, A.ac_age, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
@@ -287,7 +285,7 @@ def get_all_consent_export_all():
                 INNER JOIN
                 tingleserver."Treatment" AS T
                 ON PRT.treatment_id  = T.treatment_id
-                WHERE P.consent =%s
+                WHERE P.consent =:consent
                 ORDER BY A.ac_id, S.recorded_date, CASE WHEN S.occurence = 'Morning' THEN 1
                                             WHEN S.occurence = 'Daytime' THEN 2
                                             WHEN S.occurence = 'Night-time' THEN 3
@@ -295,42 +293,38 @@ def get_all_consent_export_all():
                                             WHEN S.occurence = 'Sporadic' THEN 5 
                                     END
             """
-
-            r = dictfetchall(cur, sql, ("yes",))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, consent="yes").fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all data: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
     if gender == "":
         single_gender = ""
     else :
-        single_gender = " AND A.gender=%s"
+        single_gender = " AND A.gender=:gender"
 
     if symptom == "":
         single_symptom = ""
     else :
-        single_symptom = " AND S.symptom_name=%s"
+        single_symptom = " AND S.symptom_name=:symptom"
 
     if chemo == "":
         single_chemo = ""
     else :
-        single_chemo = " AND T.treatment_name=%s"
+        single_chemo = " AND T.treatment_name=:treatment"
 
     age_query = ""
     if age_low == "" and age_high != "":
-        date_query = " AND A.age <= %s"
+        date_query = " AND A.age <= :age_high"
     elif age_low != "" and age_high == "":
-        date_query = " AND A.age >= %s"
+        date_query = " AND A.age >= :age_low"
     elif age_low != "" and age_high != "":
-        date_query = " AND A.age BETWEEN %s AND %s"
+        date_query = " AND A.age BETWEEN :age_low AND :age_high"
 
     conn = database_connect()
     if conn:
@@ -353,7 +347,7 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
                 INNER JOIN
                 tingleserver."Treatment" AS T
                 ON PRT.treatment_id  = T.treatment_id
-                WHERE P.consent =%s{single_gender}{single_symptom}{single_chemo}{age_query}
+                WHERE P.consent =:consent{single_gender}{single_symptom}{single_chemo}{age_query}
                 ORDER BY A.ac_id, S.recorded_date, CASE WHEN S.occurence = 'Morning' THEN 1
                                             WHEN S.occurence = 'Daytime' THEN 2
                                             WHEN S.occurence = 'Night-time' THEN 3
@@ -361,31 +355,27 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
                                             WHEN S.occurence = 'Sporadic' THEN 5 
                                     END
             """.format(single_gender=single_gender, single_symptom=single_symptom, single_chemo=single_chemo, age_query=age_query)
-            params = ["yes"]
+            params = {
+                "consent": "yes"
+            }
 
             if gender != "":
-                params.append(gender)
+                params["gender"] = gender
             if symptom != "":
-                params.append(symptom)
+                params["symptom"] = symptom
             if chemo != "":
-                params.append(chemo)
+                params["chemo"] = chemo
             if age_low != "":
-                params.append(age_low)
+                params["age_low"] = age_low
             if age_high != "":
-                params.append(age_high)
-            r = dictfetchall(cur, sql, tuple(params))
-
-            print("return val is:")
-            print(r)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+                params["age_high"] = age_high
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, **params).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_all_patients(email):
@@ -686,8 +676,8 @@ def get_all_questionnaires():
 def get_export_data(email, symptom, location, start_date, end_date, with_notes):
     notes_var = ""
     extra_vars = ""
-    single_symptom = " AND symptom_name=%s"
-    single_location = " AND location=%s"
+    single_symptom = " AND symptom_name=:symptom"
+    single_location = " AND location=:location"
     if symptom == "All":
         extra_vars = "symptom_name, location, "
         single_symptom = ""
@@ -699,11 +689,11 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
 
     date_query = ""
     if start_date == "" and end_date != "":
-        date_query = " AND recorded_date <= %s"
+        date_query = " AND recorded_date <= :end_date"
     elif start_date != "" and end_date == "":
-        date_query = " AND recorded_date >= %s"
+        date_query = " AND recorded_date >= :start_date"
     elif start_date != "" and end_date != "":
-        date_query = " AND recorded_date BETWEEN %s AND %s"
+        date_query = " AND recorded_date BETWEEN :start_date AND :end_date"
 
     with db.connect() as conn:
         try:
@@ -712,7 +702,7 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
             sql = """
                 SELECT ({extra_vars}recorded_date, severity, occurence{notes_var}) 
                 FROM tingleserver."Symptom"
-                WHERE patient_username=%s{single_symptom}{single_location}{date_query}
+                WHERE patient_username=:email{single_symptom}{single_location}{date_query}
                 ORDER BY recorded_date, CASE WHEN occurence = 'Morning' THEN 1
                                             WHEN occurence = 'Daytime' THEN 2
                                             WHEN occurence = 'Night-time' THEN 3
@@ -720,21 +710,21 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
                                             WHEN occurence = 'Sporadic' THEN 5 
                                     END
             """.format(extra_vars = extra_vars, notes_var=notes_var, single_symptom=single_symptom, single_location=single_location, date_query=date_query)
-            params = [email]
+            params = {
+                "email": email,
+            }
 
             if symptom != "All":
-                params.append(symptom)
+                params["symptom"] = symptom
             if location != "All":
-                params.append(location)
+                params["location"] = location
             if start_date != "":
-                params.append(start_date)
+                params["start_date"] = start_date
             if end_date != "":
-                params.append(end_date)
-            r = dictfetchall(cur, sql, tuple(params))
-
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+                params["end_date"] = end_date
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, **params).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
@@ -757,23 +747,18 @@ def get_patient_by_email(email):
     return None
 
 def get_patient_name(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT ac_firstname, ac_lastname FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient"
-                WHERE ac_email = %s;
+                WHERE ac_email=:email;
             """
-            r = dictfetchone(cur, sql, (email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, email=email).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get patient by email")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_questionnaire(link, id=None):

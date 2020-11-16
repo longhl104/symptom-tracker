@@ -57,8 +57,14 @@
             </select>
             <input type="text" id="chemotherapy" placeholder="Enter needed chemotherapy" name="chemotherapy" style="display: none;"/>
             <span class="error-message" id="location-error-message"></span>
-          <input class="button button-submit" type="submit" style="margin-top: 20px; width:120px;" value="Filter">
-          <input class="button button-submit" type="submit" style="margin-top: 20px; width:120px;" value="Export" formaction="{{url_for('download_export_filters')}}">
+            <div class="grid two-equal-columns">
+              <div class="col">
+                <input class="btn blue" type="submit" style="margin-top: 20px; width:100%;" value="Filter">
+              </div>
+              <div class="col">
+                <input class="btn blue" type="submit" style="margin-top: 20px; width:100%;" value="Export" formaction="{{url_for('download_export_filters')}}">
+              </div>
+            </div>
         </form>
       </div>
       <div class="card">

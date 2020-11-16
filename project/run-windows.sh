@@ -3,4 +3,4 @@
 set FLASK_ENV=development
 set FLASK_APP=app
 
-flask run
+gunicorn --bind=0.0.0.0:8087 --log-level=debug main:app

@@ -1,6 +1,7 @@
 .container {
   width: 60%;
-  padding: 1rem;
+  padding-top: 4rem;
+  padding-left: 5rem;
   justify-content: normal;
   align-items: normal;
 }
@@ -10,17 +11,13 @@
   width: 100%;
 }
 
-.title {
-  color: #333333;
-  font-size: 50px;
-}
-
 textarea {
   width: 100%;
   font-size: 16px;
   padding: 10px;
   border: 1px solid #BCBCC4;
   border-radius: 5px;
+  height: 80px;
 }
 
 
@@ -69,6 +66,7 @@ textarea {
 
   .container {
     width: 80%;
+    padding-left: 1em;
   }
 
   .title {
@@ -88,8 +86,9 @@ textarea {
   }
 
   .container {
-    width: 75%;
-    margin-top: 7em;
+    width: 90%;
+    margin-top: 3em;
+    padding-left: 3em;
   }
 
   .title {
@@ -111,7 +110,8 @@ textarea {
 
   .container {
     width: 100%;
-    margin-top: 7em;
+    margin-top: 3em;
+    padding-left: 1em;
   }
 
   .title {

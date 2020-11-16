@@ -225,7 +225,7 @@ def forgot_password():
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
-@app.route('/researcher/')
+@app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
@@ -234,16 +234,6 @@ def researcher_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    return render_template('researcher/dashboard.html', session=session)
-
-@app.route('/researcher/patient-data',methods=['GET', 'POST'])
-def researcher_data():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-
-    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
-        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
-        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
@@ -254,12 +244,31 @@ def researcher_data():
         for i, col in enumerate(consent.split(",",4)):
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
+    poplist= []
+    for i in range(len(list_of_consents)):
+        if i in poplist:
+            continue
+        else:
+            current_id = list_of_consents[i]["ac_id"]
+            for j in range(i+1,len(list_of_consents)):
+                if j in poplist:
+                    continue
+                else:
+                    checking_id  = list_of_consents[j]["ac_id"]
+                    if current_id == checking_id:
+                        list_of_consents[i]["treatment_name"] = list_of_consents[i]["treatment_name"]  +", \n"+ list_of_consents[j]["treatment_name"]
+                        poplist.append(j)
+    poplist.sort(reverse=True)
+    for i in poplist:
+        list_of_consents.pop(i)
+
+
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):
@@ -312,8 +321,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
-
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
 def view_consent_history(id = None):
@@ -337,6 +345,66 @@ def view_consent_history(id = None):
         list_of_symptoms.append(symptom_dict)
     return render_template('researcher/symptom-history.html', session=session, symptoms=list_of_symptoms, id=id)
 
+@app.route("/patient/reports/export-all")
+def download_export_all():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
+
+    data = database.get_all_consent_export_all()
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
+
+    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    csv_writer.writerow(head)
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + "all_patient_data.csv"
+    )
+    output.headers["Content-type"] = "text/csv"
+
+    return output
+
+@app.route("/patient/reports/export-filters", methods=['POST'])
+def download_export_filters():
+    if user_details.get("ac_email") is None:
+        return redirect(url_for("login"))
+
+    lage = request.form.get('lage', "")
+    hage = request.form.get('hage', "")
+    sym = request.form.get('symptom', "")
+    chemo = request.form.get('chemotherapy', "")
+    gen = request.form.get('gender', "")
+
+    string_input = io.StringIO()
+    csv_writer = csv.writer(string_input)
+
+    data = database.get_consent_export_filters(lage, hage, gen, sym, chemo)
+    row_data = []
+
+    for row in data:
+        row = row["row"][1:-1].split(",")
+        row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
+
+    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    csv_writer.writerow(head)
+    csv_writer.writerows(row_data)
+
+    output = make_response(string_input.getvalue())
+    output.headers["Content-Disposition"] = (
+        "attachment; filename=" + "filtered_patient_data.csv"
+    )
+    output.headers["Content-type"] = "text/csv"
+
+    return output
+
 @app.route('/clinician/')
 def clinician_dashboard():
     if not session.get('logged_in', None):
@@ -346,22 +414,6 @@ def clinician_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/create_survey/')
-def create_survey():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/view_patients/')
-def view_patients():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     list_of_patients = []
@@ -372,7 +424,8 @@ def view_patients():
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
         list_of_patients.append(patient_dict)
-    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
+
+    return render_template('clinician/dashboard.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):
@@ -386,6 +439,11 @@ def view_patients_history(id = None):
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
     if id != None:
+        patient = database.get_account(id)
+        if patient is None:
+            flash("Failed to find patient with that email address", "alert-warning")
+            return redirect(url_for(clinician_dashboard))
+        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
         symptoms = None
         symptoms = database.get_all_symptoms(id)
         list_of_symptoms = []
@@ -400,8 +458,50 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
-    return(redirect(url_for('clinician_dashboard')))
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms, name=patient_name)
+    return redirect(url_for('clinician_dashboard'))
+
+@app.route('/clinician/view_reports/<email>', methods=['GET', 'POST'])
+def view_patient_reports(email = None):
+    if not session.get('logged_in', None):
+        return redirect(url_for('login'))
+    if user_details['ac_type'] != 'clinician':
+        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
+
+    check_link = None
+    check_link = database.check_clinician_link(user_details['ac_id'],email)
+    if len(check_link) == 0:
+        return(redirect(url_for('clinician_dashboard')))
+
+    if email != None:
+        patient = database.get_account(email)
+        if patient is None:
+            flash("Failed to find patient with that email address", "alert-warning")
+            return redirect(url_for(clinician_dashboard))
+        patient_email = patient[0].get('ac_email')
+        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
+
+        graph = graph_data = symptom = location = start_date = end_date = None
+
+        if request.method == "POST":
+            symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
+            raw_data = database.get_export_data(patient_email, symptom, location, start_date, end_date, False)
+            graph = set_up_graph(raw_data, symptom, location, start_date, end_date, patient[0])
+            graph_data = graph.render_data_uri()
+
+        return render_template(
+            "clinician/reports.html",
+            name=patient_name,
+            email=patient_email,
+            graph_data=graph_data,
+            symptom=symptom,
+            location=location,
+            startDate=start_date,
+            endDate=end_date,
+            session=session,
+        )
+
+    return redirect(url_for('clinician_dashboard'))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
@@ -642,7 +742,7 @@ def extract_page_data(form_data):
     
     return symptom, location, startDate, endDate
 
-def set_up_graph(raw_data, symptom, location, startDate, endDate):
+def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
     multiple = False
     colors=("#E853A0", "#E853A0")
     if location == "All" or symptom == "All":
@@ -717,14 +817,18 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate):
             y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
             x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
 
-        # Might need to rework these so leave out for the moment
-            # show_minor_x_labels=False, x_labels_major_every=freq)
-
-        graph.title = symptom + ' in my ' + location
-        if symptom == "All":
-            graph.title = 'All Symptoms in my ' + location
-        elif location == "All":
-            graph.title = symptom + ' in all Locations'
+        if patient_name:
+            graph.title = symptom + ' in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+            if symptom == "All":
+                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+            elif location == "All":
+                graph.title = symptom + ' in all Locations for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+        else:
+            graph.title = symptom + ' in my ' + location
+            if symptom == "All":
+                graph.title = 'All Symptoms in my ' + location
+            elif location == "All":
+                graph.title = symptom + ' in all Locations'
         
         graph.y_labels = list(severity_dict.keys())
         
@@ -749,11 +853,12 @@ def patient_reports():
     if request.method == "POST":
         symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
         raw_data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, False)
-        graph = set_up_graph(raw_data, symptom, location, start_date, end_date)
+        graph = set_up_graph(raw_data, symptom, location, start_date, end_date, None)
         graph_data = graph.render_data_uri()
 
     return render_template(
         "patient/reports.html",
+        email = user_details["ac_email"],
         graph_data=graph_data,
         symptom=symptom,
         location=location,
@@ -762,16 +867,22 @@ def patient_reports():
         session=session,
     )
 
-@app.route("/patient/reports/download-file", methods=["POST"])
-def download_file():
+@app.route("/reports/download-file/<email>", methods=["POST"])
+def download_file(email = None):
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
+
+    names = database.get_patient_name(email)
+    if names and len(names) > 0:
+        name = names[0]
+    else:
+        return(redirect(url_for('clinician_dashboard')))
 
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
 
     symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
-    data = database.get_export_data(user_details["ac_email"], symptom, location, start_date, end_date, True)
+    data = database.get_export_data(email, symptom, location, start_date, end_date, True)
     
     row_data = []
 
@@ -796,26 +907,43 @@ def download_file():
     csv_writer.writerows(row_data)
 
     output = make_response(string_input.getvalue())
-    output.headers["Content-Disposition"] = (
-        "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv"
-    )
+
+    if location == "All" and symptom == "All":
+        filename = 'all_symptoms_and_locations.csv'
+    else:
+        filename = symptom.lower() + "_" + location.lower() + ".csv" 
+    if user_details['ac_type'] == 'clinician':
+        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + filename )
+    else: 
+        output.headers["Content-Disposition"] = ( "attachment; filename=" + filename)
+
     output.headers["Content-type"] = "text/csv"
 
     return output
 
-@app.route("/patient/reports/download-image", methods=["POST"])
-def download_image():
+@app.route("/reports/download-image/<email>", methods=["POST"])
+def download_image(email = None):
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
+    names = database.get_patient_name(email)
+    if names and len(names) > 0:
+        name = names[0]
+    else:
+        return(redirect(url_for('clinician_dashboard')))
+
     graph = symptom = location = startDate = endDate = None
     symptom, location, startDate, endDate = extract_page_data(dict(request.form.lists()))
-    raw_data = database.get_export_data(user_details["ac_email"], symptom, location, startDate, endDate, False)
-    graph = set_up_graph(raw_data, symptom, location, startDate, endDate)
+    raw_data = database.get_export_data(email, symptom, location, startDate, endDate, False)
+    graph = set_up_graph(raw_data, symptom, location, startDate, endDate, name)
 
     output = graph.render_response()
-    output.headers["Content-Disposition"] = (
-        "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".svg")
+
+    if user_details['ac_type'] == 'clinician':
+        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + symptom.lower() + "_" + location.lower() + ".svg" )
+    else: 
+        output.headers["Content-Disposition"] = ( "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".svg" )
+
     output.headers["Content-type"] = "image/svg+xml"
 
     return output
@@ -997,13 +1125,16 @@ def create_questionnaire():
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         recipients = form_data.get('recipients')[0]
         valid_recipients, invalid_recipients = validate_recipients(recipients)
-        if (valid_recipients == None and invalid_recipients == None) or len(valid_recipients) == 0:
+        if (valid_recipients == None and invalid_recipients == None):
             flash('Invalid recipient(s) format. Please enter a comma separated list with no spaces.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        if (len(valid_recipients) == 0):
+            flash('No valid recipients entered. Please ensure all patient emails are associated with existing patient accounts and list is comma separated with no spaces.', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         existing_questionnaire = database.get_questionnaire(link)
         if existing_questionnaire:
@@ -1055,7 +1186,7 @@ def modify_questionnaire(id=None):
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         existing_questionnaire = database.get_questionnaire(None, id)

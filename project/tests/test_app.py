@@ -189,16 +189,6 @@ class AppTest(unittest.TestCase):
             self.assertEqual(request.path, url_for('login'))
 
             response = client.get(
-                '/clinician/create_survey', follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(request.path, url_for('login'))
-
-            response = client.get(
-                '/clinician/view_patients', follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(request.path, url_for('login'))
-
-            response = client.get(
                 '/clinician/view_patients/1', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('login'))
@@ -306,45 +296,6 @@ class AppTest(unittest.TestCase):
             response = client.get('/clinician', follow_redirects=True)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(request.path, url_for('clinician_dashboard'))
-        pass
-
-    @mock.patch('project.app.session', {'logged_in': True})
-    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
-    def test_create_survey_not_clinician(self):
-        with tingle.test_client() as client:
-            self.assertRaises(Exception, client.get(
-                '/clinician/create_survey', follow_redirects=True))
-        pass
-
-    @mock.patch('project.app.session', {'logged_in': True})
-    @mock.patch('project.app.user_details', {'ac_type': 'clinician'})
-    def test_create_survey_is_clinician(self):
-        with tingle.test_client() as client:
-            self.assertRaises(Exception, client.get(
-                '/clinician/create_survey', follow_redirects=True))
-        pass
-
-    @mock.patch('project.app.session', {'logged_in': True})
-    @mock.patch('project.app.user_details', {'ac_type': 'researcher'})
-    def test_view_patients_not_clinician(self):
-        with tingle.test_client() as client:
-            self.assertRaises(Exception, client.get(
-                '/clinician/view_patients', follow_redirects=True))
-        pass
-
-    @mock.patch('project.database.get_all_patients')
-    @mock.patch('project.app.session', {'logged_in': True})
-    @mock.patch('project.app.user_details', {
-        'ac_type': 'clinician',
-        'ac_id': '1'
-    })
-    def test_view_patients_is_clinician(self, gap):
-        with tingle.test_client() as client:
-            gap.return_value = [{'row': '1,2,3,4'}]
-            response = client.get(
-                '/clinician/view_patients', follow_redirects=True)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(request.path, url_for('view_patients'))
         pass
 
     @mock.patch('project.app.session', {'logged_in': True})

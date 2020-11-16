@@ -3,7 +3,7 @@ input:not([type=checkbox]):not([type=submit]):not([type=range]) {
   height: 35px;
   font-size: 16px;
   padding: 10px;
-  border: 1px solid #BCBCC4;
+  border: 1px solid hsl(240, 6%, 75%);
   border-radius: 5px;
 }
 
@@ -19,4 +19,5 @@ select {
 label {
   color: #333333;
   margin: 15px 0px 3px 0px;
+  font-size: 1.3rem
 }

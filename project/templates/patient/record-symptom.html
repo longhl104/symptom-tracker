@@ -15,8 +15,8 @@
       <div class="card">
         <form name="record-symptom" class="form col" action="{{url_for('record_symptom')}}" onsubmit="return validateForm()" method="POST">
           <input type="hidden" name="id"/>
-          <label for="symptom">Symptom<sup>*</sup></label>
-          <select name="symptom" onchange="checkvalue(this)" required>
+          <label style= "margin:0px;" for="symptom">Symptom<sup>*</sup></label>
+          <select   name="symptom" onchange="checkvalue(this)" required>
             <option label=" "></option>
             <option value="Cramping">Cramping</option>
             <option value="Discomfort">Discomfort</option>

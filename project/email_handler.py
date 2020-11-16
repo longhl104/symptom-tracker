@@ -1,81 +1,107 @@
 import smtplib, ssl
 import configparser
+import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-def setup_email(to, key):
-    base_url = config['EMAIL']['base_url']
-    sender = str(config['EMAIL']['email'])
-    recipient = to
+class EmailHandler():
+    def __init__(self, emails=[]):
+        self.emails = emails
 
-    text = """
+    def set_emails(self, emails):
+        self.emails = emails
 
-    You are receiving this email because you requested a password reset for the Brain and Mind Centre's Symptom Tracker. 
+    def send_emails(self):
+        for email in self.emails:
+            self.send(self.setup_email(email.get('recipient'), email.get('subject'), email.get('message')))
 
-    Copy and paste the link below into your browser to create a new password:
+    @staticmethod
+    def setup_email(recipient, subject, text):
+        sender = str(config['EMAIL']['email'])
+        message = MIMEText(text, "plain")
+        message["Subject"] = subject
+        message["From"] = sender
+        message["To"] = recipient
+        return message
 
-    {base_url}/reset-password/{key}
+    @staticmethod
+    def send(message):
+        port = 465  # For SSL
+        password = str(config['EMAIL']['email_password'])
 
-    This link will expire in 24 hours.
+        # Create a secure SSL context
+        context = ssl.create_default_context()
+        smtp_server = "smtp.gmail.com"
 
-    If you did not request a password reset, you may disregard this message.
+        # Log into sender
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            server.login(message["From"], password)
 
-    Thank you,
+        # Send email
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+            server.login(message["From"], password)
+            server.sendmail(message["From"], message["To"], message.as_string())
 
-    The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key)
+    @staticmethod
+    def forgot_password_email_text(key):
+        base_url = config['EMAIL']['base_url']
+        text = """
 
-    message = MIMEText(text, "plain")
-    message["Subject"] = "Reset your password"
-    message["From"] = sender
-    message["To"] = recipient
+        You are receiving this email because you requested a password reset for the Brain and Mind Centre's Symptom Tracker.
 
-    return message
+        Click (or copy-paste) the link below into your browser to create a new password:
 
-def setup_invitation(role, to, key):
-    base_url = config['EMAIL']['base_url']
-    sender = str(config['EMAIL']['email'])
-    recipient = to
-    role = 'an ' + role.title() if role.lower() == 'admin' else 'a ' + role.title()
-    text = """
+        {base_url}/reset-password/{key}
 
-    You are receiving this email because you have been invited to join Brain and Mind Centre's Symptom Tracker as {role}.
+        This link will expire in 24 hours.
 
-    Copy and paste the link below into your browser to create a new account:
+        If you did not request a password reset, you may disregard this message.
 
-    {base_url}/register/{key}
+        Thank you,
 
-    This link will expire in 24 hours.
+        The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key)
+        return text
 
-    If you did not request an invitation, you may disregard this message.
+    @staticmethod
+    def invitation_email_text(role, key):
+        base_url = config['EMAIL']['base_url']
+        role = 'an ' + role.title() if role.lower() == 'admin' else 'a ' + role.title()
+        text = """
 
-    Thank you,
+        You are receiving this email because you have been invited to join Brain and Mind Centre's Symptom Tracker as {role}.
 
-    The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key, role=role)
-    message = MIMEText(text, "plain")
-    message["Subject"] = "Symptom Tracker Invitation"
-    message["From"] = sender
-    message["To"] = recipient
+        Click (or copy-paste) the link below into your browser to create a new account:
 
-    return message
+        {base_url}/register/{key}
 
-def send_email(message):
+        This link will expire in 24 hours.
 
-    port = 465  # For SSL
-    password = str(config['EMAIL']['email_password'])
-    
-    # Create a secure SSL context
-    context = ssl.create_default_context()
-    smtp_server = "smtp.gmail.com"
+        If you did not request an invitation, you may disregard this message.
 
-    # Log into sender
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(message["From"], password)
+        Thank you,
 
-    # Send email
-    context = ssl.create_default_context()
-    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-        server.login(message["From"], password)
-        server.sendmail(message["From"], message["To"], message.as_string())
+        The Brain and Mind Centre at the University of Sydney""".format(base_url=base_url, key=key, role=role)
+        return text
+
+    @staticmethod
+    def weekly_survey_email_text(id, questionnaire_name, end_date):
+        base_url = config['EMAIL']['base_url']
+        date_time_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        text = """
+
+        You are receiving this email because you are a registered patient on Symptom Tracker and have been assigned a new questionnaire - {questionnaire_name}.
+
+        Click (or copy-paste) the link below into your browser to complete the questionnaire:
+
+        {base_url}/patient/questionnaire/{id}
+
+        The questionnaire is due on {end_date}.
+
+        Thank you,
+
+        The Brain and Mind Centre at the University of Sydney""".format(questionnaire_name=questionnaire_name, base_url=base_url, id=id, end_date=date_time_obj.strftime('%B %d %Y'))
+        return text

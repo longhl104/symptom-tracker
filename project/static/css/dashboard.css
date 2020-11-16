@@ -35,15 +35,25 @@
     padding: 5px;
     margin-top: 20px;
     display: flex;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.due-date {
+    background-color: #dadada;
+    padding: 5px;
+    border-radius: 5px;
+    margin-right: 5px;
+    color: #525252;
+    white-space: nowrap;
 }
 
 .survey-text {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin: auto auto auto 10px;
 }
 
 .survey-status {
-    margin-left: auto;
     margin-top: 0px;
     min-width: 120px;
     text-align: center;
@@ -60,6 +70,15 @@
     color: #393939;
     font-weight: 700;
 }
+
+.flex {
+    display: flex;
+    align-items: center;
+}
+
+.mark-as-completed {
+    margin-left: 5px;
+}
 /*
   Device = Desktops
   Screen = 1281px to higher resolution desktops
@@ -70,7 +89,6 @@
         font-size: 1.6rem;
         padding: 40px;
     }
-
 }
 
 /*
@@ -85,6 +103,9 @@
     }
     .container {
         width: 80%;
+    }
+    .btn {
+        font-size: 14px;
     }
 }
 
@@ -119,6 +140,17 @@
     .container {
         width: 80%;
     }
+    .flex {
+        flex-direction: column;
+        justify-content: center;
+    }
+    .btn {
+        font-size: 14px;
+    }
+    .mark-as-completed {
+        margin-left: 0px;
+        margin-top: 5px;
+    }
 }
 
 /*
@@ -145,5 +177,15 @@
     }
     .container {
         width: 100%;
+    }
+    .flex {
+        flex-direction: column;
+    }
+    .btn {
+        font-size: 14px;
+    }
+    .mark-as-completed {
+        margin-left: 0px;
+        margin-top: 5px;
     }
 }

@@ -1,0 +1,41 @@
+.tabs {
+    position: relative;   
+    min-height: 480px; /* This part sucks */
+    clear: both;
+    margin: 25px 0;
+}
+.tab {
+    float: left;
+}
+.tab .tabname {
+    background: #eee; 
+    padding: 10px; 
+    border: 1px solid #ccc; 
+    border-radius: 5px 5px 0px 0px;
+    margin-left: -1px; 
+    position: relative;
+    left: 1px; 
+}
+.tab [type=radio] {
+    display: none;   
+}
+.content {
+    position: absolute;
+    top: 28px;
+    left: 0;
+    background: white;
+    right: 0;
+    bottom: 0;
+    padding: 0px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px; 
+}
+[type=radio]:checked ~ .tabname {
+    background: white;
+    border-bottom: 1px solid white;
+    z-index: 2;
+}
+[type=radio]:checked ~ .tabname ~ .content {
+    z-index: 1;
+}
+  

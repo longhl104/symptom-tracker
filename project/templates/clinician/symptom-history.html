@@ -10,12 +10,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
 {% endblock %}
-{% block title %}Symptom History of Patient {{id}}{% endblock %}
+{% block title %}Symptom History of Patient {{name}}{% endblock %}
 {% block sidebar %}
 {{ super() }}
   {% block content %}
     <div class="container">
-      <h5 class="title">Symptom History of Patient {{id}}</h5>
+      <h5 class="title">Symptom History of Patient {{name}}</h5>
       <div class="cards-holder">
         {% for symptom in symptoms %}
           <div>

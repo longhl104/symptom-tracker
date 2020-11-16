@@ -23,7 +23,8 @@
               <th>Last Name</th>
               <th>Age</th>
               <th>Gender</th>
-              <th>Symptom Recordings</th>
+              <th>Symptom History</th>
+              <th>Symptom Tracking</th>
             </tr>
           </thead>
           <tbody>
@@ -34,6 +35,7 @@
                 <td>{{patient.ac_age}}</td>
                 <td>{{patient.ac_gender}}</td>
                 <td><button class="btn blue" style="width: auto; padding: 7px; margin-top: 0px;" onclick="viewHistory('{{ patient.ac_email}}')"><img src="{{ url_for('static', filename='images/icons/documents.png' ) }}" width="18" height="18" /></button>
+                <td><button class="btn green" style="width: auto; padding: 7px; margin-top: 0px;" onclick="viewReports('{{ patient.ac_email}}')"><img src="{{ url_for('static', filename='images/icons/white-graph.png' ) }}" width="18" height="15" /></button>
               </tr>
             {% endfor %}
           </tbody>

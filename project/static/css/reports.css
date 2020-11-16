@@ -4,6 +4,7 @@
     padding-left: 6rem;
     justify-content: normal;
     align-items: normal;
+    margin-left: 9em;
   }
   
   .card {
@@ -63,7 +64,7 @@
   
   @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
     .card {
-      width: 100%;
+      width: 90%;
       margin-top: 10px;
     }
   
@@ -84,8 +85,7 @@
   
   @media (min-width: 481px) and (max-width: 767px) {
     .card {
-      width: 100%;
-      margin-top: 10px;
+      width: 85%;
     }
   
     .container {
@@ -96,6 +96,7 @@
   
     .title {
       font-size: 36px;
+      margin-top: 2em;
     }
   }
   
@@ -119,6 +120,7 @@
   
     .title {
       font-size: 32px;
+      margin-top: 2em;
     }
   
     .two-equal-columns {

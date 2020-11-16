@@ -1,5 +1,15 @@
 function getConfirmation(type) {
 
+  const form = document.forms["make-graph"];
+  if (form["symptom"][0].value === "All" && form["location"][0].value == "All" && type != "file") {
+    document.getElementById("symptom-error-message").innerText = "Cannot select both 'All Symptoms' and 'All Locations' for graph visualisation.";
+    return false
+  }
+
+  if (type === "embedded") {
+    return true
+  }
+
   let message = ""
   if (type === "image") {
     message = "Export a graph of this symptom data? This will download a .svg file to your device."
@@ -53,28 +63,6 @@ function setDate() {
   
   function checkvalue(elem) {
     if (elem) {
-      if (elem.name === "symptom") {
-        var toGreyOut = "location-list"
-      }
-      else if (elem.name === "location") {
-          var toGreyOut = "symptom-list"
-      }
-      if (toGreyOut) {
-        if (elem.value === "All") {
-          var options = document.getElementById(toGreyOut).getElementsByTagName("option"); 
-          for (var i = 0; i < options.length; i++) {
-            if (options[i].value == "All") {
-              options[i].disabled = true;
-            }
-          }
-        } else {
-          var options = document.getElementById(toGreyOut).getElementsByTagName("option");
-          for (var i = 0; i < options.length; i++) {
-              options[i].disabled = false;
-          }
-        }
-      }
-        
       if (elem.value === "Other") {
         document.getElementById(elem.name).style.display = "block";
         document.getElementById(elem.name).style.marginTop = "5px";
@@ -91,21 +79,12 @@ function setDate() {
     const form = document.forms["make-graph"];
     let valid = true;
     if (form["symptom"][0].value === "Other" && !document.getElementById("symptom").value.length) {
-      document.getElementById("symptom-error-message").innerText = "Please specify a symptom";
+      document.getElementById("symptom-error-message").innerText = "Please specify a symptom for Other.";
       valid = false;
     }
     if (form["location"][0].value === "Other" && !document.getElementById("location").value.length) {
-      document.getElementById("location-error-message").innerText = "Please specify a location";
+      document.getElementById("location-error-message").innerText = "Please specify a location for Other.";
       valid = false;
     }
-    if (form["symptom"][0].value === "All" && form["location"][0].value === "All") {
-      document.getElementById("both-error-message").innerText = "Cannot select both 'All Symptoms' and 'All Locations'";
-      valid = false;
-    }
-  
     return valid;
-  }
-
-  function editRecord(name, location, startDate, endDate) {
-    window.location.href = '/patient/reports?' + encodeURI(`name=${name}&location=${location}&startDate=${startDate}&endDate=${endDate}`);
   }

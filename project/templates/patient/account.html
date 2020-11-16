@@ -15,8 +15,7 @@
 <div class="container">
   <h5 class="title">Account</h5>
   <div class="card">
-    <p class="subtitle">Preferences</p>
-    <p>Linked clinicians</p>
+    <p class="subtitle">Linked clinicians</p>
     <ul id="cl-list-container" >
       {% if clinicians is none or clinicians|length == 0 %}
         <div>You have not linked any clinicians.</div>
@@ -26,14 +25,14 @@
         {% endfor %}
       {% endif %}
     </ul>
+    <p style="margin: 15px 0px 15px 0px; font-size: 1.2rem">Linked clinicians have access to your personal symptom recordings and survey data.</p>
     <form name="add-clinician" class="form col" method="POST">
-      <label for="clinician_email">Grant access to a clinician</label>
+      <label class="subtitle" for="clinician_email">Grant access to a clinician</label>
       <div>
         <input type="email" name="clinician_email" style="width: 69%; height: 100%; display: inline-block" required></input>
         <input class="btn green" type="submit" style="width: 29%; display: inline-block; margin: 0px" value="Add">
       </div>
     </form>
-    <p>Linked clinicians have access to your personal symptom recordings and survey data.</p>
   </div>
 </div>
 {% endblock %}

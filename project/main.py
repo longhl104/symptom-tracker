@@ -1,5 +1,6 @@
 from flask import *
-from project import database, email_handler
+import database
+import email_handler
 import configparser
 import urllib.parse
 import random
@@ -29,6 +30,19 @@ app.secret_key = config["DATABASE"]["secret_key"]
 
 email_class = email_handler.EmailHandler()
 
+def set_user_details(login_data):
+    return {
+        "ac_id": login_data[0],
+        "ac_email": login_data[1],
+        "ac_password": login_data[2],
+        "ac_firstname": login_data[3],
+        "ac_lastname": login_data[4],
+        "ac_age": login_data[5],
+        "ac_gender": login_data[6],
+        "ac_phone": login_data[7],
+        "ac_type": login_data[8]
+    }
+
 # General routes
 @app.route('/', methods=['POST', 'GET'])
 def login():
@@ -39,7 +53,7 @@ def login():
             return redirect(url_for('login'))
 
         global user_details
-        user_details = login_return_data[0]
+        user_details = set_user_details(login_return_data)
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'alert-warning')
             return redirect(url_for('login'))
@@ -82,7 +96,6 @@ def register(token=None):
         password = request.form.get('password')
 
         try:
-            print(request.form)
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'alert-warning')
                 return redirect(url_for('register'))
@@ -92,7 +105,6 @@ def register(token=None):
                 gender = None
             if (mobile == ""):
                 mobile = None
-            print(request.form.get('treatment'))
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
@@ -113,7 +125,7 @@ def register(token=None):
                 session['logged_in'] = True
                 login_return_data = database.get_account(request.form['email-address'])
                 global user_details
-                user_details = login_return_data[0]
+                user_details = set_user_details(login_return_data)
                 session['logged_in'] = True
                 session['name'] = user_details['ac_firstname']
                 session['role'] = user_details['ac_type']
@@ -141,7 +153,7 @@ def register(token=None):
         token_valid = database.check_invitation_token_validity(token)
         if request.method == 'POST':
             try:
-                if request.form['email-address'] != token_valid[0].get("ac_email"):
+                if request.form['email-address'] != token_valid[0]:
                     flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'alert-warning')
                     return render_template('register-extra.html', token=token)
                 if request.form['password'] != request.form['confirm-password']:
@@ -163,7 +175,7 @@ def register(token=None):
                     request.form.get('email-address'),
                     request.form.get('password'),
                     generate_password_hash(request.form.get('password')),
-                    token_valid[0].get('role'),
+                    token_valid[1],
                     'yes' if request.form.get('consent') == 'on' else 'no'
                 )
                 if add_account_ret is None:
@@ -173,9 +185,9 @@ def register(token=None):
                     delete_token = database.delete_account_invitation(token, request.form['email-address'])
                     session['logged_in'] = True
                     login_return_data = database.get_account(request.form['email-address'])
-                    user_details = login_return_data[0]
-                    session['name'] = user_details['ac_firstname']
-                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
+                    user_details = set_user_details(login_return_data)
+                    session['name'] = user_details[3]
+                    return redirect(url_for(str(token_valid[1]).lower()+'_dashboard'))
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')
@@ -203,7 +215,6 @@ def forgot_password():
                 flash('There is no account associated with that email. Please try again.', "alert-warning")
                 return render_template('forgot-password.html')
         else:
-            # print(result)
             unique_key = result[0]
         emails = [{'recipient': request.form['email'], 'subject': 'Reset your password', 'message': email_class.forgot_password_email_text(unique_key)}]
         email_class.set_emails(emails)
@@ -223,8 +234,8 @@ def researcher_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
     return render_template('researcher/dashboard.html', session=session)
+
 @app.route('/researcher/patient-data',methods=['GET', 'POST'])
 def researcher_data():
     if not session.get('logged_in', None):
@@ -311,7 +322,7 @@ def view_consent_history(id = None):
     if user_details['ac_type'] != 'researcher':
         raise Exception('Error: Attempted accessing researcher dashboard as Unknown')
     acc = database.get_account_by_id(id)
-    email = acc[0]['ac_email']
+    email = acc['ac_email']
     symptoms = None
     symptoms = database.get_all_symptoms(email)
     list_of_symptoms = []
@@ -328,7 +339,6 @@ def view_consent_history(id = None):
 
 @app.route('/clinician/')
 def clinician_dashboard():
-    print(session)
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
@@ -336,7 +346,6 @@ def clinician_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
     return render_template('clinician/dashboard.html', session=session)
 
 @app.route('/clinician/create_survey/')
@@ -355,7 +364,6 @@ def view_patients():
         raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
-    print(patients)
     list_of_patients = []
     patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_age", "ac_gender"]
     for patient in patients:
@@ -364,8 +372,6 @@ def view_patients():
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
         list_of_patients.append(patient_dict)
-    print(list_of_patients)
-
     return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
@@ -379,7 +385,6 @@ def view_patients_history(id = None):
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
-    print('id = {}'.format(id))
     if id != None:
         symptoms = None
         symptoms = database.get_all_symptoms(id)
@@ -417,7 +422,7 @@ def reset_password(url_key):
                 )
             else:
                 database.delete_token(url_key)
-                flash("Password successfully reset. You may now login.", "alert-warning")
+                flash("Password successfully reset. You may now login.", "alert-success")
         return redirect(url_for("reset_password", url_key=url_key))
 
     else:
@@ -837,11 +842,11 @@ def patient_account(clinician_email=None):
             flash('Please enter a clinician email address.', 'alert-warning')
 
         acc = database.get_account(clinician_email.lower())
-        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+        if acc == None or acc[-1] != "clinician":
             flash('This email address is not associated with a clinician account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
-        clinician_id = acc[0]['ac_id']
+        clinician_id = acc[0]
 
         try:
             link = database.add_patient_clinician_link(
@@ -861,12 +866,12 @@ def patient_account(clinician_email=None):
 
     if request.method == 'DELETE':
         acc = database.get_account(clinician_email)
-        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+        if (acc == None or acc[-1] != "clinician"):
             print('Error: Attempted to delete clinician-patient link for non-existent clinician account')
             return redirect(url_for('patient_account'))
         result = database.delete_patient_clinician_link(
             user_details['ac_id'],
-            acc[0]['ac_id']
+            acc[0]
         )
         if result is None:
             flash('Clinician account link could not be deleted.', 'alert-warning')
@@ -879,9 +884,9 @@ def patient_account(clinician_email=None):
         clinicians = []
     else:
         for clinician in clinicians_raw:
-            acc = database.get_account_by_id(clinician['clinician_id'])
-            if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
-                clinicians.append(acc[0]['ac_email'])
+            acc = database.get_account_by_id(clinician[0])
+            if (acc != None and acc[-1] == "clinician"):
+                clinicians.append(acc[1])
     return render_template('patient/account.html', session=session, clinicians=clinicians)
 
 @app.route('/patient/questionnaire/<id>', methods=['GET'])
@@ -896,10 +901,14 @@ def patient_questionnaire(id=None):
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
         if questionnaire:
-            questionnaire = questionnaire[0]
             result = database.mark_questionnaire_as_opened(user_details['ac_id'], id)
-            questionnaire['link'] = questionnaire['link'].replace('EMAILADDRESS', user_details['ac_email'])
-            return render_template('patient/questionnaire.html', session=session, questionnaire=questionnaire)
+            questionnaire_info = {
+                'name': questionnaire[0],
+                'link': questionnaire[1].replace('EMAILADDRESS', user_details['ac_email']),
+                'end_date': questionnaire[2],
+                'id': questionnaire[3]
+            }
+            return render_template('patient/questionnaire.html', session=session, questionnaire=questionnaire_info)
         return redirect(url_for('patient_dashboard'))
 
 @app.route('/patient/complete-questionnaire/<id>', methods=['GET'])
@@ -913,14 +922,9 @@ def complete_patient_questionnaire(id=None):
 
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
-        if questionnaire:
-            questionnaire = questionnaire[0]
         result = database.mark_questionnaire_as_completed(user_details['ac_id'], id)
-        print("result[0].get('completed') != None", result[0].get('completed') != None)
-        print("result[0].get('completed') == True", result[0].get('completed') == True)
-        print("questionnaire.get('name') != None", questionnaire.get('name') != None)
-        if result[0].get('completed') != None and result[0].get('completed') == True and questionnaire.get('name') != None:
-            flash("Marked '{questionnaire_name}' as completed.".format(questionnaire_name=questionnaire.get('name')), "alert-success")
+        if result[0] != None and result[0] == True and questionnaire[0] != None:
+            flash("Marked '{questionnaire_name}' as completed.".format(questionnaire_name=questionnaire[0]), "alert-success")
         return redirect(url_for('patient_dashboard'))
 
 @app.route('/admin/')
@@ -948,11 +952,11 @@ def invite_user():
         already_invited = database.check_email_in_account_invitation(email)
         token = None
         if already_invited:
-            token = already_invited[0].get('token')
-            if already_invited[0].get('role') != role:
+            token = already_invited[0]
+            if already_invited[2] != role:
                 result = database.update_role_in_account_invitation(email, role)
-                token = result[0].get('token')
-                role = result[0].get('role')
+                token = result[0]
+                role = result[1]
         else:
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
@@ -978,7 +982,7 @@ def validate_recipients(recipients):
         email = email.strip()
         result = database.get_patient_by_email(email)
         if result:
-            valid_recipients.append((result[0].get('ac_id'), email))
+            valid_recipients.append((result[0], email))
         else:
             invalid_recipients.append((None, email))
     return valid_recipients, invalid_recipients
@@ -1007,7 +1011,7 @@ def create_questionnaire():
             return redirect(url_for('admin_dashboard'))
         result = database.add_questionnaire(name, link, end_date)
         if result:
-            questionnaire_id = result[0].get('id')
+            questionnaire_id = result[0]
             successful_records = database.link_questionnaire_to_patient(questionnaire_id, valid_recipients)
             if len(successful_records) == 0:
                 flash('Something went wrong linking questionnaire to patients. Please try again.', 'alert-warning')
@@ -1015,6 +1019,8 @@ def create_questionnaire():
             subject = 'Symptom Tracker - New Questionnaire Assigned'
             message = email_class.weekly_survey_email_text(questionnaire_id, name, end_date)
             emails = [{'recipient': email, 'subject': subject, 'message': message} for email in successful_records]
+            summary_message = email_class.summary_weekly_survey_email_text(questionnaire_id, name, end_date, valid_recipients, invalid_recipients)
+            emails.append({'recipient': user_details['ac_email'], 'subject': 'Symptom Tracker - Questionnaire #{id} - Summary'.format(id=questionnaire_id), 'message': summary_message})
             email_class.set_emails(emails)
             email_thread = Thread(target=email_class.send_emails)
             email_thread.start()
@@ -1029,7 +1035,13 @@ def modify_questionnaire(id=None):
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
         if questionnaire:
-            return jsonify(questionnaire=questionnaire), 200
+            questionnaire_info = {
+                'name': questionnaire[0],
+                'link': questionnaire[1],
+                'end_date': questionnaire[2],
+                'id': questionnaire[3]
+            }
+            return jsonify(questionnaire=[questionnaire_info]), 200
         else:
             return jsonify(questionnaire=[]), 404
     if id and request.method == 'DELETE':
@@ -1059,3 +1071,6 @@ def modify_questionnaire(id=None):
 @app.route("/service-worker.js")
 def service_worker():
     return app.send_static_file("service-worker.js")
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080, debug=True)

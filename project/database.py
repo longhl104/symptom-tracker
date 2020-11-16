@@ -1,97 +1,56 @@
+import os
+import logging
 import configparser
 import json
 import sys
 import pg8000
 from datetime import date
+import sqlalchemy
 
-def database_connect():
-    """
-    Connects to the database using the connection string.
-    If 'None' was returned it means there was an issue connecting to
-    the database. It would be wise to handle this ;)
-    """
-    # Read the config file
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    if 'database' not in config['DATABASE']:
-        config['DATABASE']['database'] = config['DATABASE']['user']
+class DatabaseHandler:
+    def __init__(self, debug=True):
+        if debug:
+            # Read the config file
+            config = configparser.ConfigParser()
+            config.read('config.ini')
+            self.db_user = config['DATABASE']['user']
+            self.db_name = config['DATABASE']['database']
+            self.db_pass = config['DATABASE']['password']
+            self.db_host = config['DATABASE']['host']
+            self.query = {}
+        else:
+            self.db_user = os.environ.get("DB_USER")
+            self.db_pass = os.environ.get("DB_PASS")
+            self.db_name = os.environ.get("DB_NAME")
+            self.db_host = os.environ.get("DB_HOST")
+            db_socket_dir = "/cloudsql"
+            cloud_sql_connection_name = os.environ.get("CONNECTION_NAME")
+            self.query = {
+                "unix_sock": "{}/{}/.s.PGSQL.5432".format(
+                    db_socket_dir,
+                    cloud_sql_connection_name)
+            }
 
-    # Create a connection to the database
-    connection = None
-    try:
-        # Parses the config file and connects using the connect string
-        connection = pg8000.connect(database=config['DATABASE']['database'],
-                                    user=config['DATABASE']['user'],
-                                    password=config['DATABASE']['password'],
-                                    host=config['DATABASE']['host'])
-    except pg8000.OperationalError as operation_error:
-        print("""Error, you haven't updated your config.ini or you have a bad
-        connection, please try again. (Update your files first, then check
-        internet connection)
-        """)
-        print(operation_error)
-        return None
+    def connect(self):
+        db_config = {
+            "pool_size": 5,
+            "max_overflow": 2,
+            "pool_timeout": 30,
+            "pool_recycle": 1800,
+        }
+        pool = sqlalchemy.create_engine(
+            sqlalchemy.engine.url.URL(
+                drivername="postgres+pg8000",
+                username=self.db_user,
+                password=self.db_pass,
+                database=self.db_name,
+                query=self.query
+            ),
+            **db_config
+        )
+        return pool  
 
-    # return the connection to use
-    return connection
-
-##################################################
-# Print a SQL string to see how it would insert  #
-##################################################
-
-
-def print_sql_string(inputstring, params=None):
-    """
-    Prints out a string as a SQL string parameterized assuming all strings
-    """
-
-    if params is not None and len(params) != 0:
-        inputstring = inputstring.replace("%s", "'%s'")
-
-    print(inputstring % params)
-
-#####################################################
-#   SQL Dictionary Fetch
-#   useful for pulling particular items as a dict
-#   (No need to touch
-#       (unless the exception is potatoing))
-#   Expected return:
-#       singlerow:  [{col1name:col1value,col2name:col2value, etc.}]
-#       multiplerow: [{col1name:col1value,col2name:col2value, etc.},
-#           {col1name:col1value,col2name:col2value, etc.},
-#           etc.]
-#####################################################
-
-
-def dictfetchall(cursor, sqltext, params=()):
-    """ Returns query results as list of dictionaries."""
-
-    result = []
-    if len(params) == 0:
-        print(sqltext)
-    else:
-        print("we HAVE PARAMS!")
-        print_sql_string(sqltext, params)
-
-    cursor.execute(sqltext, params)
-    cols = [a[0].decode("utf-8") for a in cursor.description]
-    returnres = cursor.fetchall()
-
-    for row in returnres:
-        result.append({a: b for a, b in zip(cols, row)})
-    # cursor.close()
-    return result
-
-
-def dictfetchone(cursor, sqltext, params=()):
-    """ Returns query results as list of dictionaries."""
-    # cursor = conn.cursor()
-    result = []
-    cursor.execute(sqltext, params)
-    cols = [a[0].decode("utf-8") for a in cursor.description]
-    returnres = cursor.fetchone()
-    result.append({a: b for a, b in zip(cols, returnres)})
-    return result
+db = DatabaseHandler(False).connect()
 
 def check_login(email, password):
     """
@@ -99,100 +58,66 @@ def check_login(email, password):
         - True => return the user data
         - False => return None
     """
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Account"
-                WHERE ac_email=%s AND ac_password=%s
+                WHERE ac_email=:email AND ac_password=:password
             """
-            cur.execute(sql, (email, password))
-            # r = cur.fetchone()
-
-            r = dictfetchone(cur, sql, (email, password))
-            print(r)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, email=email, password=password).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error Invalid Login")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_account(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Account"
-                WHERE ac_email=%s
+                WHERE ac_email=:email
             """
-            cur.execute(sql, (email,))
-            # r = cur.fetchone()
-
-            r = dictfetchone(cur, sql, (email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, email=email).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get account by email")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_account_by_id(id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Account"
-                WHERE ac_id=%s
+                WHERE ac_id=:ac_id
             """
-            cur.execute(sql, (id,))
-            # r = cur.fetchone()
-
-            r = dictfetchone(cur, sql, (id,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, ac_id=id).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Error: can't get hashed password")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
+            print("Error: can't get account by ID")
     return None
 
 def get_all_treatments():
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT tingleserver."Treatment".treatment_name 
                 FROM tingleserver."Treatment"
             """
-
-            r = dictfetchall(cur, sql)
-            # print("return val is:")
-            # print(r)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            result = conn.execute(sql).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting All Treatments:", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 
@@ -213,140 +138,111 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
     elif len(email) > 255:
         print("Email entered is greater than maximum length of 255.")
         return None
-
-    conn = database_connect()
-
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             # Try executing the SQL and get from the database
             sql = """
-                SELECT tingleserver.add_account(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                SELECT tingleserver.add_account(:firstname, :lastname, :gender, :age, :mobile, :email, :password_hash, :role, :consent)
             """
-            cur.execute(sql, (firstname, lastname, gender, age, mobile, email, password_hash, role, consent))
-            conn.commit()
-            patient_id = cur.fetchone()[0]
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, firstname=firstname, lastname=lastname, gender=gender, age=age, mobile=mobile, email=email, password_hash=password_hash, role=role, consent=consent).fetchone()
+            patient_id = result[0]
             if role == 'patient':
                 if treatment is not None and len(treatment) > 0:
                     for t in treatment:
                         sql = """
                             SELECT treatment_id
                             FROM tingleserver."Treatment"
-                            WHERE treatment_name=%s;
+                            WHERE treatment_name=:name;
                         """
-                        cur.execute(sql, (t,))
-                        conn.commit()
-                        treatment_id = cur.fetchone()[0]
-                        print(treatment_id)
-
+                        stmt = sqlalchemy.text(sql)
+                        result = conn.execute(stmt, name=t).fetchone()
+                        treatment_id = result[0]
                         sql = """
                             INSERT INTO tingleserver."Patient_Receives_Treatment"(
                                 patient_id, treatment_id)
-                                VALUES (%s, %s);
+                                VALUES (:patient_id, :treatment_id);
                         """
-                        cur.execute(sql, (patient_id, treatment_id))
-                        conn.commit()
-
-            cur.close()
-            conn.close()                    # Close the connection to the db
+                        stmt = sqlalchemy.text(sql)
+                        conn.execute(stmt, patient_id=patient_id, treatment_id=treatment_id)
+            transaction.commit()
             return patient_id
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error adding a patient:", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def record_symptom(id, email, symptom, location, severity, occurence, date, notes):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
-            print(email)
             # Try executing the SQL and get from the database
             if len(id) == 0:
                 sql = """
                     INSERT INTO tingleserver."Symptom"(
                         patient_username, symptom_name, location, severity, occurence, recorded_date, notes)
-                        VALUES(%s, %s, %s, %s, %s, %s, %s);
+                        VALUES(:email, :symptom, :location, :severity, :occurence, :date, :notes);
                 """
-                cur.execute(sql, (email, symptom, location, severity, occurence, date, notes))
+                stmt = sqlalchemy.text(sql)
+                conn.execute(stmt, email=email, symptom=symptom, location=location, severity=severity, occurence=occurence, date=date, notes=notes)
             else:
                 sql = """
                     UPDATE tingleserver."Symptom" SET
-                        symptom_name = %s, location = %s, severity = %s, occurence = %s, recorded_date = %s, notes = %s
-                        WHERE symptom_id = %s AND patient_username = %s
+                        symptom_name = :symptom, location = :location, severity = :severity, occurence = :occurence, recorded_date = :date, notes = :notes
+                        WHERE symptom_id = :id AND patient_username = :email
                 """
-                cur.execute(sql, (symptom, location, severity, occurence, date, notes, id, email))
-            conn.commit()
-            cur.close()
+                stmt = sqlalchemy.text(sql)
+                conn.execute(stmt, symptom=symptom, location=location, severity=severity, occurence=occurence, date=date, notes=notes, id=id, email=email)
+            transaction.commit()
             return email
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error adding a patient:", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_all_symptoms(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT (symptom_id, recorded_date, symptom_name, location, severity, occurence, notes)
                 FROM tingleserver."Symptom" 
-                WHERE patient_username = %s 
+                WHERE patient_username = :patient_username
                 ORDER BY recorded_date DESC
             """
-
-            r = dictfetchall(cur, sql, (email,))
-            print("return val is:")
-            print(r)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, patient_username=email).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
+
 def get_name_symptoms(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT (symptom_name)
                 FROM tingleserver."Symptom" 
-                WHERE patient_username = %s 
+                WHERE patient_username = :patient_username 
             """
-
-            r = dictfetchall(cur, sql, (email,))
-            print("return val is:")
-            print(r)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, patient_username=email).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 
 def get_all_consent():
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT (A.ac_email, A.ac_id, A.ac_age, A.ac_gender, T.treatment_name)
@@ -360,385 +256,310 @@ def get_all_consent():
                 INNER JOIN
                 tingleserver."Treatment" AS T
                 ON PRT.treatment_id  = T.treatment_id
-                WHERE P.consent =%s
+                WHERE P.consent = :consent
             """
-
-            r = dictfetchall(cur, sql, ("yes",))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, consent="yes").fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
+
 def get_all_patients(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT (tingleserver."Account".ac_id,tingleserver."Account".ac_email,tingleserver."Account".ac_firstname,tingleserver."Account".ac_lastname,tingleserver."Account".ac_age,tingleserver."Account".ac_gender)
                 FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
-                WHERE tingleserver."Patient_Clinician".clinician_id =%s
+                WHERE tingleserver."Patient_Clinician".clinician_id=:clinician_id
             """
-            r = dictfetchall(cur, sql, (email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, clinician_id=email).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
+
 def check_clinician_link(clinician_id, patient_email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
-                WHERE tingleserver."Patient_Clinician".clinician_id =%s
-                AND tingleserver."Account".ac_email = %s
+                WHERE tingleserver."Patient_Clinician".clinician_id =:clinician_id
+                AND tingleserver."Account".ac_email = :ac_email
             """
-
-            cur.execute(sql,(clinician_id,patient_email))
-            r = dictfetchall(cur, sql, (clinician_id,patient_email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, clinician_id=clinician_id, ac_email=patient_email).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting link: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
+
 def check_key_exists(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT * 
                 FROM tingleserver."Forgot_password"
-                WHERE ac_email = %s
+                WHERE ac_email = :ac_email
             """
-            cur.execute(sql, (email, ))
-            result = cur.fetchone()
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, ac_email=email).fetchone()
             return result
         except:
             print("Unexpected error retrieving key: ", sys.exc_info()[0])
-            conn.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def add_password_key(key, email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 INSERT INTO tingleserver."Forgot_password"(
                     key, ac_email)
-                    VALUES(%s, %s);
+                    VALUES(:key, :email);
             """
-            cur.execute(sql, (key, email))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, key=key, email=email)
+            transaction.commit()
             return email
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error creating a unique key: ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def update_password(ac_password, url_key):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 UPDATE tingleserver."Account"
-                    SET ac_password = %s
+                    SET ac_password = :ac_password
                     WHERE ac_email = (
                         SELECT ac_email
                         FROM tingleserver."Forgot_password"
-                        WHERE key=%s
+                        WHERE key=:key
                     );
             """
-            cur.execute(sql, (ac_password, url_key))
-            result = dictfetchone(cur, """SELECT *
-                                            FROM tingleserver."Forgot_password"
-                                            WHERE key=%s""", (url_key,))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, key=url_key, ac_password=ac_password)
+            transaction.commit()
+            stmt = sqlalchemy.text('SELECT * FROM tingleserver."Forgot_password" WHERE key=:key')
+            result = conn.execute(stmt, key=url_key).fetchone()
             return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error updating password: ", sys.exc_info()[0])
-            conn.rollback()
-        cur.close()                     # Close the cursor
-        conn.close()  
+            transaction.rollback()
     return None
 
 def delete_token(url_key):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 DELETE FROM tingleserver."Forgot_password"
-                WHERE key = %s;
+                WHERE key = :key;
             """
-            cur.execute(sql, (url_key,))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, key=url_key)
+            transaction.commit()
             return None
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error deleting token: ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def delete_symptom_record(email, id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
-                DELETE FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+                DELETE FROM tingleserver."Symptom" WHERE patient_username = :email AND symptom_id = :id
             """
-            print_sql_string(sql, (email,id,))
-            cur.execute(sql, (email,id,))
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, email=email, id=id)
+            transaction.commit()
             sql = """
-                SELECT COUNT(*) FROM tingleserver."Symptom" WHERE patient_username = %s AND symptom_id = %s
+                SELECT COUNT(*) FROM tingleserver."Symptom" WHERE patient_username = :email AND symptom_id = :id
             """
-            r = dictfetchall(cur, sql, (email,id,))
-            print("return val is:")
-            print(r)
-            conn.commit()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, email=email, id=id).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error deleting:", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def add_patient_clinician_link(patient_id, clinician_id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 INSERT INTO tingleserver."Patient_Clinician"(
                     patient_id, clinician_id)
-                    VALUES(%s, %s);
+                    VALUES(:patient_id, :clinician_id);
             """
-            cur.execute(sql, (patient_id, clinician_id))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, patient_id=patient_id, clinician_id=clinician_id)
+            transaction.commit()
             return patient_id
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error linking patient and clinician ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def delete_patient_clinician_link(patient_id, clinician_id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
-                DELETE FROM tingleserver."Patient_Clinician" WHERE patient_id = %s AND clinician_id = %s
+                DELETE FROM tingleserver."Patient_Clinician" WHERE patient_id = :patient_id AND clinician_id = :clinician_id
             """
-            cur.execute(sql, (patient_id,clinician_id,))
-            conn.commit()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, patient_id=patient_id, clinician_id=clinician_id)
+            transaction.commit()
             return patient_id
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error deleting patient-clinician link:", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_linked_clinicians(patient_id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT clinician_id
-                FROM tingleserver."Patient_Clinician" WHERE patient_id = %s
+                FROM tingleserver."Patient_Clinician" WHERE patient_id = :patient_id
             """
-            r = dictfetchall(cur, sql, (patient_id,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, patient_id=patient_id).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all clinicians: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def check_invitation_token_validity(token):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
-                SELECT *
+                SELECT ac_email, role
                 FROM tingleserver."Account_Invitation"
-                WHERE token=%s
+                WHERE token=:token
             """
-            cur.execute(sql, (token,))
-            r = dictfetchone(cur, sql, (token,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, token=token).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get account invitation")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def check_email_in_account_invitation(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Account_Invitation"
-                WHERE ac_email=%s
+                WHERE ac_email=:ac_email
             """
-            cur.execute(sql, (email,))
-            r = dictfetchone(cur, sql, (email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, ac_email=email).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get account invitation")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def update_role_in_account_invitation(email, role):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 UPDATE tingleserver."Account_Invitation"
-                SET role=%s
-                WHERE ac_email=%s
+                SET role=:role
+                WHERE ac_email=:ac_email
                 RETURNING token, role;
             """
-            r = dictfetchone(cur, sql, (role, email,))
-            conn.commit()
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, role=role, ac_email=email).fetchone()
+            transaction.commit()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't update account invitation")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def add_account_invitation(token, email, role):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 INSERT INTO tingleserver."Account_Invitation" (token, ac_email, role)
-                VALUES(%s, %s, %s);
+                VALUES(:token, :email, :role);
             """
-            cur.execute(sql, (token, email, role))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, role=role, email=email, token=token)
+            transaction.commit()
             return email
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error inserting invitation: ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def delete_account_invitation(token, email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 DELETE FROM tingleserver."Account_Invitation"
-                WHERE ac_email=%s
-                AND token=%s;
+                WHERE ac_email=:email
+                AND token=:token;
             """
-            cur.execute(sql, (email, token))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, email=email, token=token)
+            transaction.commit()
             return email
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error inserting invitation: ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_all_questionnaires():
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT id, name, end_date FROM tingleserver."Questionnaire"
                 ORDER BY name
             """
-            r = dictfetchall(cur, sql)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            result = conn.execute(sql).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
-            conn.rollback()
+            print("Unexpected error getting all questionnaires: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_export_data(email, symptom, location, start_date, end_date, with_notes):
@@ -763,9 +584,7 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
     elif start_date != "" and end_date != "":
         date_query = " AND recorded_date BETWEEN %s AND %s"
 
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = None
             r = None
@@ -792,8 +611,6 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
                 params.append(end_date)
             r = dictfetchall(cur, sql, tuple(params))
 
-            print("return val is:")
-            print(r)
             cur.close()                     # Close the cursor
             conn.close()                    # Close the connection to the db
             return r
@@ -801,244 +618,202 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_patient_by_email(email):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT ac_id FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient"
-                WHERE ac_email = %s;
+                WHERE ac_email = :email;
             """
-            r = dictfetchone(cur, sql, (email,))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, email=email).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get patient by email")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_questionnaire(link, id=None):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
                 SELECT *
                 FROM tingleserver."Questionnaire"
-                WHERE link=%s
-                OR id=%s
+                WHERE link=:link
+                OR id=:id
             """
-            r = dictfetchone(cur, sql, (link, id))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, link=link, id=id).fetchone()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't get questionnaire by link")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def delete_questionnaire(id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 DELETE FROM tingleserver."Patient_Receives_Questionnaire"
-                WHERE questionnaire_id=%s;
+                WHERE questionnaire_id=:id;
             """
-            cur.execute(sql, (id,))
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, id=id)
             sql = """
                 DELETE FROM tingleserver."Questionnaire"
-                WHERE id=%s;
+                WHERE id=:id;
             """
-            cur.execute(sql, (id,))
-            conn.commit()
-            cur.close()
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, id=id)
+            transaction.commit()
             return id
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't delete questionnaire by id")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def get_patient_questionnaires(id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             today = str(date.today())
             sql = """
                 SELECT id, name, end_date, opened FROM tingleserver."Questionnaire" Q
                 JOIN tingleserver."Patient_Receives_Questionnaire" PRQ ON (Q.id = PRQ.questionnaire_id)
-                WHERE ac_id=%s
-                AND end_date >= %s
-                AND completed=%s;
+                WHERE ac_id=:ac_id
+                AND end_date >=:end_date
+                AND completed=:completed;
             """
-            r = dictfetchall(cur, sql, (id, today, False))
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, ac_id=id, end_date=today, completed=False).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
-            conn.rollback()
+            print("Unexpected error getting questionnaire: ", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def add_questionnaire(name, link, end_date):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 INSERT INTO tingleserver."Questionnaire" (name, link, end_date)
-                VALUES(%s, %s, %s)
+                VALUES(:name, :link, :end_date)
                 RETURNING id;
             """
-            r = dictfetchone(cur, sql, (name, link, end_date))
-            conn.commit()
-            cur.close()
-            return r
-        except:
-            # If there were any errors, return a NULL row printing an error to the debug
-            print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
-            conn.rollback()
-            raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
-    return None
-
-def update_questionnaire(id, name, link, end_date):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
-        try:
-            sql = """
-                UPDATE tingleserver."Questionnaire"
-                    SET name=%s,
-                        link=%s,
-                        end_date=%s
-                    WHERE id=%s;
-            """
-            cur.execute(sql, (name, link, end_date, id))
-            conn.commit()
-            result = dictfetchone(cur, """SELECT *
-                                            FROM tingleserver."Questionnaire"
-                                            WHERE id=%s""", (id,))
-            cur.close()
-            conn.close()
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, name=name, link=link, end_date=end_date).fetchone()
+            transaction.commit()
             return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error inserting questionnaire: ", sys.exc_info()[0])
-            conn.rollback()
+            transaction.rollback()
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
+    return None
+
+def update_questionnaire(id, name, link, end_date):
+    with db.connect() as conn:
+        transaction = conn.begin()
+        try:
+            sql = """
+                UPDATE tingleserver."Questionnaire"
+                    SET name=:name,
+                        link=:link,
+                        end_date=:end_date
+                    WHERE id=:id;
+            """
+            stmt = sqlalchemy.text(sql)
+            conn.execute(stmt, name=name, link=link, end_date=end_date, id=id)
+            transaction.commit()
+            sql = """SELECT *
+                    FROM tingleserver."Questionnaire"
+                    WHERE id=:id"""
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, id=id).fetchone()
+            return result
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error updating questionnaire: ", sys.exc_info()[0])
+            transaction.rollback()
+            raise
     return None
 
 def link_questionnaire_to_patient(questionnaire_id, valid_recipients):
     successful_records = []
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         for id, email in valid_recipients:
             try:
                 sql = """
                     INSERT INTO tingleserver."Patient_Receives_Questionnaire"
                     (ac_id, questionnaire_id)
-                    VALUES (%s, %s)
+                    VALUES (:ac_id, :questionnaire_id)
                     RETURNING ac_id;
                 """
-                r = dictfetchone(cur, sql, (id, questionnaire_id))
-                conn.commit()
+                stmt = sqlalchemy.text(sql)
+                result = conn.execute(stmt, ac_id=id, questionnaire_id=questionnaire_id).fetchone()
+                transaction.commit()
                 successful_records.append(email)
             except:
                 # If there were any errors, return a NULL row printing an error to the debug
                 print("Error: can't link questionnaire and patient")
                 continue
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return successful_records
 
 def get_all_patients_in_db():
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = """
-                SELECT ac_email FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient";
+                SELECT ac_id, ac_email FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient";
             """
-
-            r = dictfetchall(cur, sql)
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            result = conn.execute(sql).fetchall()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Unexpected error getting all patients:", sys.exc_info()[0])
             raise
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def mark_questionnaire_as_opened(patient_id, questionnaire_id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 UPDATE tingleserver."Patient_Receives_Questionnaire"
-                SET opened=%s
-                WHERE ac_id=%s
-                AND questionnaire_id=%s
+                SET opened=:opened
+                WHERE ac_id=:patient_id
+                AND questionnaire_id=:questionnaire_id
                 RETURNING opened;
             """
-            r = dictfetchone(cur, sql, (True, patient_id, questionnaire_id))
-            conn.commit()
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, opened=True, patient_id=patient_id, questionnaire_id=questionnaire_id).fetchone()
+            transaction.commit()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't update questionnaire 'opened' column")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None
 
 def mark_questionnaire_as_completed(patient_id, questionnaire_id):
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
+        transaction = conn.begin()
         try:
             sql = """
                 UPDATE tingleserver."Patient_Receives_Questionnaire"
-                SET completed=%s
-                WHERE ac_id=%s
-                AND questionnaire_id=%s
+                SET completed=:completed
+                WHERE ac_id=:patient_id
+                AND questionnaire_id=:questionnaire_id
                 RETURNING completed;
             """
-            r = dictfetchone(cur, sql, (True, patient_id, questionnaire_id))
-            conn.commit()
-            cur.close()                     # Close the cursor
-            conn.close()                    # Close the connection to the db
-            return r
+            stmt = sqlalchemy.text(sql)
+            result = conn.execute(stmt, completed=True, patient_id=patient_id, questionnaire_id=questionnaire_id).fetchone()
+            transaction.commit()
+            return result
         except:
             # If there were any errors, return a NULL row printing an error to the debug
             print("Error: can't update questionnaire 'completed' column")
-        cur.close()                     # Close the cursor
-        conn.close()                    # Close the connection to the db
     return None

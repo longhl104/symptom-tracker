@@ -970,13 +970,16 @@ def create_questionnaire():
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         recipients = form_data.get('recipients')[0]
         valid_recipients, invalid_recipients = validate_recipients(recipients)
-        if (valid_recipients == None and invalid_recipients == None) or len(valid_recipients) == 0:
+        if (valid_recipients == None and invalid_recipients == None):
             flash('Invalid recipient(s) format. Please enter a comma separated list with no spaces.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        if (len(valid_recipients) == 0):
+            flash('No valid recipients entered. Please ensure all patient emails are associated with existing patient accounts and list is comma separated with no spaces.', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         existing_questionnaire = database.get_questionnaire(link)
         if existing_questionnaire:
@@ -1020,7 +1023,7 @@ def modify_questionnaire(id=None):
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         existing_questionnaire = database.get_questionnaire(None, id)

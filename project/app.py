@@ -214,7 +214,7 @@ def forgot_password():
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
-@app.route('/researcher/')
+@app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
@@ -223,16 +223,6 @@ def researcher_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('researcher/dashboard.html', session=session)
-@app.route('/researcher/patient-data',methods=['GET', 'POST'])
-def researcher_data():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-
-    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
-        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
-        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
@@ -248,7 +238,7 @@ def researcher_data():
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):
@@ -301,7 +291,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
@@ -336,23 +326,6 @@ def clinician_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/create_survey/')
-def create_survey():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/view_patients/')
-def view_patients():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     print(patients)
@@ -364,9 +337,8 @@ def view_patients():
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
         list_of_patients.append(patient_dict)
-    print(list_of_patients)
 
-    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
+    return render_template('clinician/dashboard.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):
@@ -381,6 +353,11 @@ def view_patients_history(id = None):
         return(redirect(url_for('clinician_dashboard')))
     print('id = {}'.format(id))
     if id != None:
+        patient = database.get_account(id)
+        if patient is None:
+            flash("Failed to find patient with that email address", "alert-warning")
+            return redirect(url_for(clinician_dashboard))
+        patient_id = patient[0].get('ac_id')
         symptoms = None
         symptoms = database.get_all_symptoms(id)
         list_of_symptoms = []
@@ -395,8 +372,8 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
-    return(redirect(url_for('clinician_dashboard')))
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms, id=patient_id)
+    return redirect(url_for('clinician_dashboard'))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):

@@ -1,32 +1,48 @@
 {% extends "sidebar.html" %}
 {% block head %}
-{{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symptom-history.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/input-fields.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/buttons.css') }}">
 
-<script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Patients List{% endblock %}
 
 {% block sidebar %}
-{{ super() }}
+  {{ super() }}
   {% block content %}
-  <main class="s-layout__content">
     <div class="container">
-      <div class="grid-container">
-        <div class="grid-header">
-          <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
-        </div>
-        <div class="grid-button-left">
-          <a href="{{url_for('create_survey')}}" class="btn green aligned">Create Survey</a>
-        </div>
-        <div class="grid-button-right">
-          <a href="{{url_for('view_patients')}}" class="btn blue aligned">View Patients</a>
-        </div>
-        <div class="grid-main">
-        </div>
+      <h5 class="title" id="heading" style="display: none;">{{ session.name }}</h5>
+      <div class="card">
+        <h5 class="subtitle">Patient List</h5>
+        <table>
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Age</th>
+              <th>Gender</th>
+              <th>Symptom Recordings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for patient in patients %}
+              <tr>
+                <td>{{patient.ac_firstname}}</td>
+                <td>{{patient.ac_lastname}}</td>
+                <td>{{patient.ac_age}}</td>
+                <td>{{patient.ac_gender}}</td>
+                <td><button class="btn blue" style="width: auto; padding: 7px; margin-top: 0px;" onclick="viewHistory('{{ patient.ac_email}}')"><img src="{{ url_for('static', filename='images/icons/documents.png' ) }}" width="18" height="18" /></button>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
-  </main>
+  {% endblock %}
+  {% block bodyscripts %}
+    {{ super() }}
+    <script type="text/javascript" src="{{ url_for('static', filename='js/view-patients.js') }}"></script>
   {% endblock %}
 {% endblock %}

@@ -357,7 +357,7 @@ def view_patients_history(id = None):
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
             return redirect(url_for(clinician_dashboard))
-        patient_id = patient[0].get('ac_id')
+        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
         symptoms = None
         symptoms = database.get_all_symptoms(id)
         list_of_symptoms = []
@@ -372,7 +372,7 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms, id=patient_id)
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms, name=patient_name)
     return redirect(url_for('clinician_dashboard'))
 
 @app.route('/clinician/view_reports/<email>', methods=['GET', 'POST'])

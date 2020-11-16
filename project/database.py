@@ -50,7 +50,7 @@ class DatabaseHandler:
         )
         return pool  
 
-db = DatabaseHandler(False).connect()
+db = DatabaseHandler().connect()
 
 def check_login(email, password):
     """
@@ -326,9 +326,7 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
     elif age_low != "" and age_high != "":
         date_query = " AND A.age BETWEEN :age_low AND :age_high"
 
-    conn = database_connect()
-    if conn:
-        cur = conn.cursor()
+    with db.connect() as conn:
         try:
             sql = None
             r = None

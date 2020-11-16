@@ -13,7 +13,7 @@ td {
 
 .card {
     margin-top: 15px;
-    width: 100%;
+    width: 90%;
 }
 
 .title {
@@ -22,7 +22,7 @@ td {
 }
 
 .container {
-    width: 100%;
+    width: 85%;
     padding: 1rem;
     justify-content: normal;
     align-items: normal;
@@ -137,7 +137,7 @@ Screen = 768px to 1024px
 
 @media (min-width: 42em) {
     .container {
-        margin-left: 9em;
+        margin-left: 7em;
     }
 }
 
@@ -154,7 +154,8 @@ Screen = 481px to 767px
 
 @media (min-width: 481px) and (max-width: 767px) {
     .container {
-        margin-top: 7em;
+        margin-top: 5em;
+        width: 95%;
     }
 
     .cards-holder {
@@ -163,6 +164,10 @@ Screen = 481px to 767px
 
     .title {
         font-size: 36px;
+    }
+
+    .card {
+        width: 100%;
     }
 }
 
@@ -173,7 +178,12 @@ Screen = 320px to 479px
 
 @media (min-width: 320px) and (max-width: 480px) {
     .container {
-        margin-top: 7em;
+        margin-top: 5em;
+        width: 95%;
+    }
+
+    .card {
+        width: 100%;
     }
 
     .cards-holder {
@@ -182,5 +192,9 @@ Screen = 320px to 479px
 
     .title {
         font-size: 28px;
+    }
+
+    th {
+        font-size: 14px;
     }
 }

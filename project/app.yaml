@@ -11,11 +11,11 @@ runtime_config:
 
 # Enable a TCP domain socket
 beta_settings:
-  cloud_sql_instances: plexiform-plane-295614:us-central1:test-db
+  cloud_sql_instances: <CONN_NAME>
 
 env_variables:
-  DB_USER: postgres
-  DB_PASS: dfNht3Dd2FLmp6yw
-  DB_NAME: postgres
-  DB_HOST: 34.71.176.179
-  CONNECTION_NAME: plexiform-plane-295614:us-central1:test-db
+  DB_USER: <USERNAME>
+  DB_PASS: <PASSWORD>
+  DB_NAME: <NAME>
+  DB_HOST: <HOST>
+  CONNECTION_NAME: <CONN_NAME>

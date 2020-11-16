@@ -1,6 +1,12 @@
 ul {
     list-style-type: none;
 }
+
+.title {
+  margin-bottom: 6px;
+  margin-left: 10px;
+}
+
 #cl-list-container {
     background-color: #F5F6FA;
     padding: 20px 20px 20px 20px;
@@ -14,7 +20,7 @@ ul {
     padding: 7px;
     border: transparent;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 1.4rem;
     color: #FFFFFF;
     margin: 5px 0px 5px 0px;
     display: block;
@@ -29,14 +35,14 @@ ul {
     padding: 5px 16px;
     transform: translate(0%, -70%);
     color: #FFFFFF;
-    font-size: 24px;
+    font-size: 1.4rem;
 }
 
 .container {
   width: 75%;
   justify-content: normal;
   align-items: normal;
-  margin-top: 9em;
+  padding-top: 5em;
 }
 
 .card {
@@ -45,30 +51,8 @@ ul {
 }
 
 .subtitle {
-  font-size: 1.3em;
+  font-size: 1.6rem;
 }
-
-/*
-  Device = Desktops
-  Screen = 1281px to higher resolution desktops
-*/
-
-/* @media (min-width: 1281px) {
-    .container {
-      width: 50%;
-    }
-  } */
-  
-  /*
-    Device = Most Smartphones (Portrait)
-    Screen = 320px to 479px
-  */
-  
-  /* @media (min-width: 320px) and (max-width: 480px) {
-    .card {
-      width: 90%;
-    }
-  } */
 
   /*
   Device = Desktops
@@ -113,6 +97,9 @@ ul {
     .container {
       width: 75%;
     }
+    .subtitle {
+      font-size: 1.4rem;
+    }
   }
   
   /*
@@ -126,6 +113,9 @@ ul {
     }
     #cl-list-container li {
       font-size: 16px;
+    }
+    .subtitle {
+      font-size: 1.4rem;
     }
   }
   

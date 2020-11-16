@@ -214,7 +214,7 @@ def forgot_password():
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
-@app.route('/researcher/')
+@app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
@@ -223,16 +223,6 @@ def researcher_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('researcher/dashboard.html', session=session)
-@app.route('/researcher/patient-data',methods=['GET', 'POST'])
-def researcher_data():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-
-    if user_details['ac_type'] in ['clinician', 'patient', 'admin']:
-        print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
-        return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
@@ -243,12 +233,31 @@ def researcher_data():
         for i, col in enumerate(consent.split(",",4)):
             consent_dict[consent_col_order[i]] = col.strip('"')
         list_of_consents.append(consent_dict)
+    poplist= []
+    for i in range(len(list_of_consents)):
+        if i in poplist:
+            continue
+        else:
+            current_id = list_of_consents[i]["ac_id"]
+            for j in range(i+1,len(list_of_consents)):
+                if j in poplist:
+                    continue
+                else:
+                    checking_id  = list_of_consents[j]["ac_id"]
+                    if current_id == checking_id:
+                        list_of_consents[i]["treatment_name"] = list_of_consents[i]["treatment_name"]  +", \n"+ list_of_consents[j]["treatment_name"]
+                        poplist.append(j)
+    poplist.sort(reverse=True)
+    for i in poplist:
+        list_of_consents.pop(i)
+
+
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
         if (lage == ""):
@@ -301,7 +310,7 @@ def researcher_data():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
-        return render_template('researcher/patient-research.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
+        return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
 def view_consent_history(id = None):
@@ -395,23 +404,6 @@ def clinician_dashboard():
         print('Error: Attempted accessing researcher dashboard as', str(user_details['ac_type']))
         return redirect(url_for(str(user_details['ac_type']) + '_dashboard'))
 
-    print(session)
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/create_survey/')
-def create_survey():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
-    return render_template('clinician/dashboard.html', session=session)
-
-@app.route('/clinician/view_patients/')
-def view_patients():
-    if not session.get('logged_in', None):
-        return redirect(url_for('login'))
-    if user_details['ac_type'] != 'clinician':
-        raise Exception('Error: Attempted accessing clinician dashboard as Unknown')
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     print(patients)
@@ -423,9 +415,8 @@ def view_patients():
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
         list_of_patients.append(patient_dict)
-    print(list_of_patients)
 
-    return render_template('clinician/view-patients.html', session=session, patients=list_of_patients)
+    return render_template('clinician/dashboard.html', session=session, patients=list_of_patients)
 
 @app.route('/clinician/view_patients/<id>', methods=['GET'])
 def view_patients_history(id = None):
@@ -440,6 +431,11 @@ def view_patients_history(id = None):
         return(redirect(url_for('clinician_dashboard')))
     print('id = {}'.format(id))
     if id != None:
+        patient = database.get_account(id)
+        if patient is None:
+            flash("Failed to find patient with that email address", "alert-warning")
+            return redirect(url_for(clinician_dashboard))
+        patient_id = patient[0].get('ac_id')
         symptoms = None
         symptoms = database.get_all_symptoms(id)
         list_of_symptoms = []
@@ -454,8 +450,8 @@ def view_patients_history(id = None):
                     col = "None"
                 symptom_dict[symptom_col_order[i]] = col.strip('"')
             list_of_symptoms.append(symptom_dict)
-        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms)
-    return(redirect(url_for('clinician_dashboard')))
+        return render_template('clinician/symptom-history.html', session=session, symptoms=list_of_symptoms, id=patient_id)
+    return redirect(url_for('clinician_dashboard'))
 
 @app.route('/reset-password/<url_key>', methods=['GET', 'POST'])
 def reset_password(url_key):
@@ -1052,13 +1048,16 @@ def create_questionnaire():
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         recipients = form_data.get('recipients')[0]
         valid_recipients, invalid_recipients = validate_recipients(recipients)
-        if (valid_recipients == None and invalid_recipients == None) or len(valid_recipients) == 0:
+        if (valid_recipients == None and invalid_recipients == None):
             flash('Invalid recipient(s) format. Please enter a comma separated list with no spaces.', 'alert-warning')
+            return redirect(url_for('admin_dashboard'))
+        if (len(valid_recipients) == 0):
+            flash('No valid recipients entered. Please ensure all patient emails are associated with existing patient accounts and list is comma separated with no spaces.', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         existing_questionnaire = database.get_questionnaire(link)
         if existing_questionnaire:
@@ -1102,7 +1101,7 @@ def modify_questionnaire(id=None):
         name = form_data.get('questionnaire-name')[0].strip()
         link = form_data.get('survey-link')[0].strip()
         if not validate_form_link(link):
-            flash('Invalid Survey link. Please enter a Google forms link with the prefill for Email address.', 'alert-warning')
+            flash('Invalid survey link. Please enter a Google forms link with the prefill "EMAILADDRESS" for input "Email address".', 'alert-warning')
             return redirect(url_for('admin_dashboard'))
         end_date = form_data.get('end-date')[0]
         existing_questionnaire = database.get_questionnaire(None, id)

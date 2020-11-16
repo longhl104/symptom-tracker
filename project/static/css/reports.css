@@ -1,6 +1,7 @@
 .container {
     width: 65%;
-    padding: 1rem;
+    padding-top: 4rem;
+    padding-left: 6rem;
     justify-content: normal;
     align-items: normal;
   }
@@ -8,11 +9,6 @@
   .card {
     margin-top: 15px;
     width: 100%;
-  }
-  
-  .title {
-    color: #333333;
-    font-size: 50px;
   }
   
   textarea {
@@ -35,6 +31,7 @@
   @media (min-width: 1281px) {
     .container {
       width: 75%;
+      padding-left: 8rem;
     }
   }
   
@@ -51,6 +48,7 @@
   
     .container {
       width: 90%;
+      padding-top: 6rem;
     }
   
     .title {
@@ -70,7 +68,8 @@
     }
   
     .container {
-      width: 100%;
+      width: 90%;
+      padding-top: 6rem;
     }
   
     .title {
@@ -91,6 +90,8 @@
   
     .container {
       width: 90%;
+      padding-top: 6rem;
+      padding-left: 4rem;
     }
   
     .title {
@@ -111,6 +112,9 @@
   
     .container {
       width: 100%;
+      padding-top: 6rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
   
     .title {

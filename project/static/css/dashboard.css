@@ -32,7 +32,7 @@
 
 .survey-item {
     background-color: white;
-    padding: 5px;
+    padding: 10px;
     margin-top: 20px;
     display: flex;
     border-radius: 5px;
@@ -40,16 +40,18 @@
 }
 
 .due-date {
+    text-align: center;
     background-color: #dadada;
     padding: 5px;
     border-radius: 5px;
     margin-right: 5px;
+    margin-left: 10px;
     color: #525252;
     white-space: nowrap;
 }
 
 .survey-text {
-    font-size: 1.2rem;
+    font-size: 1.6rem;
     margin: auto auto auto 10px;
 }
 
@@ -60,7 +62,7 @@
 }
 
 .message {
-    font-size: 1rem;
+    font-size: 1.5rem;
     margin-top: 5px;
     color: #393939;
     font-weight: 400;
@@ -86,8 +88,11 @@
 
 @media (min-width: 1025px) {
     .aligned {
-        font-size: 1.6rem;
+        font-size: 2rem;
         padding: 40px;
+    }
+    .due-date {
+        font-size: 1.1rem;
     }
 }
 
@@ -98,14 +103,11 @@
 
 @media (min-width: 768px) and (max-width: 1024px) {
     .aligned {
-        font-size: 1.5rem;
+        font-size: 2rem;
         padding: 40px;
     }
     .container {
         width: 80%;
-    }
-    .btn {
-        font-size: 14px;
     }
 }
 
@@ -116,7 +118,7 @@
 
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
     .aligned {
-        font-size: 1.7rem;
+        font-size: 2rem;
         padding: 40px;
     }
 }
@@ -128,14 +130,14 @@
 
 @media (min-width: 481px) and (max-width: 767px) {
     .aligned {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         padding: 30px;
     }
     .survey-status {
         min-width: 80px; 
     }
     .survey-text {
-        font-size: 16px; 
+        font-size: 1.6rem; 
     }
     .container {
         width: 80%;
@@ -145,11 +147,15 @@
         justify-content: center;
     }
     .btn {
-        font-size: 14px;
+        font-size: 1.4rem;
+        width: 100%;
     }
     .mark-as-completed {
         margin-left: 0px;
         margin-top: 5px;
+    }
+    .due-date {
+        width: 100%;
     }
 }
 
@@ -160,7 +166,7 @@
 
 @media (max-width: 480px) {
     .aligned {
-        font-size: 1.1rem;
+        font-size: 1.1rem !important;
         padding: 20px;
     }
     .title {
@@ -173,7 +179,7 @@
         min-width: 60px; 
     }
     .survey-text {
-        font-size: 0.9rem; 
+        font-size: 1.2rem; 
     }
     .container {
         width: 100%;
@@ -182,10 +188,18 @@
         flex-direction: column;
     }
     .btn {
-        font-size: 14px;
+        font-size: 1rem;
+        width: 100%;
     }
     .mark-as-completed {
         margin-left: 0px;
         margin-top: 5px;
     }
+    .due-date {
+        width: 100%;
+    }
+    .message {
+        font-size: 1.2rem;
+    }
+    
 }

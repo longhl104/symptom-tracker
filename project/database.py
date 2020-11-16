@@ -825,6 +825,26 @@ def get_patient_by_email(email):
         conn.close()                    # Close the connection to the db
     return None
 
+def get_patient_name(email):
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT ac_firstname, ac_lastname FROM tingleserver."Account" NATURAL JOIN tingleserver."Patient"
+                WHERE ac_email = %s;
+            """
+            r = dictfetchone(cur, sql, (email,))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Error: can't get patient by email")
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def get_questionnaire(link, id=None):
     conn = database_connect()
     if conn:

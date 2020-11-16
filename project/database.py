@@ -374,6 +374,128 @@ def get_all_consent():
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+
+def get_all_consent_export_all():
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = """
+                SELECT (A.ac_id, A.ac_age, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
+                FROM tingleserver."Patient" AS P
+                INNER JOIN 
+                tingleserver."Account" AS A
+                ON P.ac_id = A.ac_id 
+                INNER JOIN
+                tingleserver."Symptom" AS S
+                ON A.ac_email = S.patient_username
+                INNER JOIN
+                tingleserver."Patient_Receives_Treatment" AS PRT
+                ON A.ac_id = PRT.patient_id
+                INNER JOIN
+                tingleserver."Treatment" AS T
+                ON PRT.treatment_id  = T.treatment_id
+                WHERE P.consent =%s
+                ORDER BY A.ac_id, S.recorded_date, CASE WHEN S.occurence = 'Morning' THEN 1
+                                            WHEN S.occurence = 'Daytime' THEN 2
+                                            WHEN S.occurence = 'Night-time' THEN 3
+                                            WHEN S.occurence = 'All the time' THEN 4
+                                            WHEN S.occurence = 'Sporadic' THEN 5 
+                                    END
+            """
+
+            r = dictfetchall(cur, sql, ("yes",))
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all data: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
+def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
+    if gender == "":
+        single_gender = ""
+    else :
+        single_gender = " AND A.gender=%s"
+
+    if symptom == "":
+        single_symptom = ""
+    else :
+        single_symptom = " AND S.symptom_name=%s"
+
+    if chemo == "":
+        single_chemo = ""
+    else :
+        single_chemo = " AND T.treatment_name=%s"
+
+    age_query = ""
+    if age_low == "" and age_high != "":
+        date_query = " AND A.age <= %s"
+    elif age_low != "" and age_high == "":
+        date_query = " AND A.age >= %s"
+    elif age_low != "" and age_high != "":
+        date_query = " AND A.age BETWEEN %s AND %s"
+
+    conn = database_connect()
+    if conn:
+        cur = conn.cursor()
+        try:
+            sql = None
+            r = None
+            sql = """
+                SELECT (A.ac_id, A.ac_age, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
+                FROM tingleserver."Patient" AS P
+                INNER JOIN 
+                tingleserver."Account" AS A
+                ON P.ac_id = A.ac_id 
+                INNER JOIN
+                tingleserver."Symptom" AS S
+                ON A.ac_email = S.patient_username
+                INNER JOIN
+                tingleserver."Patient_Receives_Treatment" AS PRT
+                ON A.ac_id = PRT.patient_id
+                INNER JOIN
+                tingleserver."Treatment" AS T
+                ON PRT.treatment_id  = T.treatment_id
+                WHERE P.consent =%s{single_gender}{single_symptom}{single_chemo}{age_query}
+                ORDER BY A.ac_id, S.recorded_date, CASE WHEN S.occurence = 'Morning' THEN 1
+                                            WHEN S.occurence = 'Daytime' THEN 2
+                                            WHEN S.occurence = 'Night-time' THEN 3
+                                            WHEN S.occurence = 'All the time' THEN 4
+                                            WHEN S.occurence = 'Sporadic' THEN 5 
+                                    END
+            """.format(single_gender=single_gender, single_symptom=single_symptom, single_chemo=single_chemo, age_query=age_query)
+            params = ["yes"]
+
+            if gender != "":
+                params.append(gender)
+            if symptom != "":
+                params.append(symptom)
+            if chemo != "":
+                params.append(chemo)
+            if age_low != "":
+                params.append(age_low)
+            if age_high != "":
+                params.append(age_high)
+            r = dictfetchall(cur, sql, tuple(params))
+
+            print("return val is:")
+            print(r)
+            cur.close()                     # Close the cursor
+            conn.close()                    # Close the connection to the db
+            return r
+        except:
+            # If there were any errors, return a NULL row printing an error to the debug
+            print("Unexpected error getting all symptoms: ", sys.exc_info()[0])
+            raise
+        cur.close()                     # Close the cursor
+        conn.close()                    # Close the connection to the db
+    return None
+
 def get_all_patients(email):
     conn = database_connect()
     if conn:
@@ -395,6 +517,7 @@ def get_all_patients(email):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+
 def check_clinician_link(clinician_id, patient_email):
     conn = database_connect()
     if conn:
@@ -419,6 +542,7 @@ def check_clinician_link(clinician_id, patient_email):
         cur.close()                     # Close the cursor
         conn.close()                    # Close the connection to the db
     return None
+
 def check_key_exists(email):
     conn = database_connect()
     if conn:

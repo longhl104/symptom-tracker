@@ -749,7 +749,7 @@ def get_export_data(email, symptom, location, start_date, end_date, with_notes):
     if symptom == "All":
         extra_vars = "symptom_name, location, "
         single_symptom = ""
-    elif location == "All":
+    if location == "All":
         extra_vars = "symptom_name, location, "
         single_location = ""
     if (with_notes):

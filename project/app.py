@@ -822,10 +822,14 @@ def download_file(email = None):
 
     output = make_response(string_input.getvalue())
 
+    if location == "All" and symptom == "All":
+        filename = 'all_symptoms_and_locations.csv'
+    else:
+        filename = symptom.lower() + "_" + location.lower() + ".csv" 
     if user_details['ac_type'] == 'clinician':
-        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + symptom.lower() + "_" + location.lower() + ".csv" )
+        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + filename )
     else: 
-        output.headers["Content-Disposition"] = ( "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".csv" )
+        output.headers["Content-Disposition"] = ( "attachment; filename=" + filename)
 
     output.headers["Content-type"] = "text/csv"
 

@@ -12,7 +12,7 @@ import pygal
 import io
 import csv
 from pygal.style import Style
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
 from threading import Thread
@@ -89,27 +89,27 @@ def register(token=None):
         firstName = request.form.get('first-name')
         lastName = request.form.get('last-name')
         gender = request.form.get('gender', "")
-        age = request.form.get('age', "NA")
+        dob = request.form.get('dob', "")
         mobile = request.form.get('mobile',"")
         treatment = request.form.getlist('treatment')
         emailAddress = request.form.get('email-address')
         password = request.form.get('password')
 
         try:
+            if len(treatment) == 0:
+                flash('Please enter a treatment type.', 'alert-warning')
+                return redirect(url_for('register'))
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'alert-warning')
                 return redirect(url_for('register'))
-            if (age == ""):
-                age = None
-            if (gender == "NA"):
-                gender = None
-            if (mobile == ""):
-                mobile = None
+            dob = None if dob == "" else dob
+            gender = None if gender == "" else gender
+            mobile = None if mobile == "" else mobile
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
                 gender,
-                age,
+                dob,
                 mobile,
                 treatment,
                 emailAddress,
@@ -135,13 +135,11 @@ def register(token=None):
             print('Exception occurred. Please try again')
             flash('Email address already in use. Please try again', 'alert-warning')
             # return redirect(url_for('register'))
-            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
+            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, dob=dob, mobile=mobile)
     elif not token and request.method == 'GET':
         if not session.get('logged_in', None):
             treatments = None
-            # TODO: try except; should handle somehow if it fails
             treatments = database.get_all_treatments()
-            # TODO: probably best to hardcode some treatment types if it fails
             if treatments is None:
                 treatments = {}
 
@@ -159,17 +157,17 @@ def register(token=None):
                 if request.form['password'] != request.form['confirm-password']:
                     flash('Passwords do not match. Please try again', 'alert-warning')
                     return render_template('register-extra.html', token=token)
-                age = None
-                # gender = request.form.get('gender', "NA")
-                # if (gender == "NA"):
-                #     gender = None
+                gender = request.form.get('gender', "")
+                gender = None if gender == "" else gender
+                dob = request.form.get('dob', "")
+                dob = None if dob == "" else dob
                 mobile = request.form.get('mobile-number', "")
                 mobile = None if mobile == "" else mobile
                 add_account_ret = database.add_patient(
                     request.form.get('first-name'),
                     request.form.get('last-name'),
-                    request.form.get('gender', ""), # gender,
-                    age,
+                    gender,
+                    dob,
                     mobile,
                     request.form.getlist('treatment', []),
                     request.form.get('email-address'),
@@ -179,7 +177,6 @@ def register(token=None):
                     'yes' if request.form.get('consent') == 'on' else 'no'
                 )
                 if add_account_ret is None:
-                    # TODO: return error message
                     return render_template('register-extra.html', token=token)
                 else:
                     delete_token = database.delete_account_invitation(token, request.form['email-address'])
@@ -225,6 +222,13 @@ def forgot_password():
     elif request.method == 'GET':
         return render_template('forgot-password.html')
 
+def calculate_age(birth_str): 
+    if birth_str == '':
+        return -1
+    today = date.today() 
+    birth_date = datetime.strptime(birth_str, "%Y-%m-%d")
+    return today.year - birth_date.year - ((today.month, today.day) <  (birth_date.month, birth_date.day))  
+
 @app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
     if not session.get('logged_in', None):
@@ -237,7 +241,7 @@ def researcher_dashboard():
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
-    consent_col_order = ["ac_email","ac_id", "ac_age", "ac_gender","treatment_name"]
+    consent_col_order = ["ac_email","ac_id", "ac_dob", "ac_gender","treatment_name"]
     for consent in consents:
         consent = consent['row'][1:-1]
         consent_dict = {}
@@ -261,13 +265,15 @@ def researcher_dashboard():
     poplist.sort(reverse=True)
     for i in poplist:
         list_of_consents.pop(i)
-
-
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
+        for consent in list_of_consents:
+            for key in consent:
+                if consent[key] == "":
+                    consent[key] = "NA"
         return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
@@ -291,13 +297,13 @@ def researcher_dashboard():
         if lage is not None:
             temp=[]
             for x in list_of_consents:
-                if(x["ac_age"] >= lage):
+                if(calculate_age(x["ac_dob"]) >= int(lage)):
                     temp.append(x)
             list_of_consents = temp
         if hage is not None:
             temp=[]
             for x in list_of_consents:
-                if(x["ac_age"] <= hage):
+                 if(calculate_age(x["ac_dob"]) <= int(hage)):
                     temp.append(x)
             list_of_consents = temp
         if gen is not None:
@@ -321,6 +327,10 @@ def researcher_dashboard():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
+        for consent in list_of_consents:
+            for key in consent:
+                if consent[key] == "":
+                    consent[key] = "NA"
         return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
@@ -360,7 +370,7 @@ def download_export_all():
         row = row["row"][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
-    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    head = ("Id", "Date of Birth", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
     csv_writer.writerow(head)
     csv_writer.writerows(row_data)
 
@@ -379,6 +389,12 @@ def download_export_filters():
 
     lage = request.form.get('lage', "")
     hage = request.form.get('hage', "")
+    ldob = ""
+    hdob = ""
+    if lage != "":
+        ldob = date.today() - timedelta(days=int(lage)*365.25)
+    if hage != "":
+        hdob = date.today() - timedelta(days=int(hage)*365.25)
     sym = request.form.get('symptom', "")
     chemo = request.form.get('chemotherapy', "")
     gen = request.form.get('gender', "")
@@ -386,14 +402,14 @@ def download_export_filters():
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
 
-    data = database.get_consent_export_filters(lage, hage, gen, sym, chemo)
+    data = database.get_consent_export_filters(ldob, hdob, gen, sym, chemo)
     row_data = []
 
     for row in data:
         row = row["row"][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
-    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    head = ("Id", "DOB", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
     csv_writer.writerow(head)
     csv_writer.writerows(row_data)
 
@@ -417,7 +433,7 @@ def clinician_dashboard():
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
     list_of_patients = []
-    patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_age", "ac_gender"]
+    patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_dob", "ac_gender"]
     for patient in patients:
         patient = patient['row'][1:-1]
         patient_dict = {}
@@ -626,7 +642,7 @@ def symptom_history():
     return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
 # Helper functions for graph visualisation -> might move to utility file
-def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
+def daterange(start_date, end_date): 
                 for n in range(int((end_date - start_date).days)):
                     yield start_date + timedelta(n)
 

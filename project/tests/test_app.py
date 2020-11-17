@@ -30,7 +30,7 @@ class AppTest(unittest.TestCase):
 
             db.return_value = [{
                 'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
-                'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456',
+                'ac_lastname': 'Nguyen', 'ac_dob': '01-01-1994', 'ac_gender': 'male', 'ac_phone': '0415123456',
                 'ac_type': 'clinician',
             }]
             cph.return_value = False
@@ -51,7 +51,7 @@ class AppTest(unittest.TestCase):
 
             db.return_value = [{
                 'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
-                'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456',
+                'ac_lastname': 'Nguyen', 'ac_dob': '01-01-1994', 'ac_gender': 'male', 'ac_phone': '0415123456',
                 'ac_type': 'unknown'
             }]
             cph.return_value = True
@@ -71,7 +71,7 @@ class AppTest(unittest.TestCase):
 
     @mock.patch('project.app.user_details', {
         'ac_id': 12, 'ac_email': 'long', 'ac_password': '12345678', 'ac_firstname': 'Long',
-        'ac_lastname': 'Nguyen', 'ac_age': 22, 'ac_gender': 'male', 'ac_phone': '0415123456',
+        'ac_lastname': 'Nguyen', 'ac_dob': '01-01-1994', 'ac_gender': 'male', 'ac_phone': '0415123456',
         'ac_type': 'patient',
     })
     @mock.patch('project.app.session', {'logged_in': True})

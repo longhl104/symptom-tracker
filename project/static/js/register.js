@@ -61,5 +61,7 @@ function validateForm() {
     valid = false;
   }
 
+  console.log(form["treatment"].value)
+
   return valid;
 }

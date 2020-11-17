@@ -121,7 +121,7 @@ def get_all_treatments():
     return None
 
 
-def add_patient(firstname, lastname, gender, age, mobile, treatment, email, original_password, password_hash, role, consent):
+def add_patient(firstname, lastname, gender, dob, mobile, treatment, email, original_password, password_hash, role, consent):
 
     # Catching boundary cases
     # TODO: return error message to user
@@ -143,10 +143,10 @@ def add_patient(firstname, lastname, gender, age, mobile, treatment, email, orig
         try:
             # Try executing the SQL and get from the database
             sql = """
-                SELECT tingleserver.add_account(:firstname, :lastname, :gender, :age, :mobile, :email, :password_hash, :role, :consent)
+                SELECT tingleserver.add_account(:firstname, :lastname, :gender, :dob, :mobile, :email, :password_hash, :role, :consent)
             """
             stmt = sqlalchemy.text(sql)
-            result = conn.execute(stmt, firstname=firstname, lastname=lastname, gender=gender, age=age, mobile=mobile, email=email, password_hash=password_hash, role=role, consent=consent).fetchone()
+            result = conn.execute(stmt, firstname=firstname, lastname=lastname, gender=gender, dob=dob, mobile=mobile, email=email, password_hash=password_hash, role=role, consent=consent).fetchone()
             patient_id = result[0]
             if role == 'patient':
                 if treatment is not None and len(treatment) > 0:
@@ -245,7 +245,7 @@ def get_all_consent():
     with db.connect() as conn:
         try:
             sql = """
-                SELECT (A.ac_email, A.ac_id, A.ac_age, A.ac_gender, T.treatment_name)
+                SELECT (A.ac_email, A.ac_id, A.ac_dob, A.ac_gender, T.treatment_name)
                 FROM tingleserver."Patient" AS P
                 INNER JOIN 
                 tingleserver."Account" AS A
@@ -271,7 +271,7 @@ def get_all_consent_export_all():
     with db.connect() as conn:
         try:
             sql = """
-                SELECT (A.ac_id, A.ac_age, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
+                SELECT (A.ac_id, A.ac_dob, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
                 FROM tingleserver."Patient" AS P
                 INNER JOIN 
                 tingleserver."Account" AS A
@@ -302,7 +302,7 @@ def get_all_consent_export_all():
             raise
     return None
 
-def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
+def get_consent_export_filters(dob_low, dob_high, gender, symptom, chemo):
     if gender == "":
         single_gender = ""
     else :
@@ -318,20 +318,20 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
     else :
         single_chemo = " AND T.treatment_name=:treatment"
 
-    age_query = ""
-    if age_low == "" and age_high != "":
-        date_query = " AND A.age <= :age_high"
-    elif age_low != "" and age_high == "":
-        date_query = " AND A.age >= :age_low"
-    elif age_low != "" and age_high != "":
-        date_query = " AND A.age BETWEEN :age_low AND :age_high"
+    date_query = ""
+    if dob_low == "" and dob_high != "":
+        date_query = " AND A.ac_dob >= :dob_high"
+    elif dob_low != "" and dob_high == "":
+        date_query = " AND A.ac_dob <= :dob_low"
+    elif dob_low != "" and dob_high != "":
+        date_query = " AND A.ac_dob BETWEEN :dob_high AND :dob_low"
 
     with db.connect() as conn:
         try:
             sql = None
             r = None
             sql = """
-                SELECT (A.ac_id, A.ac_age, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
+                SELECT (A.ac_id, A.ac_dob, A.ac_gender, T.treatment_name, S.symptom_name, S.location, S.recorded_date, S.severity, S.occurence)
                 FROM tingleserver."Patient" AS P
                 INNER JOIN 
                 tingleserver."Account" AS A
@@ -345,14 +345,15 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
                 INNER JOIN
                 tingleserver."Treatment" AS T
                 ON PRT.treatment_id  = T.treatment_id
-                WHERE P.consent =:consent{single_gender}{single_symptom}{single_chemo}{age_query}
+                WHERE P.consent =:consent{single_gender}{single_symptom}{single_chemo}{date_query}
                 ORDER BY A.ac_id, S.recorded_date, CASE WHEN S.occurence = 'Morning' THEN 1
                                             WHEN S.occurence = 'Daytime' THEN 2
                                             WHEN S.occurence = 'Night-time' THEN 3
                                             WHEN S.occurence = 'All the time' THEN 4
                                             WHEN S.occurence = 'Sporadic' THEN 5 
                                     END
-            """.format(single_gender=single_gender, single_symptom=single_symptom, single_chemo=single_chemo, age_query=age_query)
+            """.format(single_gender=single_gender, single_symptom=single_symptom, single_chemo=single_chemo, date_query=date_query)
+            print(sql)
             params = {
                 "consent": "yes"
             }
@@ -363,10 +364,10 @@ def get_consent_export_filters(age_low, age_high, gender, symptom, chemo):
                 params["symptom"] = symptom
             if chemo != "":
                 params["chemo"] = chemo
-            if age_low != "":
-                params["age_low"] = age_low
-            if age_high != "":
-                params["age_high"] = age_high
+            if dob_low != "":
+                params["dob_low"] = dob_low
+            if dob_high != "":
+                params["dob_high"] = dob_high
             stmt = sqlalchemy.text(sql)
             result = conn.execute(stmt, **params).fetchall()
             return result
@@ -380,7 +381,7 @@ def get_all_patients(email):
     with db.connect() as conn:
         try:
             sql = """
-                SELECT (tingleserver."Account".ac_id,tingleserver."Account".ac_email,tingleserver."Account".ac_firstname,tingleserver."Account".ac_lastname,tingleserver."Account".ac_age,tingleserver."Account".ac_gender)
+                SELECT (tingleserver."Account".ac_id,tingleserver."Account".ac_email,tingleserver."Account".ac_firstname,tingleserver."Account".ac_lastname,tingleserver."Account".ac_dob,tingleserver."Account".ac_gender)
                 FROM tingleserver."Patient_Clinician" INNER JOIN tingleserver."Account" ON tingleserver."Patient_Clinician".patient_id = tingleserver."Account".ac_id 
                 WHERE tingleserver."Patient_Clinician".clinician_id=:clinician_id
             """

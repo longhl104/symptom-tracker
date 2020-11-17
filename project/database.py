@@ -3,7 +3,6 @@ import logging
 import configparser
 import json
 import sys
-import pg8000
 from datetime import date
 import sqlalchemy
 

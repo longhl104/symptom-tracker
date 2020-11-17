@@ -1,11 +1,10 @@
 from flask import *
-import database
-import email_handler
+from project import database, email_handler
 import configparser
 import urllib.parse
 import random
 import string
-import pg8000
+from sqlalchemy import exc
 import traceback
 import sys
 import pygal
@@ -205,10 +204,10 @@ def forgot_password():
             unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.IntegrityError: # if key already exists
+            except exc.IntegrityError: # if key already exists
                 unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.ProgrammingError: # email not in database
+            except exc.ProgrammingError: # email not in database
                 flash('There is no account associated with that email. Please try again.', "alert-warning")
                 return render_template('forgot-password.html')
         else:
@@ -365,9 +364,8 @@ def download_export_all():
 
     data = database.get_all_consent_export_all()
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
     head = ("Id", "Date of Birth", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
@@ -404,9 +402,8 @@ def download_export_filters():
 
     data = database.get_consent_export_filters(ldob, hdob, gen, sym, chemo)
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
     head = ("Id", "DOB", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
@@ -494,8 +491,8 @@ def view_patient_reports(email = None):
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
             return redirect(url_for('clinician_dashboard'))
-        patient_email = patient[0].get('ac_email')
-        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
+        patient_email = patient[1]
+        patient_name = patient[3] + ' ' + patient[4]
 
         graph = graph_data = symptom = location = start_date = end_date = None
 
@@ -641,11 +638,6 @@ def symptom_history():
         list_of_symptoms.append(symptom_dict)
     return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
-# Helper functions for graph visualisation -> might move to utility file
-def daterange(start_date, end_date): 
-                for n in range(int((end_date - start_date).days)):
-                    yield start_date + timedelta(n)
-
 def clean_data(start_date, end_date, data, multiple):
     date = []
     severity = []
@@ -659,14 +651,16 @@ def clean_data(start_date, end_date, data, multiple):
     }
     day_included = True
 
+    # Helper functions for graph visualisation
+    def daterange(start_date, end_date):
+        for n in range(int((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+
     for single_date in daterange(start_date, end_date + timedelta(1)):
         d = single_date.strftime("%Y-%m-%d")
         
         if d in data:
             day_included = True
-            date += [d+" "]
-            date += [d+""]
-            date += [d+"\n"]
             if len(data[d]) == 3:
                 severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 
                     'label': 'Morning'}]
@@ -727,20 +721,11 @@ def clean_data(start_date, end_date, data, multiple):
                     sporadic += [None] * 3
 
         elif day_included:
-            date += [" "]
-            date += [""]
-            date += ["\n"]
             severity += [None] * 3
             sporadic += [None] * 3
             day_included = False
 
-        no_days = (end_date - start_date).days + 1
-        i = 0
-        while no_days / (7 * pow(3, i)) > 1:
-            i += 1
-        freq = pow(3, i)
-
-    return date, severity, sporadic, freq
+    return severity, sporadic
 
 def extract_page_data(form_data):
     symptom = form_data.get("symptom")[0]
@@ -789,7 +774,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         multiples = defaultdict(list)
         if (multiple):
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 if symptom == "All":
                     raw_multiples[row[0]].append([row[2], row[3].strip('"'), row[4].strip('"')])
                 else:
@@ -801,7 +786,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
                 multiples[single_all] = dates
         else:
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 data[row[0]].append([row[1].strip('"'), row[2].strip('"')])
 
         results = {}
@@ -815,11 +800,11 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
             for multiple_key in results:
                 graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
         else: 
-            first_row = raw_data[0]["row"][1:-1].split(",")
-            last_row = raw_data[-1]["row"][1:-1].split(",")
+            first_row = raw_data[0][0][1:-1].split(",")
+            last_row = raw_data[-1][0][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
-            date, severity, sporadic, freq = clean_data(start_date, end_date, data, multiple)
+            severity, sporadic = clean_data(start_date, end_date, data, multiple)
 
         custom_style = Style(
             background="#FFFFFF",
@@ -832,13 +817,12 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
             y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
             x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
-
         if patient_name:
-            graph.title = symptom + ' in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+            graph.title = symptom + ' in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             if symptom == "All":
-                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             elif location == "All":
-                graph.title = symptom + ' in all Locations for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = symptom + ' in all Locations for ' + patient_name[0] + ' ' + patient_name[1]
         else:
             graph.title = symptom + ' in my ' + location
             if symptom == "All":
@@ -942,10 +926,8 @@ def download_image(email = None):
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
-    names = database.get_patient_name(email)
-    if names and len(names) > 0:
-        name = names[0]
-    else:
+    name = database.get_patient_name(email)
+    if name is None:
         return(redirect(url_for('clinician_dashboard')))
 
     graph = symptom = location = startDate = endDate = None
@@ -997,7 +979,7 @@ def patient_account(clinician_email=None):
                 user_details['ac_id'],
                 clinician_id
             )
-        except pg8000.IntegrityError:
+        except exc.IntegrityError:
             flash('This clinician account is already linked to your account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
@@ -1105,7 +1087,7 @@ def invite_user():
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_account_invitation(token, email, role)
-            except pg8000.core.IntegrityError: # if token already exists
+            except exc.IntegrityError: # if token already exists
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_account_invitation(token, email, role)
         emails = [{'recipient': email, 'subject': 'Symptom Tracker Invitation', 'message': email_class.invitation_email_text(role, token)}]

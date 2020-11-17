@@ -638,19 +638,6 @@ def clean_data(start_date, end_date, data, multiple):
     }
     day_included = True
 
-def clean_data(start_date, end_date, data, multiple):
-    date = []
-    severity = []
-    sporadic = []
-    severity_dict = {
-        "Not at all": 0,
-        "A little bit": 1,
-        "Somewhat": 2,
-        "Quite a bit": 3,
-        "Very much": 4,
-    }
-    day_included = True
-
     # Helper functions for graph visualisation -> might move to utility file
     def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
         for n in range(int((end_date - start_date).days)):

@@ -5,7 +5,7 @@ import configparser
 import urllib.parse
 import random
 import string
-import pg8000
+from sqlalchemy import exc
 import traceback
 import sys
 import pygal
@@ -208,10 +208,10 @@ def forgot_password():
             unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.IntegrityError: # if key already exists
+            except exc.IntegrityError: # if key already exists
                 unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.ProgrammingError: # email not in database
+            except exc.ProgrammingError: # email not in database
                 flash('There is no account associated with that email. Please try again.', "alert-warning")
                 return render_template('forgot-password.html')
         else:
@@ -355,9 +355,8 @@ def download_export_all():
 
     data = database.get_all_consent_export_all()
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
     head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
@@ -388,9 +387,8 @@ def download_export_filters():
 
     data = database.get_consent_export_filters(lage, hage, gen, sym, chemo)
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
     head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
@@ -478,8 +476,8 @@ def view_patient_reports(email = None):
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
             return redirect(url_for('clinician_dashboard'))
-        patient_email = patient[0].get('ac_email')
-        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
+        patient_email = patient[1]
+        patient_name = patient[3] + ' ' + patient[4]
 
         graph = graph_data = symptom = location = start_date = end_date = None
 
@@ -773,7 +771,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         multiples = defaultdict(list)
         if (multiple):
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 if symptom == "All":
                     raw_multiples[row[0]].append([row[2], row[3].strip('"'), row[4].strip('"')])
                 else:
@@ -785,7 +783,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
                 multiples[single_all] = dates
         else:
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 data[row[0]].append([row[1].strip('"'), row[2].strip('"')])
 
         results = {}
@@ -799,8 +797,8 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
             for multiple_key in results:
                 graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
         else: 
-            first_row = raw_data[0]["row"][1:-1].split(",")
-            last_row = raw_data[-1]["row"][1:-1].split(",")
+            first_row = raw_data[0][0][1:-1].split(",")
+            last_row = raw_data[-1][0][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
             date, severity, sporadic, freq = clean_data(start_date, end_date, data, multiple)
@@ -816,13 +814,12 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
             y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
             x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
-
         if patient_name:
-            graph.title = symptom + ' in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+            graph.title = symptom + ' in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             if symptom == "All":
-                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             elif location == "All":
-                graph.title = symptom + ' in all Locations for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = symptom + ' in all Locations for ' + patient_name[0] + ' ' + patient_name[1]
         else:
             graph.title = symptom + ' in my ' + location
             if symptom == "All":
@@ -926,10 +923,8 @@ def download_image(email = None):
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
-    names = database.get_patient_name(email)
-    if names and len(names) > 0:
-        name = names[0]
-    else:
+    name = database.get_patient_name(email)
+    if name is None:
         return(redirect(url_for('clinician_dashboard')))
 
     graph = symptom = location = startDate = endDate = None
@@ -981,7 +976,7 @@ def patient_account(clinician_email=None):
                 user_details['ac_id'],
                 clinician_id
             )
-        except pg8000.IntegrityError:
+        except exc.IntegrityError:
             flash('This clinician account is already linked to your account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
@@ -1089,7 +1084,7 @@ def invite_user():
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_account_invitation(token, email, role)
-            except pg8000.core.IntegrityError: # if token already exists
+            except exc.IntegrityError: # if token already exists
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_account_invitation(token, email, role)
         emails = [{'recipient': email, 'subject': 'Symptom Tracker Invitation', 'message': email_class.invitation_email_text(role, token)}]

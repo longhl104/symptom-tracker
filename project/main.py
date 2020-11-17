@@ -623,11 +623,6 @@ def symptom_history():
         list_of_symptoms.append(symptom_dict)
     return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
-# Helper functions for graph visualisation -> might move to utility file
-def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
-                for n in range(int((end_date - start_date).days)):
-                    yield start_date + timedelta(n)
-
 def clean_data(start_date, end_date, data, multiple):
     date = []
     severity = []
@@ -641,14 +636,16 @@ def clean_data(start_date, end_date, data, multiple):
     }
     day_included = True
 
+    # Helper functions for graph visualisation -> might move to utility file
+    def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
+        for n in range(int((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+
     for single_date in daterange(start_date, end_date + timedelta(1)):
         d = single_date.strftime("%Y-%m-%d")
         
         if d in data:
             day_included = True
-            date += [d+" "]
-            date += [d+""]
-            date += [d+"\n"]
             if len(data[d]) == 3:
                 severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 
                     'label': 'Morning'}]
@@ -709,20 +706,11 @@ def clean_data(start_date, end_date, data, multiple):
                     sporadic += [None] * 3
 
         elif day_included:
-            date += [" "]
-            date += [""]
-            date += ["\n"]
             severity += [None] * 3
             sporadic += [None] * 3
             day_included = False
 
-        no_days = (end_date - start_date).days + 1
-        i = 0
-        while no_days / (7 * pow(3, i)) > 1:
-            i += 1
-        freq = pow(3, i)
-
-    return date, severity, sporadic, freq
+    return severity, sporadic
 
 def extract_page_data(form_data):
     symptom = form_data.get("symptom")[0]
@@ -801,7 +789,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
             last_row = raw_data[-1][0][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
-            date, severity, sporadic, freq = clean_data(start_date, end_date, data, multiple)
+            severity, sporadic = clean_data(start_date, end_date, data, multiple)
 
         custom_style = Style(
             background="#FFFFFF",

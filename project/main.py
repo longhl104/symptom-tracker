@@ -783,7 +783,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
 
             graph_data = {}
             for multiple_key in results:
-                graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
+                graph_data[multiple_key] = [results[multiple_key][0], results[multiple_key][1]]
         else: 
             first_row = raw_data[0][0][1:-1].split(",")
             last_row = raw_data[-1][0][1:-1].split(",")

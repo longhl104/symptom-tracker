@@ -457,7 +457,7 @@ def view_patients_history(id = None):
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
             return redirect(url_for(clinician_dashboard))
-        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
+        patient_name = patient[3] + ' ' + patient[4]
         symptoms = None
         symptoms = database.get_all_symptoms(id)
         list_of_symptoms = []
@@ -500,7 +500,7 @@ def view_patient_reports(email = None):
         if request.method == "POST":
             symptom, location, start_date, end_date = extract_page_data(dict(request.form.lists()))
             raw_data = database.get_export_data(patient_email, symptom, location, start_date, end_date, False)
-            graph = set_up_graph(raw_data, symptom, location, start_date, end_date, patient[0])
+            graph = set_up_graph(raw_data, symptom, location, start_date, end_date, (patient[3], patient[4]))
             graph_data = graph.render_data_uri()
 
         return render_template(
@@ -914,7 +914,7 @@ def download_file(email = None):
     else:
         filename = symptom.lower() + "_" + location.lower() + ".csv" 
     if user_details['ac_type'] == 'clinician':
-        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + filename )
+        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name[0] + "_" + name[1] + "_" + filename )
     else: 
         output.headers["Content-Disposition"] = ( "attachment; filename=" + filename)
 
@@ -939,7 +939,7 @@ def download_image(email = None):
     output = graph.render_response()
 
     if user_details['ac_type'] == 'clinician':
-        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name.get('ac_firstname', "") + "_" + name.get('ac_lastname', "") + "_" + symptom.lower() + "_" + location.lower() + ".svg" )
+        output.headers["Content-Disposition"] = ( "attachment; filename=" +  name[0] + "_" + name[1] + "_" + symptom.lower() + "_" + location.lower() + ".svg" )
     else: 
         output.headers["Content-Disposition"] = ( "attachment; filename=" + symptom.lower() + "_" + location.lower() + ".svg" )
 
@@ -969,7 +969,7 @@ def patient_account(clinician_email=None):
             flash('Please enter a clinician email address.', 'alert-warning')
 
         acc = database.get_account(clinician_email.lower())
-        if acc == None or acc[-1] != "clinician":
+        if acc == None or acc[-2] != "clinician":
             flash('This email address is not associated with a clinician account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
@@ -993,7 +993,7 @@ def patient_account(clinician_email=None):
 
     if request.method == 'DELETE':
         acc = database.get_account(clinician_email)
-        if (acc == None or acc[-1] != "clinician"):
+        if (acc == None or acc[-2] != "clinician"):
             print('Error: Attempted to delete clinician-patient link for non-existent clinician account')
             return redirect(url_for('patient_account'))
         result = database.delete_patient_clinician_link(
@@ -1012,7 +1012,7 @@ def patient_account(clinician_email=None):
     else:
         for clinician in clinicians_raw:
             acc = database.get_account_by_id(clinician[0])
-            if (acc != None and acc[-1] == "clinician"):
+            if (acc != None and acc[-2] == "clinician"):
                 clinicians.append(acc[1])
     return render_template('patient/account.html', session=session, clinicians=clinicians)
 

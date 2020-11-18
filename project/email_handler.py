@@ -105,3 +105,35 @@ class EmailHandler():
 
         The Brain and Mind Centre at the University of Sydney""".format(questionnaire_name=questionnaire_name, base_url=base_url, id=id, end_date=date_time_obj.strftime('%B %d %Y'))
         return text
+
+    @staticmethod
+    def summary_weekly_survey_email_text(questionnaire_id, name, end_date, valid_recipients, invalid_recipients):
+        date_time_obj = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        text = """
+
+        You are receiving this email because you are a registered admin on Symptom Tracker.
+        
+        Here is a summary report for the recently created survey - {questionnaire_name}:
+
+        Questionnaire ID: {id}
+        Due date: {end_date}
+        Total recipient(s): {total}
+        Successful recipient(s): {successful}
+        Invalid recipient(s): {invalid}
+
+
+        Below are email address(es) that didn't receive the survey:
+        {invalid_emails}
+
+        Thank you,
+
+        The Brain and Mind Centre at the University of Sydney""".format(
+            questionnaire_name=name,
+            id=questionnaire_id,
+            end_date=date_time_obj.strftime('%B %d %Y'),
+            total=len(valid_recipients) + len(invalid_recipients),
+            successful=len(valid_recipients),
+            invalid=len(invalid_recipients),
+            invalid_emails=", ".join([email[1] for email in invalid_recipients])
+        )
+        return text

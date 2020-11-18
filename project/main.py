@@ -1,17 +1,18 @@
 from flask import *
-from project import database, email_handler
+import database
+import email_handler
 import configparser
 import urllib.parse
 import random
 import string
-import pg8000
+from sqlalchemy import exc
 import traceback
 import sys
 import pygal
 import io
 import csv
 from pygal.style import Style
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
 from threading import Thread
@@ -29,6 +30,19 @@ app.secret_key = config["DATABASE"]["secret_key"]
 
 email_class = email_handler.EmailHandler()
 
+def set_user_details(login_data):
+    return {
+        "ac_id": login_data[0],
+        "ac_email": login_data[1],
+        "ac_password": login_data[2],
+        "ac_firstname": login_data[3],
+        "ac_lastname": login_data[4],
+        "ac_gender": login_data[5],
+        "ac_phone": login_data[6],
+        "ac_type": login_data[7],
+        "ac_dob": login_data[8]
+    }
+
 # General routes
 @app.route('/', methods=['POST', 'GET'])
 def login():
@@ -39,7 +53,7 @@ def login():
             return redirect(url_for('login'))
 
         global user_details
-        user_details = login_return_data[0]
+        user_details = set_user_details(login_return_data)
         if not check_password_hash(user_details['ac_password'], request.form['password']):
             flash('Incorrect email/password, please try again', 'alert-warning')
             return redirect(url_for('login'))
@@ -75,29 +89,27 @@ def register(token=None):
         firstName = request.form.get('first-name')
         lastName = request.form.get('last-name')
         gender = request.form.get('gender', "")
-        age = request.form.get('age', "NA")
+        dob = request.form.get('dob', "")
         mobile = request.form.get('mobile',"")
         treatment = request.form.getlist('treatment')
         emailAddress = request.form.get('email-address')
         password = request.form.get('password')
 
         try:
-            print(request.form)
+            if len(treatment) == 0:
+                flash('Please enter a treatment type.', 'alert-warning')
+                return redirect(url_for('register'))
             if request.form['password'] != request.form['confirm-password']:
                 flash('Passwords do not match. Please try again', 'alert-warning')
                 return redirect(url_for('register'))
-            if (age == ""):
-                age = None
-            if (gender == "NA"):
-                gender = None
-            if (mobile == ""):
-                mobile = None
-            print(request.form.get('treatment'))
+            dob = None if dob == "" else dob
+            gender = None if gender == "" else gender
+            mobile = None if mobile == "" else mobile
             add_patient_ret = database.add_patient(
                 firstName,
                 lastName,
                 gender,
-                age,
+                dob,
                 mobile,
                 treatment,
                 emailAddress,
@@ -113,7 +125,7 @@ def register(token=None):
                 session['logged_in'] = True
                 login_return_data = database.get_account(request.form['email-address'])
                 global user_details
-                user_details = login_return_data[0]
+                user_details = set_user_details(login_return_data)
                 session['logged_in'] = True
                 session['name'] = user_details['ac_firstname']
                 session['role'] = user_details['ac_type']
@@ -123,13 +135,11 @@ def register(token=None):
             print('Exception occurred. Please try again')
             flash('Email address already in use. Please try again', 'alert-warning')
             # return redirect(url_for('register'))
-            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, age=age, mobile=mobile)
+            return render_template('register.html', session=session, firstName=firstName, lastName=lastName, emailAddress=emailAddress, gender=gender, dob=dob, mobile=mobile)
     elif not token and request.method == 'GET':
         if not session.get('logged_in', None):
             treatments = None
-            # TODO: try except; should handle somehow if it fails
             treatments = database.get_all_treatments()
-            # TODO: probably best to hardcode some treatment types if it fails
             if treatments is None:
                 treatments = {}
 
@@ -141,41 +151,40 @@ def register(token=None):
         token_valid = database.check_invitation_token_validity(token)
         if request.method == 'POST':
             try:
-                if request.form['email-address'] != token_valid[0].get("ac_email"):
+                if request.form['email-address'] != token_valid[0]:
                     flash('This invitation is not valid for the email address entered. Please request a new invitation.', 'alert-warning')
                     return render_template('register-extra.html', token=token)
                 if request.form['password'] != request.form['confirm-password']:
                     flash('Passwords do not match. Please try again', 'alert-warning')
                     return render_template('register-extra.html', token=token)
-                age = None
-                # gender = request.form.get('gender', "NA")
-                # if (gender == "NA"):
-                #     gender = None
+                gender = request.form.get('gender', "")
+                gender = None if gender == "" else gender
+                dob = request.form.get('dob', "")
+                dob = None if dob == "" else dob
                 mobile = request.form.get('mobile-number', "")
                 mobile = None if mobile == "" else mobile
                 add_account_ret = database.add_patient(
                     request.form.get('first-name'),
                     request.form.get('last-name'),
-                    request.form.get('gender', ""), # gender,
-                    age,
+                    gender,
+                    dob,
                     mobile,
                     request.form.getlist('treatment', []),
                     request.form.get('email-address'),
                     request.form.get('password'),
                     generate_password_hash(request.form.get('password')),
-                    token_valid[0].get('role'),
+                    token_valid[1],
                     'yes' if request.form.get('consent') == 'on' else 'no'
                 )
                 if add_account_ret is None:
-                    # TODO: return error message
                     return render_template('register-extra.html', token=token)
                 else:
                     delete_token = database.delete_account_invitation(token, request.form['email-address'])
                     session['logged_in'] = True
                     login_return_data = database.get_account(request.form['email-address'])
-                    user_details = login_return_data[0]
-                    session['name'] = user_details['ac_firstname']
-                    return redirect(url_for(str(token_valid[0].get('role', 'patient')).lower()+'_dashboard'))
+                    user_details = set_user_details(login_return_data)
+                    session['name'] = user_details[3]
+                    return redirect(url_for(str(token_valid[1]).lower()+'_dashboard'))
             except Exception as e:
                 print(e)
                 print('Exception occurred. Please try again')
@@ -196,14 +205,13 @@ def forgot_password():
             unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.IntegrityError: # if key already exists
+            except exc.IntegrityError: # if key already exists
                 unique_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_password_key(unique_key, request.form['email'])
-            except pg8000.core.ProgrammingError: # email not in database
+            except exc.ProgrammingError: # email not in database
                 flash('There is no account associated with that email. Please try again.', "alert-warning")
                 return render_template('forgot-password.html')
         else:
-            # print(result)
             unique_key = result[0]
         emails = [{'recipient': request.form['email'], 'subject': 'Reset your password', 'message': email_class.forgot_password_email_text(unique_key)}]
         email_class.set_emails(emails)
@@ -213,6 +221,13 @@ def forgot_password():
         return render_template('forgot-password.html')
     elif request.method == 'GET':
         return render_template('forgot-password.html')
+
+def calculate_age(birth_str): 
+    if birth_str == '':
+        return -1
+    today = date.today() 
+    birth_date = datetime.strptime(birth_str, "%Y-%m-%d")
+    return today.year - birth_date.year - ((today.month, today.day) <  (birth_date.month, birth_date.day))  
 
 @app.route('/researcher/', methods=['GET', 'POST'])
 def researcher_dashboard():
@@ -226,7 +241,7 @@ def researcher_dashboard():
     consents = None
     consents = database.get_all_consent()
     list_of_consents = []
-    consent_col_order = ["ac_email","ac_id", "ac_age", "ac_gender","treatment_name"]
+    consent_col_order = ["ac_email","ac_id", "ac_dob", "ac_gender","treatment_name"]
     for consent in consents:
         consent = consent['row'][1:-1]
         consent_dict = {}
@@ -250,13 +265,15 @@ def researcher_dashboard():
     poplist.sort(reverse=True)
     for i in poplist:
         list_of_consents.pop(i)
-
-
     treatments = database.get_all_treatments()
     list_of_treatments = []
     for treatment in treatments:
         list_of_treatments.append(treatment["treatment_name"])
     if request.method =='GET':
+        for consent in list_of_consents:
+            for key in consent:
+                if consent[key] == "":
+                    consent[key] = "NA"
         return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
     if request.method =='POST':
         lage = request.form.get('lage', "")
@@ -280,13 +297,13 @@ def researcher_dashboard():
         if lage is not None:
             temp=[]
             for x in list_of_consents:
-                if(x["ac_age"] >= lage):
+                if(calculate_age(x["ac_dob"]) >= int(lage)):
                     temp.append(x)
             list_of_consents = temp
         if hage is not None:
             temp=[]
             for x in list_of_consents:
-                if(x["ac_age"] <= hage):
+                 if(calculate_age(x["ac_dob"]) <= int(hage)):
                     temp.append(x)
             list_of_consents = temp
         if gen is not None:
@@ -310,6 +327,10 @@ def researcher_dashboard():
                     if (sym == name["symptom_name"]):
                         temp.append(x)
             list_of_consents = temp  
+        for consent in list_of_consents:
+            for key in consent:
+                if consent[key] == "":
+                    consent[key] = "NA"
         return render_template('researcher/dashboard.html', session=session, consents=list_of_consents, treatments=list_of_treatments)
 
 @app.route('/researcher/patient-data/<id>', methods=['GET'])
@@ -319,7 +340,7 @@ def view_consent_history(id = None):
     if user_details['ac_type'] != 'researcher':
         raise Exception('Error: Attempted accessing researcher dashboard as Unknown')
     acc = database.get_account_by_id(id)
-    email = acc[0]['ac_email']
+    email = acc['ac_email']
     symptoms = None
     symptoms = database.get_all_symptoms(email)
     list_of_symptoms = []
@@ -344,12 +365,11 @@ def download_export_all():
 
     data = database.get_all_consent_export_all()
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
-    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    head = ("Id", "Date of Birth", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
     csv_writer.writerow(head)
     csv_writer.writerows(row_data)
 
@@ -368,6 +388,12 @@ def download_export_filters():
 
     lage = request.form.get('lage', "")
     hage = request.form.get('hage', "")
+    ldob = ""
+    hdob = ""
+    if lage != "":
+        ldob = date.today() - timedelta(days=int(lage)*365.25)
+    if hage != "":
+        hdob = date.today() - timedelta(days=int(hage)*365.25)
     sym = request.form.get('symptom', "")
     chemo = request.form.get('chemotherapy', "")
     gen = request.form.get('gender', "")
@@ -375,14 +401,13 @@ def download_export_filters():
     string_input = io.StringIO()
     csv_writer = csv.writer(string_input)
 
-    data = database.get_consent_export_filters(lage, hage, gen, sym, chemo)
+    data = database.get_consent_export_filters(ldob, hdob, gen, sym, chemo)
     row_data = []
-
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         row_data += [(row[0], row[1], row[2], "".join(row[3:-5]).strip('"'), row[-5], row[-4], row[-3], row[-2].strip('"'), row[-1].strip('"'))]
 
-    head = ("Id", "Age", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
+    head = ("Id", "DOB", "Gender", "Chemotherapy", "Symptom", "Location", "Date", "Severity", "Time of Day")
     csv_writer.writerow(head)
     csv_writer.writerows(row_data)
 
@@ -396,7 +421,6 @@ def download_export_filters():
 
 @app.route('/clinician/')
 def clinician_dashboard():
-    print(session)
     if not session.get('logged_in', None):
         return redirect(url_for('login'))
 
@@ -406,9 +430,8 @@ def clinician_dashboard():
 
     patients = None
     patients = database.get_all_patients(user_details['ac_id'])
-    print(patients)
     list_of_patients = []
-    patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_age", "ac_gender"]
+    patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_dob", "ac_gender"]
     for patient in patients:
         patient = patient['row'][1:-1]
         patient_dict = {}
@@ -429,7 +452,6 @@ def view_patients_history(id = None):
     check_link = database.check_clinician_link(user_details['ac_id'],id)
     if len(check_link) == 0:
         return(redirect(url_for('clinician_dashboard')))
-    print('id = {}'.format(id))
     if id != None:
         patient = database.get_account(id)
         if patient is None:
@@ -469,9 +491,9 @@ def view_patient_reports(email = None):
         patient = database.get_account(email)
         if patient is None:
             flash("Failed to find patient with that email address", "alert-warning")
-            return redirect(url_for(clinician_dashboard))
-        patient_email = patient[0].get('ac_email')
-        patient_name = patient[0].get('ac_firstname') + ' ' + patient[0].get('ac_lastname')
+            return redirect(url_for('clinician_dashboard'))
+        patient_email = patient[1]
+        patient_name = patient[3] + ' ' + patient[4]
 
         graph = graph_data = symptom = location = start_date = end_date = None
 
@@ -514,7 +536,7 @@ def reset_password(url_key):
                 )
             else:
                 database.delete_token(url_key)
-                flash("Password successfully reset. You may now login.", "alert-warning")
+                flash("Password successfully reset. You may now login.", "alert-success")
         return redirect(url_for("reset_password", url_key=url_key))
 
     else:
@@ -617,11 +639,6 @@ def symptom_history():
         list_of_symptoms.append(symptom_dict)
     return render_template("patient/symptom-history.html", session=session, symptoms=list_of_symptoms)
 
-# Helper functions for graph visualisation -> might move to utility file
-def daterange(start_date, end_date):  # https://stackoverflow.com/questions/1060279/iterating-through-a-range-of-dates-in-python
-                for n in range(int((end_date - start_date).days)):
-                    yield start_date + timedelta(n)
-
 def clean_data(start_date, end_date, data, multiple):
     date = []
     severity = []
@@ -635,14 +652,16 @@ def clean_data(start_date, end_date, data, multiple):
     }
     day_included = True
 
+    # Helper functions for graph visualisation
+    def daterange(start_date, end_date):
+        for n in range(int((end_date - start_date).days)):
+            yield start_date + timedelta(n)
+
     for single_date in daterange(start_date, end_date + timedelta(1)):
         d = single_date.strftime("%Y-%m-%d")
         
         if d in data:
             day_included = True
-            date += [d+" "]
-            date += [d+""]
-            date += [d+"\n"]
             if len(data[d]) == 3:
                 severity += [{'value': (single_date + timedelta(hours = 0), severity_dict[data[d][0][0]]), 
                     'label': 'Morning'}]
@@ -703,20 +722,11 @@ def clean_data(start_date, end_date, data, multiple):
                     sporadic += [None] * 3
 
         elif day_included:
-            date += [" "]
-            date += [""]
-            date += ["\n"]
             severity += [None] * 3
             sporadic += [None] * 3
             day_included = False
 
-        no_days = (end_date - start_date).days + 1
-        i = 0
-        while no_days / (7 * pow(3, i)) > 1:
-            i += 1
-        freq = pow(3, i)
-
-    return date, severity, sporadic, freq
+    return severity, sporadic
 
 def extract_page_data(form_data):
     symptom = form_data.get("symptom")[0]
@@ -765,7 +775,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         multiples = defaultdict(list)
         if (multiple):
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 if symptom == "All":
                     raw_multiples[row[0]].append([row[2], row[3].strip('"'), row[4].strip('"')])
                 else:
@@ -777,7 +787,7 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
                 multiples[single_all] = dates
         else:
             for row in raw_data:
-                row = row["row"][1:-1].split(",")
+                row = row[0][1:-1].split(",")
                 data[row[0]].append([row[1].strip('"'), row[2].strip('"')])
 
         results = {}
@@ -789,13 +799,13 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
 
             graph_data = {}
             for multiple_key in results:
-                graph_data[multiple_key] = [results[multiple_key][1], results[multiple_key][2]]
+                graph_data[multiple_key] = [results[multiple_key][0], results[multiple_key][1]]
         else: 
-            first_row = raw_data[0]["row"][1:-1].split(",")
-            last_row = raw_data[-1]["row"][1:-1].split(",")
+            first_row = raw_data[0][0][1:-1].split(",")
+            last_row = raw_data[-1][0][1:-1].split(",")
             start_date = datetime.strptime(first_row[0], "%Y-%m-%d")
             end_date = datetime.strptime(last_row[0], "%Y-%m-%d")
-            date, severity, sporadic, freq = clean_data(start_date, end_date, data, multiple)
+            severity, sporadic = clean_data(start_date, end_date, data, multiple)
 
         custom_style = Style(
             background="#FFFFFF",
@@ -808,13 +818,12 @@ def set_up_graph(raw_data, symptom, location, startDate, endDate, patient_name):
         graph = pygal.DateTimeLine(style = custom_style, height = 400, x_label_rotation=60, x_title='Date',
             y_title='Severity', fill=False, show_legend=multiple, stroke_style={'width': 3}, range=(0,4),
             x_value_formatter=lambda dt: dt.strftime('%d, %b %Y'),)
-
         if patient_name:
-            graph.title = symptom + ' in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+            graph.title = symptom + ' in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             if symptom == "All":
-                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = 'All Symptoms in ' + location + ' for ' + patient_name[0] + ' ' + patient_name[1]
             elif location == "All":
-                graph.title = symptom + ' in all Locations for ' + patient_name.get('ac_firstname', 'NAME_ERROR') + ' ' + patient_name.get('ac_lastname', 'NAME_ERROR')
+                graph.title = symptom + ' in all Locations for ' + patient_name[0] + ' ' + patient_name[1]
         else:
             graph.title = symptom + ' in my ' + location
             if symptom == "All":
@@ -918,10 +927,8 @@ def download_image(email = None):
     if user_details.get("ac_email") is None:
         return redirect(url_for("login"))
 
-    names = database.get_patient_name(email)
-    if names and len(names) > 0:
-        name = names[0]
-    else:
+    name = database.get_patient_name(email)
+    if name is None:
         return(redirect(url_for('clinician_dashboard')))
 
     graph = symptom = location = startDate = endDate = None
@@ -962,18 +969,18 @@ def patient_account(clinician_email=None):
             flash('Please enter a clinician email address.', 'alert-warning')
 
         acc = database.get_account(clinician_email.lower())
-        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+        if acc == None or acc[-1] != "clinician":
             flash('This email address is not associated with a clinician account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
-        clinician_id = acc[0]['ac_id']
+        clinician_id = acc[0]
 
         try:
             link = database.add_patient_clinician_link(
                 user_details['ac_id'],
                 clinician_id
             )
-        except pg8000.IntegrityError:
+        except exc.IntegrityError:
             flash('This clinician account is already linked to your account.', 'alert-warning')
             return redirect(url_for('patient_account'))
 
@@ -986,12 +993,12 @@ def patient_account(clinician_email=None):
 
     if request.method == 'DELETE':
         acc = database.get_account(clinician_email)
-        if (acc == None or len(acc) == 0 or acc[0]['ac_type'] != "clinician"):
+        if (acc == None or acc[-1] != "clinician"):
             print('Error: Attempted to delete clinician-patient link for non-existent clinician account')
             return redirect(url_for('patient_account'))
         result = database.delete_patient_clinician_link(
             user_details['ac_id'],
-            acc[0]['ac_id']
+            acc[0]
         )
         if result is None:
             flash('Clinician account link could not be deleted.', 'alert-warning')
@@ -1004,9 +1011,9 @@ def patient_account(clinician_email=None):
         clinicians = []
     else:
         for clinician in clinicians_raw:
-            acc = database.get_account_by_id(clinician['clinician_id'])
-            if (acc != None and len(acc) != 0 and acc[0]['ac_type'] == "clinician"):
-                clinicians.append(acc[0]['ac_email'])
+            acc = database.get_account_by_id(clinician[0])
+            if (acc != None and acc[-1] == "clinician"):
+                clinicians.append(acc[1])
     return render_template('patient/account.html', session=session, clinicians=clinicians)
 
 @app.route('/patient/questionnaire/<id>', methods=['GET'])
@@ -1021,10 +1028,14 @@ def patient_questionnaire(id=None):
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
         if questionnaire:
-            questionnaire = questionnaire[0]
             result = database.mark_questionnaire_as_opened(user_details['ac_id'], id)
-            questionnaire['link'] = questionnaire['link'].replace('EMAILADDRESS', user_details['ac_email'])
-            return render_template('patient/questionnaire.html', session=session, questionnaire=questionnaire)
+            questionnaire_info = {
+                'name': questionnaire[0],
+                'link': questionnaire[1].replace('EMAILADDRESS', user_details['ac_email']),
+                'end_date': questionnaire[2],
+                'id': questionnaire[3]
+            }
+            return render_template('patient/questionnaire.html', session=session, questionnaire=questionnaire_info)
         return redirect(url_for('patient_dashboard'))
 
 @app.route('/patient/complete-questionnaire/<id>', methods=['GET'])
@@ -1038,14 +1049,9 @@ def complete_patient_questionnaire(id=None):
 
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
-        if questionnaire:
-            questionnaire = questionnaire[0]
         result = database.mark_questionnaire_as_completed(user_details['ac_id'], id)
-        print("result[0].get('completed') != None", result[0].get('completed') != None)
-        print("result[0].get('completed') == True", result[0].get('completed') == True)
-        print("questionnaire.get('name') != None", questionnaire.get('name') != None)
-        if result[0].get('completed') != None and result[0].get('completed') == True and questionnaire.get('name') != None:
-            flash("Marked '{questionnaire_name}' as completed.".format(questionnaire_name=questionnaire.get('name')), "alert-success")
+        if result[0] != None and result[0] == True and questionnaire[0] != None:
+            flash("Marked '{questionnaire_name}' as completed.".format(questionnaire_name=questionnaire[0]), "alert-success")
         return redirect(url_for('patient_dashboard'))
 
 @app.route('/admin/')
@@ -1073,16 +1079,16 @@ def invite_user():
         already_invited = database.check_email_in_account_invitation(email)
         token = None
         if already_invited:
-            token = already_invited[0].get('token')
-            if already_invited[0].get('role') != role:
+            token = already_invited[0]
+            if already_invited[2] != role:
                 result = database.update_role_in_account_invitation(email, role)
-                token = result[0].get('token')
-                role = result[0].get('role')
+                token = result[0]
+                role = result[1]
         else:
             token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
             try:
                 database.add_account_invitation(token, email, role)
-            except pg8000.core.IntegrityError: # if token already exists
+            except exc.IntegrityError: # if token already exists
                 token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(24))
                 database.add_account_invitation(token, email, role)
         emails = [{'recipient': email, 'subject': 'Symptom Tracker Invitation', 'message': email_class.invitation_email_text(role, token)}]
@@ -1103,7 +1109,7 @@ def validate_recipients(recipients):
         email = email.strip()
         result = database.get_patient_by_email(email)
         if result:
-            valid_recipients.append((result[0].get('ac_id'), email))
+            valid_recipients.append((result[0], email))
         else:
             invalid_recipients.append((None, email))
     return valid_recipients, invalid_recipients
@@ -1135,7 +1141,7 @@ def create_questionnaire():
             return redirect(url_for('admin_dashboard'))
         result = database.add_questionnaire(name, link, end_date)
         if result:
-            questionnaire_id = result[0].get('id')
+            questionnaire_id = result[0]
             successful_records = database.link_questionnaire_to_patient(questionnaire_id, valid_recipients)
             if len(successful_records) == 0:
                 flash('Something went wrong linking questionnaire to patients. Please try again.', 'alert-warning')
@@ -1143,6 +1149,8 @@ def create_questionnaire():
             subject = 'Symptom Tracker - New Questionnaire Assigned'
             message = email_class.weekly_survey_email_text(questionnaire_id, name, end_date)
             emails = [{'recipient': email, 'subject': subject, 'message': message} for email in successful_records]
+            summary_message = email_class.summary_weekly_survey_email_text(questionnaire_id, name, end_date, valid_recipients, invalid_recipients)
+            emails.append({'recipient': user_details['ac_email'], 'subject': 'Symptom Tracker - Questionnaire #{id} - Summary'.format(id=questionnaire_id), 'message': summary_message})
             email_class.set_emails(emails)
             email_thread = Thread(target=email_class.send_emails)
             email_thread.start()
@@ -1157,7 +1165,13 @@ def modify_questionnaire(id=None):
     if id and request.method == 'GET':
         questionnaire = database.get_questionnaire(None, id)
         if questionnaire:
-            return jsonify(questionnaire=questionnaire), 200
+            questionnaire_info = {
+                'name': questionnaire[0],
+                'link': questionnaire[1],
+                'end_date': questionnaire[2],
+                'id': questionnaire[3]
+            }
+            return jsonify(questionnaire=[questionnaire_info]), 200
         else:
             return jsonify(questionnaire=[]), 404
     if id and request.method == 'DELETE':
@@ -1187,3 +1201,6 @@ def modify_questionnaire(id=None):
 @app.route("/service-worker.js")
 def service_worker():
     return app.send_static_file("service-worker.js")
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=8080, debug=True)

@@ -1,0 +1,21 @@
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT --log-level=debug main:app
+
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 2
+
+runtime_config:
+  python_version: 3
+
+# Enable a TCP domain socket
+beta_settings:
+  cloud_sql_instances: <CONN_NAME>
+
+env_variables:
+  DB_USER: <USERNAME>
+  DB_PASS: <PASSWORD>
+  DB_NAME: <NAME>
+  DB_HOST: <HOST>
+  CONNECTION_NAME: <CONN_NAME>

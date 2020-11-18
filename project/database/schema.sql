@@ -20,7 +20,7 @@ CREATE TABLE Account(
     ac_first_name TEXT NOT NULL,
     ac_last_name TEXT NOT NULL,
     ac_email TEXT,
-    ac_age SMALLINT,
+    ac_dob DATE,
     ac_gender TEXT,
     ac_phone INTEGER NOT NULL,
     ac_admin SMALLINT DEFAULT 0
@@ -61,8 +61,8 @@ $ADD$
         VALUES (assignedclinician, symptoms)
         RETURNING patient_id
         ) ins2 AS (
-            INSERT INTO accountserver.Account (ac_username, ac_password, ac_firstname, ac_lastname, ac_email, ac_age, ac_gender, ac_phone)
-            VALUES (username, password, firstname, lastname, email, age, gender, phone)
+            INSERT INTO accountserver.Account (ac_username, ac_password, ac_firstname, ac_lastname, ac_email, ac_dob, ac_gender, ac_phone)
+            VALUES (username, password, firstname, lastname, email, dob, gender, phone)
             RETURNING account_id
         ) ins3 AS (
             INSERT INTO accountserver.AccountType (account_type_name)

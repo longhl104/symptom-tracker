@@ -324,7 +324,7 @@ def researcher_dashboard():
                 email = x["ac_email"]
                 symptom_list = database.get_name_symptoms(email)
                 for name in symptom_list:
-                    if (sym == name["symptom_name"]):
+                    if (sym == name[0]):
                         temp.append(x)
             list_of_consents = temp  
         for consent in list_of_consents:

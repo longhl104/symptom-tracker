@@ -183,7 +183,7 @@ def register(token=None):
                     session['logged_in'] = True
                     login_return_data = database.get_account(request.form['email-address'])
                     user_details = set_user_details(login_return_data)
-                    session['name'] = user_details[3]
+                    session['name'] = user_details["ac_firstname"]
                     return redirect(url_for(str(token_valid[1]).lower()+'_dashboard'))
             except Exception as e:
                 print(e)

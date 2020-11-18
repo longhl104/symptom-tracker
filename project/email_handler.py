@@ -115,14 +115,13 @@ class EmailHandler():
         
         Here is a summary report for the recently created survey - {questionnaire_name}:
 
-        Questionnaire ID: {id}
+        ID: {id}
         Due date: {end_date}
         Total recipient(s): {total}
         Successful recipient(s): {successful}
         Invalid recipient(s): {invalid}
 
-
-        Below are email address(es) that didn't receive the survey:
+        Below are the email address(es) that didn't receive the survey:
         {invalid_emails}
 
         Thank you,

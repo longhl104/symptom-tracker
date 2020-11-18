@@ -243,7 +243,7 @@ def researcher_dashboard():
     list_of_consents = []
     consent_col_order = ["ac_email","ac_id", "ac_dob", "ac_gender","treatment_name"]
     for consent in consents:
-        consent = consent['row'][1:-1]
+        consent = consent[0][1:-1]
         consent_dict = {}
         for i, col in enumerate(consent.split(",",4)):
             consent_dict[consent_col_order[i]] = col.strip('"')
@@ -346,7 +346,7 @@ def view_consent_history(id = None):
     list_of_symptoms = []
     symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
     for symptom in symptoms:
-        symptom = symptom["row"][1:-1]
+        symptom = symptom[0][1:-1]
         symptom_dict = {}
         for i, col in enumerate(symptom.split(",")):
             if i == 1 and col[-3:] == ":00":
@@ -433,7 +433,7 @@ def clinician_dashboard():
     list_of_patients = []
     patient_col_order = ["ac_id","ac_email", "ac_firstname", "ac_lastname", "ac_dob", "ac_gender"]
     for patient in patients:
-        patient = patient['row'][1:-1]
+        patient = patient[0][1:-1]
         patient_dict = {}
         for i, col in enumerate(patient.split(",")):
             patient_dict[patient_col_order[i]] = col.strip('"')
@@ -463,7 +463,7 @@ def view_patients_history(id = None):
         list_of_symptoms = []
         symptom_col_order = ["symptom_id", "recorded_date", "symptom_name", "location", "severity", "occurence", "notes"]
         for symptom in symptoms:
-            symptom = symptom["row"][1:-1]
+            symptom = symptom[0][1:-1]
             symptom_dict = {}
             for i, col in enumerate(symptom.split(",")):
                 if i == 1 and col[-3:] == ":00":
@@ -628,7 +628,7 @@ def symptom_history():
         "notes",
     ]
     for symptom in symptoms:
-        symptom = symptom["row"][1:-1]
+        symptom = symptom[0][1:-1]
         symptom_dict = {}
         for i, col in enumerate(symptom.split(",")):
             if i == 1 and col[-3:] == ":00":
@@ -888,7 +888,7 @@ def download_file(email = None):
     row_data = []
 
     for row in data:
-        row = row["row"][1:-1].split(",")
+        row = row[0][1:-1].split(",")
         if location == "All" or symptom == "All":
             if row[5] == '""':
                 row_data += [(row[0], row[1], row[2], row[3].strip('"'), row[4].strip('"'), 'N/A')]

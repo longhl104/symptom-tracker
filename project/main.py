@@ -1,5 +1,6 @@
 from flask import *
-from project import database, email_handler
+import database
+import email_handler
 import configparser
 import urllib.parse
 import random
@@ -36,10 +37,10 @@ def set_user_details(login_data):
         "ac_password": login_data[2],
         "ac_firstname": login_data[3],
         "ac_lastname": login_data[4],
-        "ac_age": login_data[5],
-        "ac_gender": login_data[6],
-        "ac_phone": login_data[7],
-        "ac_type": login_data[8]
+        "ac_gender": login_data[5],
+        "ac_phone": login_data[6],
+        "ac_type": login_data[7],
+        "ac_dob": login_data[8]
     }
 
 # General routes

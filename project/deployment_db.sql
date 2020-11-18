@@ -38,40 +38,38 @@ CREATE SCHEMA tingleserver;
 
 
 --
--- Name: add_account(character varying, character varying, character varying, smallint, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: tingleserver; Owner: -
+-- Name: add_account(character varying, character varying, character varying, date, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: tingleserver; Owner: -
 --
 
-CREATE FUNCTION tingleserver.add_account(first_name character varying, last_name character varying, gender character varying, age smallint, mobile character varying, email character varying, password_hash character varying, user_role character varying, consent character varying) RETURNS smallint
+CREATE FUNCTION tingleserver.add_account(first_name character varying, last_name character varying, gender character varying, dob date, mobile character varying, email character varying, password_hash character varying, user_role character varying, consent character varying) RETURNS smallint
     LANGUAGE plpgsql
     AS $$
 DECLARE account_id smallint;
 BEGIN
-	INSERT INTO tingleserver."Account" (ac_email,
-										ac_password,
-										ac_firstname,
-										ac_lastname,
-										ac_age,
-										ac_gender,
-										ac_phone,
-										ac_type
-									   )
-   		VALUES(email, password_hash, first_name, last_name, age, gender, mobile, user_role);
+INSERT INTO tingleserver."Account" (ac_email,
+ac_password,
+ac_firstname,
+ac_lastname,
+ac_dob,
+ac_gender,
+ac_phone,
+ac_type
+  )
+   	VALUES(email, password_hash, first_name, last_name, dob, gender, mobile, user_role);
 
-	SELECT ac_id INTO account_id
-	FROM tingleserver."Account"
-	WHERE ac_email = email;
-	
-	IF LOWER(user_role) = 'patient' THEN
-		INSERT INTO tingleserver."Patient" (ac_id, consent) VALUES(account_id, consent);
-	ELSIF LOWER(user_role) = 'clinician' THEN
-		INSERT INTO tingleserver."Clinician" (ac_id) VALUES(account_id);
-	ELSIF LOWER(user_role) = 'researcher' THEN
-		INSERT INTO tingleserver."Researcher" (ac_id) VALUES(account_id);
-	ELSIF LOWER(user_role) = 'admin' THEN
-		INSERT INTO tingleserver."Admin" (ac_id) VALUES(account_id);
-	END IF;
-	
-	RETURN account_id;
+SELECT ac_id INTO account_id
+FROM tingleserver."Account"
+WHERE ac_email = email;
+IF LOWER(user_role) = 'patient' THEN
+INSERT INTO tingleserver."Patient" (ac_id, consent) VALUES(account_id, consent);
+ELSIF LOWER(user_role) = 'clinician' THEN
+INSERT INTO tingleserver."Clinician" (ac_id) VALUES(account_id);
+ELSIF LOWER(user_role) = 'researcher' THEN
+INSERT INTO tingleserver."Researcher" (ac_id) VALUES(account_id);
+ELSIF LOWER(user_role) = 'admin' THEN
+INSERT INTO tingleserver."Admin" (ac_id) VALUES(account_id);
+END IF;
+RETURN account_id;
 END;
 $$;
 
@@ -90,10 +88,10 @@ CREATE TABLE tingleserver."Account" (
     ac_password character varying(255) NOT NULL,
     ac_firstname character varying(255) NOT NULL,
     ac_lastname character varying(255) NOT NULL,
-    ac_age smallint,
     ac_gender character varying(6),
     ac_phone character varying(20),
-    ac_type character varying(50)
+    ac_type character varying(50),
+    ac_dob date
 );
 
 
@@ -337,11 +335,11 @@ ALTER TABLE ONLY tingleserver."Treatment" ALTER COLUMN treatment_id SET DEFAULT 
 -- Data for Name: Account; Type: TABLE DATA; Schema: tingleserver; Owner: -
 --
 
-COPY tingleserver."Account" (ac_id, ac_email, ac_password, ac_firstname, ac_lastname, ac_age, ac_gender, ac_phone, ac_type) FROM stdin;
-56	patient@test.com	pbkdf2:sha256:150000$fDjsnkNU$bef2af8fb99ba74eb24525a68133a366a53f2a8169ef2eb0de19b05065bea3be	Jane	Doe	45	Female	0412345678	patient
-57	clinician@test.com	pbkdf2:sha256:150000$y4Yk3EIp$70ca6e06f8319728d9a4673d20494657744a973ba1691dd97f160346d1dccda3	John	Doe	50	Male	0421312324	clinician
-58	researcher@test.com	pbkdf2:sha256:150000$DSr6jvtl$ccc61a69ae3e610118e5fae80c39e859c3889495e856e4bcfd31d615f6a3d501	Jake	Doe	32	Male	0423212389	researcher
-61	admin@test.com	pbkdf2:sha256:150000$WT5eNrHI$fabc60fc188bcebf165644501d540f27c33998ff5da2f381e743b9097462463e	Admin	Account	21	Female	0123456789	admin
+COPY tingleserver."Account" (ac_id, ac_email, ac_password, ac_firstname, ac_lastname, ac_gender, ac_phone, ac_type, ac_dob) FROM stdin;
+56	patient@test.com	pbkdf2:sha256:150000$fDjsnkNU$bef2af8fb99ba74eb24525a68133a366a53f2a8169ef2eb0de19b05065bea3be	Jane	Doe	Female	0412345678	patient	\N
+57	clinician@test.com	pbkdf2:sha256:150000$y4Yk3EIp$70ca6e06f8319728d9a4673d20494657744a973ba1691dd97f160346d1dccda3	John	Doe	Male	0421312324	clinician	\N
+58	researcher@test.com	pbkdf2:sha256:150000$DSr6jvtl$ccc61a69ae3e610118e5fae80c39e859c3889495e856e4bcfd31d615f6a3d501	Jake	Doe	Male	0423212389	researcher	\N
+61	admin@test.com	pbkdf2:sha256:150000$WT5eNrHI$fabc60fc188bcebf165644501d540f27c33998ff5da2f381e743b9097462463e	Admin	Account	Female	0123456789	admin	\N
 \.
 
 
@@ -393,7 +391,6 @@ COPY tingleserver."Patient" (ac_id, consent) FROM stdin;
 --
 
 COPY tingleserver."Patient_Clinician" (patient_id, clinician_id) FROM stdin;
-56	57
 \.
 
 
@@ -439,6 +436,7 @@ COPY tingleserver."Symptom" (symptom_id, patient_username, severity, recorded_da
 15	patient@test.com	Somewhat	2020-10-14	Tingling		Hands	Daytime
 13	patient@test.com	Quite a bit	2020-10-08	Numbness		Hands	Daytime
 14	patient@test.com	A little bit	2020-10-13	Pain		Legs	Morning
+17	patient@test.com	A little bit	2020-11-16	Test222	ASDASDASD	Test1111	Night-time
 \.
 
 
@@ -468,21 +466,21 @@ COPY tingleserver."Treatment" (treatment_id, treatment_name) FROM stdin;
 -- Name: Account_ac_id_seq; Type: SEQUENCE SET; Schema: tingleserver; Owner: -
 --
 
-SELECT pg_catalog.setval('tingleserver."Account_ac_id_seq"', 73, true);
+SELECT pg_catalog.setval('tingleserver."Account_ac_id_seq"', 82, true);
 
 
 --
 -- Name: Questionnaire_id_seq; Type: SEQUENCE SET; Schema: tingleserver; Owner: -
 --
 
-SELECT pg_catalog.setval('tingleserver."Questionnaire_id_seq"', 46, true);
+SELECT pg_catalog.setval('tingleserver."Questionnaire_id_seq"', 62, true);
 
 
 --
 -- Name: Symptom_symptom_id_seq; Type: SEQUENCE SET; Schema: tingleserver; Owner: -
 --
 
-SELECT pg_catalog.setval('tingleserver."Symptom_symptom_id_seq"', 15, true);
+SELECT pg_catalog.setval('tingleserver."Symptom_symptom_id_seq"', 17, true);
 
 
 --
